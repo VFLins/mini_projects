@@ -1,0 +1,1 @@
+Este projeto é um dashboard que usa dados retirados do IBGE para fazer uma análise breve das condições de trabalho e de vida das pessoas assalariadas, utilizando um recorte mais recente dos dados dsiponíveis.
