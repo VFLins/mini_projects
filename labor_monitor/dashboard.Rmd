@@ -1,5 +1,5 @@
 ---
-title: "Monitor das condições de trabalho"
+title: "Monitor das condições do trabalhador"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
@@ -51,9 +51,10 @@ plot <- ggplot(temp, aes(x =Data, y =Valor, fill =Indicador)) +
   theme_classic() +
   scale_fill_manual(values =palette) +
   theme(legend.position ="none",
-        panel.grid.major.y =element_line(),
+    panel.grid.major.y =element_line(),
     panel.grid.minor.y =element_line()) +
-  labs(x ="", y ="", fill ="")
+  labs(x ="", y ="", fill ="") +
+  labs(caption = "This is the caption")
 
 ggplotly(plot)
 ```
@@ -77,6 +78,7 @@ plot <- ggplot(temp, aes(x =Trimestre, y =Valor, fill =Setor)) +
     panel.grid.major.y =element_line(),
     panel.grid.minor.y =element_line()) +
   labs(x ="", y ="", fill ="")
+
 ggplotly(plot)
 ```
 
@@ -117,7 +119,7 @@ sidram %>%
   mutate(Data =as.yearmon(Data)) ->
 temp
 
-ggplot(temp, aes(x =Data, y =`Inflação do Mês`, color =factor(year(Data)))) +
+plot <- ggplot(temp, aes(x =Data, y =`Inflação do Mês`, color =factor(year(Data)))) +
   geom_line() +
   geom_point(size =1.5) +
   geom_line(
@@ -127,8 +129,8 @@ ggplot(temp, aes(x =Data, y =`Inflação do Mês`, color =factor(year(Data)))) +
   theme_classic() +
   scale_color_manual(values =palette) +
   labs(x ="", y ="", color ="") +
-  theme(legend.position ="none") ->
-plot
+  theme(legend.position ="none")
+
 ggplotly(plot)
 ```
 
@@ -151,6 +153,7 @@ plot <- ggplot(temp, aes(x =Data, y =Valor, color =`Grupo de produtos`)) +
   labs(x ="", y ="") + 
   facet_wrap(.~`Grupo de produtos`, ncol =3) +
   theme(legend.position ="none")
+
 ggplotly(plot)
 ```
 
@@ -186,6 +189,6 @@ ggplotly(plot)
 - Valores dos índices nesta página acima de zero indicam aumento nos preços. <b>A linha de zero</b> está demarcada para mostrar quais meses apresentam aumento dos preços, e quais apresentam queda.
 - <b>O salário real</b> dos trabalhadores é afetado primeiramente pela variação dos preços na economia. Preços mais baixos, a priori, indicam aumento no poder de compra.
 - <b>Porque o INPC?</b> Este índice monitora a variação de preços para as famílias de reda mais baixa, em relação ao IPCA.
-- <b>O primeiro gráfico</b> mostra as variações mensais do índice, bem como sua tendência de variação ao longo dos anos. <b>Linhas de tendência</b> ascendentes mostram que o aumento dos preços está acelerando ao longo do ano.
-- <b>O segundo gráfico</b> mostra as variações de preços para cada grupo de bens.
+- <b>A variação INPC mensal total</b> mostra as variações mensais do índice, bem como sua tendência de variação ao longo dos anos. <b>Linhas de tendência</b> ascendentes mostram que o aumento dos preços está acelerando ao longo do ano.
+- <b>A variação INPC mensal por gurpo</b> mostra as variações de preços para cada grupo de bens.
 - <b>O salário real</b> é a razão da média salarial, pelo nível de preços. Indica como está sendo afetado o poder de compra das pessoas pela relação entre as duas variáveis.

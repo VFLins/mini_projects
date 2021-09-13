@@ -47,6 +47,7 @@ sidra$preco <- get_sidra(
 ) %>% select(`Mês (Código)`, `Geral, grupo, subgrupo, item e subitem`, Valor) %>%
   setNames(c("meses", "grupo", "preco")) %>%
   mutate(meses =as.yearmon(meses, format ="%Y%m")) %>%
+  .[.$meses %in% as.yearmon(meses), ] %>%
   pivot_wider(names_from =grupo, values_from =preco)
 dicio_preco <- names(sidra$preco[1, 2:ncol(sidra$preco)])
 names(sidra$preco) <- c("meses", paste0("prec", 1:9))
