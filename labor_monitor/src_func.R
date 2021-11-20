@@ -35,3 +35,15 @@ qtrlize <- function(x, func ="sum") {
   }
   output
 }
+
+# Simplesmente calcula variações percentuais
+percentvar <- function(x) {diff(x)/x[-length(x)]}
+
+# Cálculo da equação de fisher para juros real
+#https://investimentoss.files.wordpress.com/2014/02/3.jpg
+fisher_gir <- function(pi, ir) {
+  gir = {
+    ( (1+ir)/(1+pi) )-1
+  }
+  gir
+}

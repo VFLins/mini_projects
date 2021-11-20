@@ -1,0 +1,197 @@
+---
+title: "Monitor das condições do trabalhador"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+```{r setup, include=FALSE}
+library(flexdashboard)
+packages <- list(
+  "sidrar", "dplyr", "tidyr", "zoo",
+  "ggplot2", "plotly", "lubridate")
+#install.packages(packages)
+lapply(packages, require, character.only =T)
+remove(packages)
+
+source("src_sidram.R")
+source("src_sidrat.R")
+source("src_func.R")
+
+palette <- c(
+  "#0040d3","#422579","#85091e","#b82900","#e26700",
+  "#ee9c10","#bac23f","#86e76f","#519077","#4f95cd"
+)
+```
+
+Instruções de uso
+================================
+- Deslize o dedo/clique e arraste para <b>dar zoom nos gráficos</b>
+- Duplo toque/clique para <b>retornar à vizualização orignal</b>
+- <b>Instruções para interpretar os gráficos</b> acompanham os mesmos na parte inferior direita da tela (PC) ou no fim da página (Smartphone)
+- <b>Navegue entre as páginas</b> através do menu suspenso (PC), ou através do menu sanduíche (Smartphone)
+- Em caso de vizualização através de smartphone, recomendado navegar com a tela na horizontal
+
+Condições de trabalho
+================================
+Row {data-width=980}
+-----------------------------------------------------------------------
+
+### Índice de mal-estar econômico (maior é pior)
+```{r echo=F}
+temp <- sidram %>%
+  select(meses, unemp, inf12) %>%
+  na.omit() %>%
+  setNames(c("Data", "Desemprego", "Inflação 12m")) %>%
+  pivot_longer(cols =-Data, names_to ="Indicador", values_to ="Valor")
+
+plot <- ggplot(temp, aes(x =Data, y =Valor, fill =Indicador)) +
+  geom_area(alpha =0.66, size =1.1, position ="stack") +
+  geom_point(position ="stack", size =2, color =NA) +
+  theme_classic() +
+  scale_fill_manual(values =palette) +
+  theme(legend.position ="none",
+    panel.grid.major.y =element_line(),
+    panel.grid.minor.y =element_line()) +
+  labs(x ="", y ="", fill ="") +
+  labs(caption = "This is the caption")
+
+ggplotly(plot)
+```
+
+### Valor adicionado real (R$ 10 milhÃµes a preços de 1995)
+```{r echo=F}
+temp <- sidrat %>% 
+  select(c("trimestre", "vAdi2_agro", "vAdi2_indu", "vAdi2_serv")) %>%
+  setNames(c("Trimestre", "Agropecuária", "Indústrias", "Serviços")) %>%
+  pivot_longer(cols =-Trimestre, names_to ="Setor", values_to ="Valor") %>%
+  mutate(Valor =I(Valor/10))
+
+plot <- ggplot(temp, aes(x =Trimestre, y =Valor, fill =Setor)) +
+  geom_area(alpha =0.66, size =1.1) +
+  geom_point(size =2, position ="stack", color =NA) +
+  theme_classic() +
+  scale_fill_manual(values =palette) +
+  scale_color_manual(values =palette) +
+  theme(
+    legend.position ="none",
+    panel.grid.major.y =element_line(),
+    panel.grid.minor.y =element_line()) +
+  labs(x ="", y ="", fill ="")
+
+ggplotly(plot)
+```
+
+Row
+-----------------------------------------------------------------------
+### Medidor de situação econômica (Variação em 3 meses)
+```{r echo=F}
+temp <- sidram %>% select(inf12, unemp) %>%
+  na.omit() %>% .[I(nrow(.)-3):nrow(.), ] 
+temp <- c(
+  inf12 =diff(temp$inf12)/temp$inf12[-length(temp$inf12)] *100,
+  unemp =diff(temp$unemp)/temp$unemp[-length(temp$unemp)] *100
+) %>% sum()
+
+gauge(round(temp,1), min = -100, max = 100, symbol = '%',
+  gaugeSectors(
+    success = c(-100, -10), warning = c(-9, 39), danger = c(40, 100)
+  )
+)
+```
+
+### Info:
+- Valores maiores no <b>Índice de mal-estar econômico</b> pode indicar o início de um momento de recessão
+- <b>O  medidor acima</b> indica as três últimas variações mensais acumuladas. Os cenários ideais são indicador e medidor próximos de zero, ou medidor abaixo de zero quando o indicador está alto.
+- Um aumento no <b>valor adicionado real</b> indica uma economia com trabalho mais especializado ou maior emprego de capital produtivo. O cenário ideal apresenta valores cada vez maiores.
+
+Poder de compra
+================================
+Row {data-width=980}
+-----------------------------------------------------------------------
+
+### Variação INPC mensal total {data-height=210}
+```{r echo=F}
+sidram %>% 
+  select(c("meses", "prec0")) %>%
+  setNames(c("Data", "Inflação do Mês")) %>%
+  mutate(Data =as.yearmon(Data)) ->
+temp
+
+plot <- ggplot(temp, aes(x =Data, y =`Inflação do Mês`, color =factor(year(Data)))) +
+  geom_line() +
+  geom_point(size =1.5) +
+  geom_line(
+    stat="smooth",method = "lm",
+    alpha = 0.33) +
+  geom_abline(slope =0, intercept =0, size =0.2, color ="grey") +
+  theme_classic() +
+  scale_color_manual(values =palette) +
+  labs(x ="", y ="", color ="") +
+  theme(legend.position ="none")
+
+ggplotly(plot)
+```
+
+### Variação INPC mensal por gurpo
+
+```{r echo=F}
+temp <- sidram %>%
+  select(c("meses", paste0("prec", 1:9))) %>%
+  setNames(c("Data", dicio_preco)) %>%
+  na.omit() %>%
+  pivot_longer(cols =-Data) %>%
+  setNames(c("Data", "Grupo de produtos", "Valor"))
+
+plot <- ggplot(temp, aes(x =Data, y =Valor, color =`Grupo de produtos`)) +
+  geom_line(size =0.33) +
+  geom_point() +
+  geom_abline(slope =0, intercept =0, size =0.2, color ="grey") +
+  theme_classic() +
+  scale_color_manual(values =palette) +
+  labs(x ="", y ="") + 
+  facet_wrap(.~`Grupo de produtos`, ncol =3) +
+  theme(legend.position ="none")
+
+ggplotly(plot)
+```
+
+Row
+-----------------------------------------------------------------------
+### Indicador de salário real dessazonalizado {data-height=260}
+```{r echo=F}
+temp <- sidrat %>% select(trimestre, reMed) %>% 
+  mutate(reMed =c(NA, percentvar(reMed))) %>%
+  inner_join(
+    data.frame(
+      trimestre =unique(yearqtr(sidram$meses)),
+      inf =qtrlize(sidram$inf00, "sum") 
+    ),
+    by ="trimestre"
+  ) %>% mutate(inf =c(NA, percentvar(inf))) %>% .[-c(1, nrow(.)), ] %>%
+  mutate(`Salário Real` =fisher_gir(inf, reMed)) %>% 
+  select(trimestre, `Salário Real`) %>%
+  setNames(c("Trimestre", "Salário Real")) %>% as.data.frame()
+temp <- zoo(temp[,2], temp[,1])
+  # removendo sazonalidade
+temp <- zoo({
+  as.ts(temp) - stl(temp, s.window =4)$time.series[,1]}, date(temp))
+
+plot <- autoplot(temp) +
+  geom_col(fill =palette[9]) +
+  geom_line(alpha =0) +
+  geom_abline(intercept =0, slope =0, color ="grey") +
+  geom_line(stat="smooth",method = "lm", color ="black") +
+  labs(x ="", y ="") + theme_classic()
+ggplotly(plot)
+```
+
+### Info:
+
+- Valores dos Índices nesta página acima de zero indicam aumento nos preços. <b>A linha de zero</b> está demarcada para mostrar quais meses apresentam aumento dos preços, e quais apresentam queda.
+- <b>O salário real</b> dos trabalhadores é afetado primeiramente pela variação dos preços na economia. Preços mais baixos, a priori, indicam aumento no poder de compra.
+- <b>Porque o INPC?</b> Este índice monitora a variação de preços para as famílias de reda mais baixa, em relação ao IPCA.
+- <b>A variação INPC mensal total</b> mostra as variações mensais do Índice, bem como sua tendência de variação ao longo dos anos.
+- <b>Linhas de tendência</b> ascendentes mostram que o aumento dos preços está acelerando ao longo do ano.
+- <b>A variação INPC mensal por gurpo</b> mostra as variações de preços para cada grupo de bens.
+- <b>O salário real</b> é a razão da média salarial, pelo nível de preços. Indica como está sendo afetado o poder de compra das pessoas pela relação entre as duas variáveis.

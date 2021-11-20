@@ -1,5 +1,5 @@
 ---
-title: "Monitor das condi√ß√µes do trabalhador"
+title: "Monitor das condiÁıes do trabalhador"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
@@ -24,25 +24,25 @@ palette <- c(
 )
 ```
 
-Instru√ß√µes de uso
+InstruÁıes de uso
 ================================
-- Deslize o dedo/clique e arraste para <b>dar zoom nos gr√°ficos</b>
-- Duplo toque/clique para <b>retornar √† vizualiza√ß√£o orignal</b>
-- <b>Instru√ß√µes para interpretar os gr√°ficos</b> acompanham os mesmos na parte inferior direita da tela (PC) ou no fim da p√°gina (Smartphone)
-- <b>Navegue entre as p√°ginas</b> atrav√©s do menu suspenso (PC), ou atrav√©s do menu sandu√≠che (Smartphone)
-- Em caso de vizualiza√ß√£o atrav√©s de smartphone, recomendado navegar com a tela na horizontal
+- Deslize o dedo/clique e arraste para <b>dar zoom nos gr·ficos</b>
+- Duplo toque/clique para <b>retornar ‡ vizualizaÁ„o orignal</b>
+- <b>InstruÁıes para interpretar os gr·ficos</b> acompanham os mesmos na parte inferior direita da tela (PC) ou no fim da p·gina (Smartphone)
+- <b>Navegue entre as p·ginas</b> atravÈs do menu suspenso (PC), ou atravÈs do menu sanduÌche (Smartphone)
+- Em caso de vizualizaÁ„o atravÈs de smartphone, recomendado navegar com a tela na horizontal
 
-Condi√ß√µes de trabalho
+CondiÁıes de trabalho
 ================================
 Row {data-width=980}
 -----------------------------------------------------------------------
 
-### √çndice de mal-estar econ√¥mico (maior √© pior)
+### Õndice de mal-estar econÙmico (maior È pior)
 ```{r echo=F}
 temp <- sidram %>%
   select(meses, unemp, inf12) %>%
   na.omit() %>%
-  setNames(c("Data", "Desemprego", "Infla√ß√£o 12m")) %>%
+  setNames(c("Data", "Desemprego", "InflaÁ„o 12m")) %>%
   pivot_longer(cols =-Data, names_to ="Indicador", values_to ="Valor")
 
 plot <- ggplot(temp, aes(x =Data, y =Valor, fill =Indicador)) +
@@ -59,11 +59,11 @@ plot <- ggplot(temp, aes(x =Data, y =Valor, fill =Indicador)) +
 ggplotly(plot)
 ```
 
-### Valor adicionado real (R$ 10 milh√µes a pre√ßos de 1995)
+### Valor adicionado real (R$ 10 milh√µes a preÁos de 1995)
 ```{r echo=F}
 temp <- sidrat %>% 
   select(c("trimestre", "vAdi2_agro", "vAdi2_indu", "vAdi2_serv")) %>%
-  setNames(c("Trimestre", "Agropecu√°ria", "Ind√∫strias", "Servi√ßos")) %>%
+  setNames(c("Trimestre", "Agropecu·ria", "Ind˙strias", "ServiÁos")) %>%
   pivot_longer(cols =-Trimestre, names_to ="Setor", values_to ="Valor") %>%
   mutate(Valor =I(Valor/10))
 
@@ -84,17 +84,16 @@ ggplotly(plot)
 
 Row
 -----------------------------------------------------------------------
-### Medidor de situa√ß√£o econ√¥mica (Varia√ß√£o em 3 meses)
+### Medidor de situaÁ„o econÙmica (VariaÁ„o em 3 meses)
 ```{r echo=F}
 temp <- sidram %>% select(inf12, unemp) %>%
-  na.omit() %>% .[I(nrow(.)-3):nrow(.), ] %>%
-  mutate(
-    unemp =I(c(0, diff(unemp))/unemp*100),
-    inf12 =I(c(0, diff(inf12))/inf12*100)
-    ) %>%
-  sum(na.rm =T) %>% round(1)
+  na.omit() %>% .[I(nrow(.)-3):nrow(.), ] 
+temp <- c(
+  inf12 =diff(temp$inf12)/temp$inf12[-length(temp$inf12)] *100,
+  unemp =diff(temp$unemp)/temp$unemp[-length(temp$unemp)] *100
+) %>% sum()
 
-gauge(temp, min = -100, max = 100, symbol = '%',
+gauge(round(temp,1), min = -100, max = 100, symbol = '%',
   gaugeSectors(
     success = c(-100, -10), warning = c(-9, 39), danger = c(40, 100)
   )
@@ -102,24 +101,24 @@ gauge(temp, min = -100, max = 100, symbol = '%',
 ```
 
 ### Info:
-- Valores maiores no <b>√≠ndice de mal-estar econ√¥mico</b> pode indicar o in√≠cio de um momento de recess√£o
-- <b>O  medidor acima</b> indica as tr√™s √∫ltimas varia√ß√µes mensais acumuladas. Os cen√°rios ideais s√£o indicador e medidor pr√≥ximos de zero, ou medidor abaixo de zero quando o indicador est√° alto.
-- Um aumento no <b>valor adicionado real</b> indica uma economia com trabalho mais especializado ou maior emprego de capital produtivo. O cen√°rio ideal apresenta valores cada vez maiores.
+- Valores maiores no <b>Õndice de mal-estar econÙmico</b> pode indicar o inÌcio de um momento de recess„o
+- <b>O  medidor acima</b> indica as trÍs ˙ltimas variaÁıes mensais acumuladas. Os cen·rios ideais s„o indicador e medidor prÛximos de zero, ou medidor abaixo de zero quando o indicador est· alto.
+- Um aumento no <b>valor adicionado real</b> indica uma economia com trabalho mais especializado ou maior emprego de capital produtivo. O cen·rio ideal apresenta valores cada vez maiores.
 
 Poder de compra
 ================================
 Row {data-width=980}
 -----------------------------------------------------------------------
 
-### Varia√ß√£o INPC mensal total {data-height=210}
+### VariaÁ„o INPC mensal total {data-height=210}
 ```{r echo=F}
 sidram %>% 
   select(c("meses", "prec0")) %>%
-  setNames(c("Data", "Infla√ß√£o do M√™s")) %>%
+  setNames(c("Data", "InflaÁ„o do MÍs")) %>%
   mutate(Data =as.yearmon(Data)) ->
 temp
 
-plot <- ggplot(temp, aes(x =Data, y =`Infla√ß√£o do M√™s`, color =factor(year(Data)))) +
+plot <- ggplot(temp, aes(x =Data, y =`InflaÁ„o do MÍs`, color =factor(year(Data)))) +
   geom_line() +
   geom_point(size =1.5) +
   geom_line(
@@ -134,7 +133,7 @@ plot <- ggplot(temp, aes(x =Data, y =`Infla√ß√£o do M√™s`, color =factor(year(Da
 ggplotly(plot)
 ```
 
-### Varia√ß√£o INPC mensal por gurpo
+### VariaÁ„o INPC mensal por gurpo
 
 ```{r echo=F}
 temp <- sidram %>%
@@ -159,36 +158,39 @@ ggplotly(plot)
 
 Row
 -----------------------------------------------------------------------
-### Indicador de sal√°rio real {data-height=260}
+### Indicador de sal·rio real {data-height=260}
 ```{r echo=F}
-temp <- sidrat %>% select(trimestre, reMe0) %>%
+temp <- sidrat %>% select(trimestre, reMed) %>% 
+  mutate(reMed =c(NA, percentvar(reMed))) %>%
   inner_join(
     data.frame(
       trimestre =unique(yearqtr(sidram$meses)),
-      inf00 =qtrlize(sidram$inf12, "sum"))
-  ) %>% 
-  mutate(value =round(I(reMe0/inf00), 2)) %>%
-  select(trimestre, value) %>%
-  setNames(c("Trimestre", "Sal√°rio Real")) %>% na.omit
+      inf =qtrlize(sidram$inf00, "sum") 
+    ),
+    by ="trimestre"
+  ) %>% mutate(inf =c(NA, percentvar(inf))) %>% .[-c(1, nrow(.)), ] %>%
+  mutate(`Sal·rio Real` =fisher_gir(inf, reMed)) %>% 
+  select(trimestre, `Sal·rio Real`) %>%
+  setNames(c("Trimestre", "Sal·rio Real")) %>% as.data.frame()
+temp <- zoo(temp[,2], temp[,1])
+  # removendo sazonalidade
+temp <- zoo({
+  as.ts(temp) - stl(temp, s.window =4)$time.series[,1]}, date(temp))
 
-plot <- ggplot(temp, aes(x =Trimestre, y =`Sal√°rio Real`)) +
-  geom_line(
-    stat="smooth",method = "lm",
-    alpha = 0.66) +
-  geom_area(alpha =0.66, fill =palette[1]) +
-  geom_point(color =palette[1]) +
-  theme_classic() +
-  labs(x ="", y ="", color ="") +
-  theme(legend.position ="none")
-  
+plot <- autoplot(temp) +
+  geom_point(color =palette[3]) + 
+  geom_abline(intercept =0, slope =0) +
+  geom_line(color =palette[3]) + 
+  geom_line(stat="smooth",method = "lm", color =palette[2]) +
+  labs(x ="", y ="") + theme_classic()
 ggplotly(plot)
 ```
 
 ### Info:
 
-- Valores dos √≠ndices nesta p√°gina acima de zero indicam aumento nos pre√ßos. <b>A linha de zero</b> est√° demarcada para mostrar quais meses apresentam aumento dos pre√ßos, e quais apresentam queda.
-- <b>O sal√°rio real</b> dos trabalhadores √© afetado primeiramente pela varia√ß√£o dos pre√ßos na economia. Pre√ßos mais baixos, a priori, indicam aumento no poder de compra.
-- <b>Porque o INPC?</b> Este √≠ndice monitora a varia√ß√£o de pre√ßos para as fam√≠lias de reda mais baixa, em rela√ß√£o ao IPCA.
-- <b>A varia√ß√£o INPC mensal total</b> mostra as varia√ß√µes mensais do √≠ndice, bem como sua tend√™ncia de varia√ß√£o ao longo dos anos. <b>Linhas de tend√™ncia</b> ascendentes mostram que o aumento dos pre√ßos est√° acelerando ao longo do ano.
-- <b>A varia√ß√£o INPC mensal por gurpo</b> mostra as varia√ß√µes de pre√ßos para cada grupo de bens.
-- <b>O sal√°rio real</b> √© a raz√£o da m√©dia salarial, pelo n√≠vel de pre√ßos. Indica como est√° sendo afetado o poder de compra das pessoas pela rela√ß√£o entre as duas vari√°veis.
+- Valores dos Õndices nesta p·gina acima de zero indicam aumento nos preÁos. <b>A linha de zero</b> est· demarcada para mostrar quais meses apresentam aumento dos preÁos, e quais apresentam queda.
+- <b>O sal·rio real</b> dos trabalhadores È afetado primeiramente pela variaÁ„o dos preÁos na economia. PreÁos mais baixos, a priori, indicam aumento no poder de compra.
+- <b>Porque o INPC?</b> Este Ìndice monitora a variaÁ„o de preÁos para as famÌlias de reda mais baixa, em relaÁ„o ao IPCA.
+- <b>A variaÁ„o INPC mensal total</b> mostra as variaÁıes mensais do Õndice, bem como sua tendÍncia de variaÁ„o ao longo dos anos. <b>Linhas de tendÍncia</b> ascendentes mostram que o aumento dos preÁos est· acelerando ao longo do ano.
+- <b>A variaÁ„o INPC mensal por gurpo</b> mostra as variaÁıes de preÁos para cada grupo de bens.
+- <b>O sal·rio real</b> È a raz„o da mÈdia salarial, pelo nÌvel de preÁos. Indica como est· sendo afetado o poder de compra das pessoas pela relaÁ„o entre as duas vari·veis.
