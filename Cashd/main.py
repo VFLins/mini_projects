@@ -1,6 +1,7 @@
 # import PySimpleGUI as sgui
 import os
 import time
+import platform as pf
 import datetime as dt
 
 def inp_handle(type_to = ["d", "t", "n"]):
@@ -36,17 +37,35 @@ def inp_handle(type_to = ["d", "t", "n"]):
             print("Valor inválido!\n\n")
             prompter()
 
+def manage_dir():
+    global work_dir
+    try:
+        if pf.system() == "Windows":
+            work_dir = os.path.expanduser("~") + "\\Appdata\\Roaming\\Cashd"
+            if not os.path.isdir(work_dir):
+                os.mkdir(work_dir)
+        elif pf.system() == "Darwin":
+            work_dir = os.path.expanduser("~") + "\\Library\\\Preferences\\Cashd"
+            if not os.path.isdir(work_dir):
+                os.mkdir(work_dir)
+        elif pf.system() =="Linux":
+            work_dir = os.path.expanduser("~") + "\\Cashd"
+            if not os.path.isdir(work_dir):
+                os.mkdir(work_dir)
+        os.chdir(work_dir)
+    except Exception as manage_dir_error:
+        print(manage_dir_error)
+        countdown_message("Não foi possível definir pasta de trabalho, fechando em")
+
 def data_storage(array):
     """Save the array of inputs in a text file"""
-    work_dir = os.getcwd() + "\\Cashd"
-    os.chdir(work_dir)
-
+    manage_dir()
     regfile = open("input_reg.csv", "a")
     for item in array:
         regfile.write(item)
     regfile.close()
 
-def countdown_message(message, seconds = 10):
+def countdown_message(message, seconds = 5):
     while seconds > 0:
         print(message, seconds, end = "\r")
         time.sleep(1)
@@ -63,7 +82,7 @@ def prompter():
         print("Dados armazenados!\n")
     except Exception as prompter_error:
         print(prompter_error)
-        countdown_message("Falha no aramazenamento dos dados, fechando em", 5)
+        countdown_message("Falha no aramazenamento dos dados, fechando em")
     finally:
         prompter()
 
