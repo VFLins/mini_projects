@@ -2,7 +2,6 @@
 import os
 import time
 import datetime as dt
-import numpy as np
 
 def date_handle(str_date):
     """Converts the ddmmaaaa string input to actual date format"""
@@ -35,9 +34,9 @@ def data_storage(array):
     work_dir = "C:\\Users\\vflin\OneDrive\\Documentos\\GitHub\\Projects\\Cashd"
     os.chdir(work_dir)
 
-    regfile = open("input_reg.txt", "a")
+    regfile = open("input_reg.csv", "a")
     for item in array:
-        np.savetxt(regfile, item)
+        regfile.write(item)
     regfile.close()
 
 def countdown_message(message, seconds = 10):
@@ -52,12 +51,13 @@ def prompter():
     inp_value = float( input("Insira o valor (0000.00):\n") )
     try:
         data_storage(
-            [str(inp_date), str(inp_time), str(inp_value)]
+            [str(inp_date)+",", str(inp_time)+",", str(inp_value), "\n"]
         )
-        print("Armazenando dados...")
-        time.sleep(3)
+        print("Dados armazenados!\n")
     except Exception as prompter_error:
         print(prompter_error)
         countdown_message("Falha no aramazenamento dos dados, fechando em", 3)
+    finally:
+        prompter()
 
 prompter()
