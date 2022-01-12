@@ -4,49 +4,56 @@ import time
 import platform as pf
 import datetime as dt
 
+shortcut_list = ["HOJE", "AGORA"]
+
 def shortcut_handle(shortcut):
-   if shortcut.upper() == "HOJE":
-      return dt.date.today()
-   elif shortcut.upper() == "AGORA":
-      return dt.datetime.now().strftime("%H:%M:%S")
+   if shortcut.upper() == shortcut_list[0]:
+      output = str( dt.date.today() )
+   elif shortcut.upper() == shortcut_list[1]:
+      output = dt.datetime.now().strftime("%H:%M:%S")
+   return output
 
 def inp_date_handle():
+   str_input = input("Insira a data (ddmmaaaa):\n")
    try:
-      str_input = input("Insira a data (ddmmaaaa):\n")
-      tru_date = str(dt.date(
-         year = int( str_input[4:] ), 
-         month = int( str_input[2:4] ), 
-         day = int( str_input[0:2] )
-      ))
-      return tru_date
-   except:
-      str_input = input("Insira a data (ddmmaaaa):\n")
-      tru_date = shortcut_handle( str_input )
+      if str_input.upper() in shortcut_list:
+         tru_date = shortcut_handle( str_input )
+      else:
+         tru_date = str(dt.date(
+            year = int( str_input[4:] ), 
+            month = int( str_input[2:4] ), 
+            day = int( str_input[0:2] )
+         ))
       if bool(dt.datetime.strptime(tru_date, "%Y-%m-%d")):
          return tru_date
       else:
-         print("Data inválida!\n\n")
-         prompter()
+         raise ValueError
+   except ValueError:
+      print("Valor obtido para data é inválido!")
+      prompter()
+   except Exception as error:
+      countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
 
 def inp_time_handle():
+   str_input = input("Insira o horário (hhmmss):\n")
    try:
-      str_input = input("Insira o horário (hhmmss):\n")
-      tru_time = dt.time(
-         second = int( str_input[4:] ),
-         minute = int( str_input[2:4] ),
-         hour = int( str_input[0:2] )
-      )
-      return tru_time
-   except ValueError:
-      str_input = input("Insira o horário (hhmmss):\n")
-      tru_time = shortcut_handle( str_input )
+      if str_input.upper() in shortcut_list:
+         tru_time = shortcut_handle( str_input )
+      else:
+         tru_time = dt.time(
+            second = int( str_input[4:] ),
+            minute = int( str_input[2:4] ),
+            hour = int( str_input[0:2] )
+         )
       if bool(dt.datetime.strptime(tru_time, "%H:%M:%S")):
          return tru_time
       else:
-         raise Exception("Valor icorreto para este campo!")
-   except:
-      print("Horário inválido!\n\n")
+         raise ValueError()
+   except ValueError:
+      print("Valor obtido para hora é inválido!")
       prompter()
+   except Exception as error:
+      countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
 
 def inp_numeric_handle():
    try:
@@ -84,9 +91,9 @@ def data_storage(array):
       regfile.write(item)
    regfile.close()
 
-def countdown_message(message, seconds = 5):
+def countdown_message(*message, seconds = 5):
    while seconds > 0:
-      print(message, seconds, end = "\r")
+      print(message, seconds, end = "\r", sep ="")
       time.sleep(1)
       seconds -= 1
 
