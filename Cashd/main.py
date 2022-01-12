@@ -4,34 +4,48 @@ import time
 import platform as pf
 import datetime as dt
 
+def shortcut_handle(shortcut):
+   if shortcut.upper() == "HOJE":
+      return dt.date.today()
+   elif shortcut.upper() == "AGORA":
+      return dt.datetime.now().strftime("%H:%M:%S")
+
 def inp_handle(type_to = ["d", "t", "n"]):
    if type_to == "d":
       try:
          str_input = input("Insira a data (ddmmaaaa):\n")
-         if str_input.upper() == "P":
-            tru_date = dt.date.today()
-         else:
-            tru_date = dt.date(
-               year = int( str_input[4:] ), 
-               month = int( str_input[2:4] ), 
-               day = int( str_input[0:2] )
-            )
+         tru_date = dt.date(
+            year = int( str_input[4:] ), 
+            month = int( str_input[2:4] ), 
+            day = int( str_input[0:2] )
+         )
          return tru_date
+      except ValueError:
+         str_input = input("Insira a data (ddmmaaaa):\n")
+         tru_date = shortcut_handle( str_input )
+         if bool(dt.datetime.strptime(tru_time, "%Y-%m-%d")):
+            return tru_date
+         else:
+            raise Exception("Valor icorreto para este campo!")
       except:
          print("Data inválida!\n\n")
          prompter()
    elif type_to == "t":
       try:
          str_input = input("Insira o horário (hhmmss):\n")
-         if str_input.upper() == "P":
-            tru_time = dt.datetime.now().strftime("%H:%M:%S")
-         else:
-            tru_time = dt.time(
-               second = int( str_input[4:] ),
-               minute = int( str_input[2:4] ),
-               hour = int( str_input[0:2] )
-               )
+         tru_time = dt.time(
+            second = int( str_input[4:] ),
+            minute = int( str_input[2:4] ),
+            hour = int( str_input[0:2] )
+         )
          return tru_time
+      except ValueError:
+         str_input = input("Insira o horário (hhmmss):\n")
+         tru_time = shortcut_handle( str_input )
+         if bool(dt.datetime.strptime(tru_time, "%H:%M:%S")):
+            return tru_time
+         else:
+            raise Exception("Valor icorreto para este campo!")
       except:
          print("Horário inválido!\n\n")
          prompter()
