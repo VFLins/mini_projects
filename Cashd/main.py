@@ -5,6 +5,10 @@ import platform as pf
 import datetime as dt
 
 shortcut_list = ["HOJE", "AGORA"]
+shortcut_desc = [
+   "Retorna a data atual em um campo válido",
+   "Retorna o horário atual em um campo válido"
+]
 
 def shortcut_handle(shortcut):
    if shortcut.upper() == shortcut_list[0]:
@@ -114,9 +118,11 @@ def prompter():
 
 manage_dir()
 print(
-    "Bem vindo ao Cashd, seus dados serão salvos em: ",
-    work_dir + "\\input_reg.csv\n",
-    "Você pode sempre inserir 'P' para entrar com a data ou horário atual.",
-    sep = ""
+   "Bem vindo ao Cashd, seus dados serão salvos em: ",
+   work_dir + "\\input_reg.csv\n\n",
+   "ATALHOS:",
+   sep = ""
 )
+[print(shortcut_list[ind] + ": ", shortcut_desc[ind]) for ind in range(len(shortcut_list))]
+print("")
 prompter()
