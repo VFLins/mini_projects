@@ -1,6 +1,7 @@
 # import PySimpleGUI as sgui
 import os
 import time
+import db_connector
 import platform as pf
 import datetime as dt
 
@@ -100,6 +101,7 @@ def countdown_message(*message, seconds = 5):
       print(message, seconds, end = "\r", sep ="")
       time.sleep(1)
       seconds -= 1
+   quit()
 
 def prompter():
    inp_date = inp_date_handle()
