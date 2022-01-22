@@ -1,6 +1,6 @@
 import os
 import time
-import fdb
+import sqlite3
 import platform as pf
 
 def manage_dir():
@@ -24,16 +24,20 @@ def manage_dir():
       time.sleep(10)
 
 manage_dir()
-dbpath = work_dir + "\\mydb.fdb"
+dbpath = work_dir + "\\database"
 
-def db_connection():
+def db_connection(db_name):
+   conn = None
    try:
-      con = fdb.create_database(user = 'admin', password = 'serious_password',
-      dsn = dbpath, page_size = 8000
-      )
-      print('Base de dados criada em', '\Cashd\database\mydb.fdb', '\n')
+      if os.path.isdir(dbpath):
+         conn = sqlite3.Connection(dbpath + "\\" + db_name)
+         print("Conectado com a base de dados!")
+      else:
+         os.mkdir(dbpath)
+         conn = sqlite3.Connection(dbpath + "\\" + db_name)
+         print("Conectado com a base de dados!")
    except Exception as err:
-      print(err)
+      main.countdown_message(err, "\nFechando em ...")
 
 db_connection()
 
