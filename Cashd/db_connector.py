@@ -4,6 +4,9 @@ import sqlite3
 import platform as pf
 
 def manage_dir():
+   """
+   Defines a working directory based on current OS for the the program to manage it's files
+   """
    global work_dir
    try:
       if pf.system() == "Windows":
@@ -21,23 +24,32 @@ def manage_dir():
       os.chdir(work_dir)
    except Exception as manage_dir_error:
       print(manage_dir_error)
-      time.sleep(10)
-
-manage_dir()
-dbpath = work_dir + "\\database"
+      countdown_message("Não foi possível definir pasta de trabalho, fechando em")
 
 def db_connection(db_name):
-   conn = None
+   """
+    :param db_name: String with database's file name
+    :return: Connection object
+   """
    try:
-      if os.path.isdir(dbpath):
-         conn = sqlite3.Connection(dbpath + "\\" + db_name)
-         print("Conectado com a base de dados!")
-      else:
-         os.mkdir(dbpath)
          conn = sqlite3.Connection(dbpath + "\\" + db_name)
          print("Conectado com a base de dados!")
    except Exception as err:
       main.countdown_message(err, "\nFechando em ...")
+   finally:
+      if conn:
+         conn.close()
 
-db_connection()
+def db_table_builder(table_name, schema):
+   """
+   :table_name: String with name of the table
+   :schema: 
+   """
+
+manage_dir()
+if os.path.isdir(dbpath):
+   dbpath = work_dir + "\\database"
+else:
+   os.mkdir(dbpath)
+   dbpath = work_dir + "\\database"
 
