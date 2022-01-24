@@ -1,5 +1,5 @@
 import os
-import time
+import msg_handler as mh
 import sqlite3
 import platform as pf
 
@@ -24,32 +24,30 @@ def manage_dir():
       os.chdir(work_dir)
    except Exception as manage_dir_error:
       print(manage_dir_error)
-      countdown_message("Não foi possível definir pasta de trabalho, fechando em")
+      mh.countdown_message("Não foi possível definir pasta de trabalho, fechando em")
 
-def db_connection(db_name):
-   """
-    :param db_name: String with database's file name
-    :return: Connection object
-   """
-   try:
-         conn = sqlite3.Connection(dbpath + "\\" + db_name)
-         print("Conectado com a base de dados!")
-   except Exception as err:
-      main.countdown_message(err, "\nFechando em ...")
-   finally:
-      if conn:
-         conn.close()
+#def db_connection(db_name):
+#   """
+#    :param db_name: String with database's file name
+#    :return: Connection object
+#   """
+#   try:
+#         conn = sqlite3.Connection(dbpath + "\\" + db_name)
+#         print("Conectado com a base de dados!")
+#   except Exception as err:
+#      mh.countdown_message(err, "\nFechando em ...")
+#   finally:
+#      if conn:
+#         conn.close()
 
-def db_table_builder(table_name, schema):
-   """
-   :table_name: String with name of the table
-   :schema: 
-   """
+#def db_table_builder(table_name, schema):
+#   """
+#   :table_name: String with name of the table
+#   :schema: 
+#   """
 
-manage_dir()
-if os.path.isdir(dbpath):
-   dbpath = work_dir + "\\database"
-else:
-   os.mkdir(dbpath)
-   dbpath = work_dir + "\\database"
-
+#if os.path.isdir(dbpath):
+#   dbpath = work_dir + "\\database"
+#else:
+#   os.mkdir(dbpath)
+#   dbpath = work_dir + "\\database"

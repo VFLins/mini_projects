@@ -1,8 +1,6 @@
 # import PySimpleGUI as sgui
-import os
-import time
+import msg_handler as mh
 import db_connector
-import platform as pf
 import datetime as dt
 
 shortcut_list = ["HOJE", "AGORA"]
@@ -37,7 +35,7 @@ def inp_date_handle():
       print("Valor obtido para data é inválido!")
       prompter()
    except Exception as error:
-      countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
+      mh.countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
 
 def inp_time_handle():
    str_input = input("Insira o horário (hhmmss):\n")
@@ -58,7 +56,7 @@ def inp_time_handle():
       print("Valor obtido para hora é inválido!")
       prompter()
    except Exception as error:
-      countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
+      mh.countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
 
 def inp_numeric_handle():
    try:
@@ -70,18 +68,11 @@ def inp_numeric_handle():
 
 def data_storage(array):
    """Save the array of inputs in a text file"""
-   db_connector.manage_dir()
+   db_connector.db_connector.manage_dir()
    regfile = open("input_reg.csv", "a")
    for item in array:
       regfile.write(item)
    regfile.close()
-
-def countdown_message(*message, seconds = 5):
-   while seconds > 0:
-      print(message, seconds, end = "\r", sep ="")
-      time.sleep(1)
-      seconds -= 1
-   quit()
 
 def prompter():
    inp_date = inp_date_handle()
@@ -94,14 +85,14 @@ def prompter():
       print("Dados armazenados!\n")
    except Exception as prompter_error:
       print(prompter_error)
-      countdown_message("Falha no aramazenamento dos dados, fechando em")
+      mh.countdown_message("Falha no aramazenamento dos dados, fechando em")
    finally:
       prompter()
 
 db_connector.manage_dir()
 print(
    "Bem vindo ao Cashd, seus dados serão salvos em: ",
-   work_dir + "\\input_reg.csv\n\n",
+   db_connector.work_dir + "\\input_reg.csv\n\n",
    "ATALHOS:",
    sep = ""
 )
