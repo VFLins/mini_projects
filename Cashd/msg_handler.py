@@ -1,9 +1,12 @@
 import time
+import datetime as dt
+import db_manager as dm
 
-SHORTCUTS = {
-   "HOJE" : "Retorna a data atual em um campo válido",
-   "AGORA" : "Retorna o horário atual em um campo válido"
-}
+SHORTCUTS = (
+   ["HOJE", "AGORA"],
+   ["Retorna a data atual em um campo válido",
+   "Retorna o horário atual em um campo válido"]
+)
 
 def countdown_message(*message, seconds = 5):
    while seconds > 0:
@@ -15,7 +18,7 @@ def countdown_message(*message, seconds = 5):
 def inp_date_handle():
    str_input = input("Insira a data (ddmmaaaa):\n")
    try:
-      if str_input.upper() in SHORTCUTS.keys():
+      if str_input.upper() in SHORTCUTS[0]:
          tru_date = shortcut_handle( str_input )
       else:
          tru_date = str(dt.date(
@@ -31,12 +34,12 @@ def inp_date_handle():
       print("Valor obtido para data é inválido!")
       prompter()
    except Exception as error:
-      mh.countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
+      countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
 
 def inp_time_handle():
    str_input = input("Insira o horário (hhmmss):\n")
    try:
-      if str_input.upper() in SHORTCUTS.keys():
+      if str_input.upper() in SHORTCUTS[0]:
          tru_time = shortcut_handle( str_input )
       else:
          tru_time = dt.time(
@@ -52,9 +55,9 @@ def inp_time_handle():
       print("Valor obtido para hora é inválido!")
       prompter()
    except Exception as error:
-      mh.countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
+      countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
 
-def inp_numeric_handle():
+def inp_float_handle():
    try:
       str_input = input("Insira o valor (0000.00):\n")
       return float( str_input )
@@ -63,23 +66,27 @@ def inp_numeric_handle():
       prompter()
 
 def shortcut_handle(shortcut):
-   if shortcut.upper() == SHORTCUTS.keys()[0]:
+   if shortcut.upper() == SHORTCUTS[0][0]:
       output = str( dt.date.today() )
-   elif shortcut.upper() == SHORTCUTS.keys()[1]:
+   elif shortcut.upper() == SHORTCUTS[0][1]:
       output = dt.datetime.now().strftime("%H:%M:%S")
    return output
 
 def prompter():
    inp_date = inp_date_handle()
    inp_time = inp_time_handle()
-   inp_value = inp_numeric_handle()
+   inp_value = inp_float_handle()
    try:
-      data_storage(
-         [str(inp_date)+",", str(inp_time)+",", str(inp_value), "\n"]
+      entry = dm.tb_entry(
+         Data = inp_date,
+         Hora = inp_time,
+         Valor = inp_value
       )
+      dm.DB_SESSION.add(entry)
+      dm.commit()
       print("Dados armazenados!\n")
    except Exception as prompter_error:
       print(prompter_error)
-      mh.countdown_message("Falha no aramazenamento dos dados, fechando em")
+      countdown_message("Falha no aramazenamento dos dados, fechando em")
    finally:
       prompter()

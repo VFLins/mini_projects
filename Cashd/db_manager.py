@@ -1,8 +1,11 @@
 import os
+from re import I
 import msg_handler as mh
-import sqlite3
-import sqlalchemy
+import sqlalchemy as alch
+from sqlalchemy.orm import sessionmaker
 import platform as pf
+
+DB_DECBASE = alch.declarative_base()
 
 def manage_dir():
    """
@@ -21,44 +24,32 @@ def manage_dir():
          if not os.path.isdir(WORK_DIR):
             os.mkdir(WORK_DIR)
       elif SYS_NAME =="Linux":
-         WORK_DIR = os.path.expanduser("~") + "\\Cashd"
+         WORK_DIR = os.path.expanduser("~") + "\\.local\\Share\\Cashd"
          if not os.path.isdir(WORK_DIR):
             os.mkdir(WORK_DIR)
       os.chdir(WORK_DIR)
    except Exception as manage_dir_error:
       print(manage_dir_error)
       mh.countdown_message("Não foi possível definir pasta de trabalho, fechando em")
-
 manage_dir()
+
 if SYS_NAME == "Windows":
-   DB_ENGINE = sqlalchemy.create_engine("sqlite:///" + WORK_DIR + "DB.sqlite")
+   DB_ENGINE = alch.create_engine("sqlite:///" + WORK_DIR + "DB.sqlite")
 else:
-   DB_ENGINE = sqlalchemy.create_engine("sqlite:////" + WORK_DIR + "DB.sqlite")
-   
-#def db_connection(db_name):
-#   """
-#    :param db_name: String with database's file name
-#    :return: Connection object
-#   """
-#   global dbpath
-#   dbpath = workdir + "\\database"
-#   try:
-#         conn = sqlite3.Connection(dbpath + "\\" + db_name)
-#         print("Conectado com a base de dados!")
-#   except Exception as err:
-#      mh.countdown_message(err, "\nFechando em ...")
-#   finally:
-#      if conn:
-#         conn.close()
+   DB_ENGINE = alch.create_engine("sqlite:////" + WORK_DIR + "DB.sqlite")
 
-#def db_table_builder(table_name, schema):
-#   """
-#   :table_name: String with name of the table
-#   :schema: 
-#   """
+#DB_METADATA = alch.MetaData(bind = DB_ENGINE)
 
-#if os.path.isdir(dbpath):
-#   dbpath = WORK_DIR + "\\database"
-#else:
-#   os.mkdir(dbpath)
-#   dbpath = WORK_DIR + "\\database"
+if not os.path.isfile(WORK_DIR + "DB.sqlite"): 
+   DB_DECBASE.metadata.create_all(DB_ENGINE)
+
+DB_SESSION = sessionmaker(bind = DB_ENGINE)
+
+class tb_entry(DB_DECBASE):
+   __tablename__ = "entry"
+   Id = alch.Column(alch.Integer, primary_key = True)
+   Data = alch.Column(alch.Date)
+   Hora = alch.Column(alch.Time)
+   Valor = alch.Column(alch.Float)
+
+
