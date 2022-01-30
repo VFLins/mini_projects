@@ -1,6 +1,6 @@
 import time
 import datetime as dt
-import db_manager as dm
+from db_manager import tb_entry, DB_MSESSION
 
 SHORTCUTS = (
    ["HOJE", "AGORA"],
@@ -25,7 +25,8 @@ def inp_date_handle():
             year = int( str_input[4:] ), 
             month = int( str_input[2:4] ), 
             day = int( str_input[0:2] )
-         ))
+         )
+      )
       if bool(dt.datetime.strptime(tru_date, "%Y-%m-%d")):
          return tru_date
       else:
@@ -77,13 +78,13 @@ def prompter():
    inp_time = inp_time_handle()
    inp_value = inp_float_handle()
    try:
-      entry = dm.tb_entry(
+      entry = tb_entry(
          Data = inp_date,
          Hora = inp_time,
          Valor = inp_value
       )
-      dm.DB_SESSION.add(entry)
-      dm.commit()
+      DB_MSESSION.add(entry)
+      DB_MSESSION.commit()
       print("Dados armazenados!\n")
    except Exception as prompter_error:
       print(prompter_error)
