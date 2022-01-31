@@ -12,8 +12,10 @@ Simplified solution to store cash flow data through an interactive interface, of
 
 ## Upcoming
 
-1. Integration with SQL database;
+1. ~~Integration with SQL database~~;
 2. Interaction with stored data;
+   - Visualize stored data;
+   - Delete regs by id;
 3. Graphical interface;
 
 With all of these features added, this project goes to to it's own folder.
