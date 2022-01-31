@@ -1,11 +1,12 @@
+import err_handler as eh
 import sqlalchemy as alch
 from sqlalchemy.orm import sessionmaker
-from msg_handler import countdown_message
+from sqlalchemy.ext.declarative import declarative_base
 from platform import system
 from os import mkdir, chdir
 from os.path import isdir, isfile, expanduser
 
-DB_DECBASE = alch.declarative_base()
+DB_DECBASE = declarative_base()
 
 SYS_NAME = system()
 try:
@@ -21,7 +22,7 @@ try:
    chdir(WORK_DIR)
 except Exception as manage_dir_error:
    print(manage_dir_error)
-   countdown_message("Não foi possível definir pasta de trabalho, fechando em")
+   eh.countdown_message("Não foi possível definir pasta de trabalho, fechando em")
 
 if SYS_NAME == "Windows":
    DB_ENGINE = alch.create_engine("sqlite:///DB.sqlite")
@@ -29,8 +30,6 @@ else:
    DB_ENGINE = alch.create_engine("sqlite:////DB.sqlite")
 
 #DB_METADATA = alch.MetaData(bind = DB_ENGINE)
-
-if not isfile(WORK_DIR + "DB.sqlite"): DB_DECBASE.metadata.create_all(DB_ENGINE)
 
 DB_SESSION = sessionmaker(bind = DB_ENGINE)
 DB_MSESSION = DB_SESSION()
@@ -42,5 +41,9 @@ class tb_entry(DB_DECBASE):
    Hora = alch.Column(alch.Time)
    Valor = alch.Column(alch.Float)
 
-print("SYS_NAME: ", SYS_NAME, ", WORK_DIR: ", WORK_DIR, ", ", ", DB_ENGINE: ", DB_ENGINE, ", DB_SESSION: ", DB_SESSION, "DB_MSESSION: ", DB_MSESSION)
-input("is it ok?")
+   def __repr__(self):
+      return "<entry(Data={}, Hora={}, Valor={})>".format(
+         self.Data, self.Hora, self.Valor
+      )
+
+DB_DECBASE.metadata.create_all(DB_ENGINE)
