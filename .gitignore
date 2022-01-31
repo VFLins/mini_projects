@@ -3,3 +3,4 @@ sandbox.*
 *.Rhistory
 *.Rproj
 .Rproj.user
+*.pyc
