@@ -21,8 +21,10 @@ try:
       if not isdir(WORK_DIR): mkdir(WORK_DIR)
    chdir(WORK_DIR)
 except Exception as manage_dir_error:
-   print(manage_dir_error)
-   eh.countdown_message("Não foi possível definir pasta de trabalho, fechando em")
+   eh.countdown_message(
+      message="Não foi possível definir pasta de trabalho, fechando em... s",
+      error=manage_dir_error
+   )
 
 if SYS_NAME == "Windows":
    DB_ENGINE = alch.create_engine("sqlite:///DB.sqlite")

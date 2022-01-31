@@ -47,8 +47,11 @@ def inp_time_handle():
    except ValueError:
       print("Valor obtido para hora é inválido!")
       prompter()
-   except Exception as error:
-      eh.countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
+   except Exception as inp_error:
+      eh.countdown_message(
+         message="Erro imprevisto! fechando em... ",
+         error="inp_error"
+      )
 
 def inp_float_handle():
    try:
@@ -79,7 +82,8 @@ def prompter():
       DB_MSESSION.commit()
       print("Dados armazenados!\n")
    except Exception as prompter_error:
-      print(prompter_error)
-      eh.countdown_message("Falha no aramazenamento dos dados, fechando em")
+      eh.countdown_message(
+         message="Falha no aramazenamento dos dados, fechando em... ",
+         error=prompter_error)
    finally:
       prompter()
