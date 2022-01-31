@@ -18,4 +18,4 @@ Simplified solution to store cash flow data through an interactive interface, of
    - Delete regs by id;
 3. Graphical interface;
 
-With all of these features added, this project goes to to it's own folder.
+With all of these features added, this project goes to to it's own repo.
