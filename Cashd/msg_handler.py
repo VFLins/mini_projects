@@ -1,11 +1,12 @@
 import datetime as dt
 import err_handler as eh
-from db_manager import tb_entry, DB_MSESSION
+from db_manager import tb_entry, DB_MSESSION, consult_database
 
 SHORTCUTS = (
-   ["HOJE", "AGORA"],
+   ["HOJE", "AGORA", "CONS"],
    ["Retorna a data atual em um campo válido",
-   "Retorna o horário atual em um campo válido"]
+   "Retorna o horário atual em um campo válido",
+   "Cancela a entrada atual de dados e entra no modo de consluta"]
 )
 
 def inp_date_handle():
@@ -14,7 +15,7 @@ def inp_date_handle():
    """
    str_input = input("Insira a data (ddmmaaaa): ")
    try:
-      if str_input.upper() in SHORTCUTS[0]:
+      if str_input.upper() in SHORTCUTS[0][0::2]:
          tru_date = shortcut_handle( str_input )
       else:
          tru_date = dt.date(
@@ -35,7 +36,7 @@ def inp_time_handle():
    """
    str_input = input("Insira o horário (hhmmss): ")
    try:
-      if str_input.upper() in SHORTCUTS[0]:
+      if str_input.upper() in SHORTCUTS[0][1:]:
          tru_time = shortcut_handle( str_input )
       else:
          tru_time = dt.time(
@@ -51,9 +52,12 @@ def inp_time_handle():
       eh.countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
 
 def inp_float_handle():
+   str_input = input("Insira o valor (0000.00): ")
    try:
-      str_input = input("Insira o valor (0000.00): ")
-      return float( str_input )
+      if str_input.upper() in SHORTCUTS[0][2]:
+         shortcut_handle( str_input )
+      else:
+         return float( str_input )
    except:
       print("Valor inválido!\n\n")
       prompter()
@@ -61,20 +65,20 @@ def inp_float_handle():
 def shortcut_handle(shortcut):
    if shortcut.upper() == SHORTCUTS[0][0]:
       output = dt.date.today()
+      return output
    elif shortcut.upper() == SHORTCUTS[0][1]:
       output = dt.datetime.now().time()
-   return output
+      return output
+   elif shortcut.upper() == SHORTCUTS[0][2]:
+      consult_database()
+      prompter()
 
 def prompter():
    inp_date = inp_date_handle()
    inp_time = inp_time_handle()
    inp_value = inp_float_handle()
    try:
-      entry = tb_entry(
-         Data = inp_date,
-         Hora = inp_time,
-         Valor = inp_value
-      )
+      entry = tb_entry(Data = inp_date, Hora = inp_time, Valor = inp_value)
       DB_MSESSION.add(entry)
       DB_MSESSION.commit()
       print("Dados armazenados!\n")
