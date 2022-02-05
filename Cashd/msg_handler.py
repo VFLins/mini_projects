@@ -1,6 +1,6 @@
 import datetime as dt
-import err_handler as eh
-from db_manager import tb_entry, DB_MSESSION, consult_database
+from logging import exception
+from time import sleep
 
 SHORTCUTS = (
    ["HOJE", "AGORA", "CONS"],
@@ -9,58 +9,87 @@ SHORTCUTS = (
    "Cancela a entrada atual de dados e entra no modo de consluta"]
 )
 
-def inp_date_handle():
+def countdown_message(*message, seconds = 10):
+   while seconds > 0:
+      print(message, seconds, end = "\r", sep ="")
+      sleep(1)
+      seconds -= 1
+   quit()
+
+def inp_date_handle() -> dt.date:
    """
-   Returns input from the user as datetime.date() object.
+   Returns input from the user as a datetime.date object.
    """
-   str_input = input("Insira a data (ddmmaaaa): ")
+   def is_date_type(x) -> bool:
+      return isinstance( x, type(dt.date.today()) )
+       
    try:
-      if str_input.upper() in SHORTCUTS[0][0::2]:
-         tru_date = shortcut_handle( str_input )
-      else:
-         tru_date = dt.date(
-            year = int( str_input[4:] ), 
-            month = int( str_input[2:4] ), 
-            day = int( str_input[0:2] )
-         )
+      str_input = input("Insira a data (ddmmaaaa): ")
+      while not is_date_type(str_input):
+         if str_input.upper() in SHORTCUTS[0][0::2]:
+            tru_date = shortcut_handle( str_input )
+         else:
+            try:
+               tru_date = dt.date(
+                  year = int( str_input[4:] ), 
+                  month = int( str_input[2:4] ), 
+                  day = int( str_input[0:2] )
+               )
+            except:
+               print("Valor obtido para data é inválido!")
+               str_input = input("Insira a data (ddmmaaaa): ")
       return tru_date
-   except ValueError:
-      print("Valor obtido para data é inválido!")
-      prompter()
    except Exception as error:
-      eh.countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
+      countdown_message("Erro não previsto ao lidar com a data:\n", error, "\nFechando em ")
 
-def inp_time_handle():
+def inp_time_handle() -> dt.time:
    """
-   Returns input from the user as datetime.time( ) object.
+   Returns input from the user as datetime.time object.
    """
-   str_input = input("Insira o horário (hhmmss): ")
+   def is_time_type(x) -> bool:
+      return isinstance( x, type(dt.datetime.now().time()) )
+
    try:
-      if str_input.upper() in SHORTCUTS[0][1:]:
-         tru_time = shortcut_handle( str_input )
-      else:
-         tru_time = dt.time(
-            second = int( str_input[4:] ),
-            minute = int( str_input[2:4] ),
-            hour = int( str_input[0:2] )
-         )
+      str_input = input("Insira o horário (hhmmss): ")
+      while not is_time_type(str_input):
+         if str_input.upper() in SHORTCUTS[0][1:]:
+            tru_time = shortcut_handle( str_input )
+         else:
+            try:
+               tru_time = dt.time(
+                  second = int( str_input[4:] ),
+                  minute = int( str_input[2:4] ),
+                  hour = int( str_input[0:2] )
+               )
+            except:
+               print("Valor obtido para hora é inválido!")
+               str_input = input("Insira o horário (hhmmss): ")
       return tru_time
-   except ValueError:
-      print("Valor obtido para hora é inválido!")
-      prompter()
    except Exception as error:
-      eh.countdown_message("Erro não previsto:\n", error + "\n", "Fechando em ")
+      countdown_message("Erro não previsto ao definir horário:\n", error, "\nFechando em ")
 
-def inp_float_handle():
-   str_input = input("Insira o valor (0000.00): ")
+def inp_float_handle() -> float:
+   """
+   Returns input from the user as float object.
+   """
+   def is_numeric_type(x) -> bool:
+      if isinstance(x, bool): return False
+      else: return isinstance(x, (int, float))
+
    try:
-      if str_input.upper() in SHORTCUTS[0][2]:
-         shortcut_handle( str_input )
-      else:
-         return float( str_input )
-   except:
-      print("Valor inválido!\n\n")
-      prompter()
+      str_input = input("Insira o valor (0000.00): ")
+      while not is_numeric_type(str_input):
+         if str_input.upper() in SHORTCUTS[0][2]:
+            shortcut_handle( str_input )
+         else: 
+            try: 
+               tru_numeric = float( str_input )
+            except:
+               print("Valor inválido! Separe apenas decimais com ponto.")
+               str_input = input("Insira o valor (0000.00): ")
+      return tru_numeric
+   except Exception as error:
+      countdown_message("Erro não previsto ao definir valor:\n", error, "\nFechando em ")
 
 def shortcut_handle(shortcut):
    if shortcut.upper() == SHORTCUTS[0][0]:
@@ -71,19 +100,4 @@ def shortcut_handle(shortcut):
       return output
    elif shortcut.upper() == SHORTCUTS[0][2]:
       consult_database()
-      prompter()
-
-def prompter():
-   inp_date = inp_date_handle()
-   inp_time = inp_time_handle()
-   inp_value = inp_float_handle()
-   try:
-      entry = tb_entry(Data = inp_date, Hora = inp_time, Valor = inp_value)
-      DB_MSESSION.add(entry)
-      DB_MSESSION.commit()
-      print("Dados armazenados!\n")
-   except Exception as prompter_error:
-      print(prompter_error)
-      eh.countdown_message("Falha no aramazenamento dos dados, fechando em")
-   finally:
       prompter()
