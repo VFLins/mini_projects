@@ -133,6 +133,7 @@ def prompter():
       prompter()
 
 def consult_database():
+   print("\nMODO CONSULTA:")
    has_run = False
 
    try:
@@ -140,9 +141,9 @@ def consult_database():
       while not has_run:
 
          if sel_mode.upper() == "T":
-            this_querry = dm.DB_MSESSION.querry(dm.tb_entry)
-            for obs in this_querry.order_by(dm.tb_entry.Id):
-               print("{:<5} {:>11} {:<10} {:<21}").format(obs.Id, obs.Data, obs.Hora, obs.Valor)
+            this_querry = dm.DB_MSESSION.querry(tb_entry)
+            for obs in this_querry:
+               print(obs)
             has_run = True
          
          elif sel_mode.upper() == "D":
@@ -156,6 +157,7 @@ def consult_database():
 
          elif sel_mode.upper() == "C":
             has_run = True
+            print("\nMODO INSERÇÃO:")
 
          else:
             print("Método inválido! Selecione algum dos métodos disponíveis.")
