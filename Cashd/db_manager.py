@@ -1,14 +1,14 @@
-import err_handler as eh
 import sqlalchemy as alch
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from time import sleep
 from platform import system
 from os import mkdir, chdir
 from os.path import isdir, expanduser
 
 DB_DECBASE = declarative_base()
-
 SYS_NAME = system()
+
 try:
    if SYS_NAME == "Windows":
       WORK_DIR = expanduser("~") + "\\Appdata\\Roaming\\Cashd"
@@ -21,8 +21,10 @@ try:
       if not isdir(WORK_DIR): mkdir(WORK_DIR)
    chdir(WORK_DIR)
 except Exception as manage_dir_error:
-   print(manage_dir_error)
-   eh.countdown_message("Não foi possível definir pasta de trabalho, fechando em")
+   sleep_time = 30
+   print("ERRO FATAL:\n", manage_dir_error, "\nFechando em 30 segundos...", sep="")
+   sleep(30)
+   quit()
 
 if SYS_NAME == "Windows":
    DB_ENGINE = alch.create_engine("sqlite:///DB.sqlite")
