@@ -21,8 +21,8 @@ def prompt_entry():
 
 def prompt_consult():
    print("\nMODO CONSULTA:")
-   has_run = False
 
+   has_run = False
    try:
       sel_mode = input("Ver tudo/Selecionar por data/Cancelar [t/d/c]: ")
       while not has_run:
@@ -30,7 +30,7 @@ def prompt_consult():
          if sel_mode.upper() == "T":
             this_querry = dm.DB_MSESSION.querry(dm.tb_entry)
             for obs in this_querry:
-               print(obs)
+               return obs
             has_run = True
          
          elif sel_mode.upper() == "D":
@@ -55,4 +55,5 @@ def prompt_consult():
       prompt_entry()
 
 def prompt_deletion():
+   print("\nMODO REMOÇÃO:")
    return

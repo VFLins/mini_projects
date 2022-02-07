@@ -1,10 +1,14 @@
 import datetime as dt
-from logging import raiseExceptions
+from collections import OrderedDict
 import prompter as ppt
 from time import sleep
 
 SHORTCUTS = (
-   {"date" : "HOJE", "time" : "AGORA", "call" : ["CONS", "REM"]},
+   OrderedDict( {
+      "HOJE" : "date", 
+      "AGORA" : "time", 
+      "CONS" : "call", 
+      "REM" : "call"} ),
    ["Retorna a data atual em um campo válido",
    "Retorna o horário atual em um campo válido",
    "Cancela a entrada atual de dados e entra no modo de consluta",
@@ -110,10 +114,19 @@ def inp_float_handle() -> float:
       countdown_message("ERRO AO ATRIBUIR VALOR:", error = ERROR)
 
 def shortcut_handle(shortcut, type = "call"):
+
+   def keys_by_value(dict, value):
+    KEYS_LIST = list()
+    ITEMS_LIST = dict.items()
+    for item  in ITEMS_LIST:
+        if item[1] == value:
+            KEYS_LIST.append(item[0])
+    return  KEYS_LIST
+
    # Shortcut inserted must be of the type informed and call
-   SEL_SHORTCUTS = SHORTCUTS[0]["call"]
+   SEL_SHORTCUTS = keys_by_value(SHORTCUTS[0], "call")
    if  type != "call":
-      SEL_SHORTCUTS.append(SHORTCUTS[0][type])
+      SEL_SHORTCUTS.append( keys_by_value(SHORTCUTS[0], type) )
 
    if shortcut.upper() == "HOJE":
       output = dt.date.today()
