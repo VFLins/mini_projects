@@ -8,7 +8,8 @@ SHORTCUTS = (
       "HOJE" : "date", 
       "AGORA" : "time", 
       "CONS" : "call", 
-      "REM" : "call"} ),
+      "REM" : "call"}
+   ),
    ["Retorna a data atual em um campo válido",
    "Retorna o horário atual em um campo válido",
    "Cancela a entrada atual de dados e entra no modo de consluta",
@@ -27,67 +28,82 @@ def countdown_message(message, error, seconds = 15):
 def inp_date_handle() -> dt.date:
    """
    Returns input from the user as a datetime.date object.
+   Also deals with attributable shortcuts.
    """
+   def str_to_date(str):
+      date = dt.date(
+         year = int( str[4:] ), 
+         month = int( str[2:4] ), 
+         day = int( str[0:2] ))
+      return date
+
    def is_date_type(x) -> bool:
       try: return isinstance( x, type(dt.date.today()) )
       except: return False
-       
+
+   str_input = input("Insira a data [ddmmaaaa]: ")
    try:
-      str_input = input("Insira a data (ddmmaaaa): ")
-      inp_is_date = is_date_type(str_input)
-      while not inp_is_date:
-         if str_input.upper() in SHORTCUTS[0][0::3]:
-            tru_date = shortcut_handle( str_input )
-            inp_is_date = is_date_type(tru_date)
-         else:
-            try:
-               tru_date = dt.date(
-                  year = int( str_input[4:] ), 
-                  month = int( str_input[2:4] ), 
-                  day = int( str_input[0:2] )
-               )
-               inp_is_date = is_date_type(tru_date)
-            except:
-               print("Valor obtido para data é inválido!")
-               str_input = input("Insira a data (ddmmaaaa): ")
-      return tru_date
+      if str_input.upper() in SHORTCUTS[0].keys():
+         try: tru_date = shortcut_handle(str_input, type = "date")
+         except:
+            print("Valor inválido para data!")
+            inp_date_handle()
+      else:
+         try: tru_date = str_to_date(str_input)
+         except:
+            print("Valor inválido para data!")
+            inp_date_handle()
+
+      if is_date_type(tru_date): 
+         return tru_date
+      else: 
+         inp_date_handle()
    except Exception as ERROR:
-      countdown_message("ERRO AO ATRIBUIR DATA:", error = ERROR)
+      countdown_message("ERRO IMPREVISTO AO ATRIBUIR DATA:", error = ERROR)
 
 def inp_time_handle() -> dt.time:
    """
    Returns input from the user as datetime.time object.
    """
+   def str_to_time(str):
+      time = dt.time(
+         second = int( str_input[4:] ),
+         minute = int( str_input[2:4] ),
+         hour = int( str_input[0:2] ))
+      return time
+
    def is_time_type(x) -> bool:
       try: return isinstance( x, type(dt.datetime.now().time()) )
       except: return False
 
+   str_input = input("Insira o horário (hhmmss): ")
    try:
-      str_input = input("Insira o horário (hhmmss): ")
-      inp_is_time = is_time_type(str_input)
-      while not inp_is_time:
-         if str_input.upper() in SHORTCUTS[0][1:]:
-            tru_time = shortcut_handle( str_input )
-            inp_is_time = is_time_type(tru_time)
-         else:
-            try:
-               tru_time = dt.time(
-                  second = int( str_input[4:] ),
-                  minute = int( str_input[2:4] ),
-                  hour = int( str_input[0:2] )
-               )
-               inp_is_time = is_time_type(tru_time)
-            except:
-               print("Valor obtido para hora é inválido!")
-               str_input = input("Insira o horário (hhmmss): ")
-      return tru_time
+      if str_input.upper() in SHORTCUTS[0].keys():
+        try: tru_time = shortcut_handle(str_input, type = "time")
+        except:
+            print("Valor inválido para horário!")
+            inp_time_handle()
+      else:
+        try: tru_time = str_to_time(str_input)
+        except:
+            print("Valor inválido para horário!")
+            inp_time_handle()
+      
+      if is_time_type(tru_time):
+         return tru_time
+      else:
+         inp_time_handle()
    except Exception as ERROR:
-      countdown_message("ERRO AO ATRIBUIR HORÁRIO:", error = ERROR)
+      countdown_message("ERRO IMPREVISTO AO ATRIBUIR HORÁRIO:", error = ERROR)
 
 def inp_float_handle() -> float:
    """
    Returns input from the user as float object.
    """
+   def str_to_numeric(str):
+      number = float( str )
+      return number
+
    def is_numeric_type(x) -> bool:
       try:
          if isinstance(x, bool): return False
@@ -95,21 +111,23 @@ def inp_float_handle() -> float:
       except:
          return False
 
+   str_input = input("Insira o valor (0000.00): ")
    try:
-      str_input = input("Insira o valor (0000.00): ")
-      inp_is_numeric = is_numeric_type(str_input)
-      while not inp_is_numeric:
-         if str_input.upper() in SHORTCUTS[0][2]:
-            tru_numeric = shortcut_handle( str_input )
-            inp_is_numeric = is_numeric_type(tru_numeric)
-         else: 
-            try: 
-               tru_numeric = float( str_input )
-               inp_is_numeric = is_numeric_type(tru_numeric)
-            except:
-               print("Valor inválido! Separe apenas decimais com ponto.")
-               str_input = input("Insira o valor (0000.00): ")
-      return tru_numeric
+      if str_input.upper() in SHORTCUTS[0].keys():
+         try: tru_numeric = shortcut_handle(str_input)
+         except:
+            print("Verifique se está separando as casas decimais com ponto!")
+            inp_float_handle()
+      else:
+         try: tru_numeric = str_to_numeric(str_input)
+         except:
+            print("Verifique se está separando as casas decimais com ponto!")
+            inp_float_handle()
+
+      if is_numeric_type(tru_numeric):
+         return tru_numeric
+      else:
+         inp_float_handle()
    except Exception as ERROR:
       countdown_message("ERRO AO ATRIBUIR VALOR:", error = ERROR)
 
@@ -126,15 +144,21 @@ def shortcut_handle(shortcut, type = "call"):
    # Shortcut inserted must be of the type informed and call
    SEL_SHORTCUTS = keys_by_value(SHORTCUTS[0], "call")
    if  type != "call":
-      SEL_SHORTCUTS.append( keys_by_value(SHORTCUTS[0], type) )
+      for item in keys_by_value(SHORTCUTS[0], type):
+         SEL_SHORTCUTS.append( item )
 
-   if shortcut.upper() == "HOJE":
-      output = dt.date.today()
-      return output
-   elif shortcut.upper() == "AGORA":
-      output = dt.datetime.now().time()
-      return output
-   elif shortcut.upper() == "CONS":
-      ppt.prompt_consult()
-   elif shortcut.upper() == "REM":
-      ppt.prompt_deletion()
+   # Raise ValueError if shortcut not allowed
+   if shortcut.upper() not in SEL_SHORTCUTS:
+      raise ValueError
+   # Deal with shortcut if valid and allowed
+   else:
+      if shortcut.upper() == "HOJE":
+         output = dt.date.today()
+         return output
+      elif shortcut.upper() == "AGORA":
+         output = dt.datetime.now().time()
+         return output
+      elif shortcut.upper() == "CONS":
+         ppt.prompt_consult()
+      elif shortcut.upper() == "REM":
+         ppt.prompt_deletion()
