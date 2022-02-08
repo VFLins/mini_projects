@@ -156,7 +156,7 @@ def shortcut_handle(shortcut, type = "call"):
          output = dt.date.today()
          return output
       elif shortcut.upper() == "AGORA":
-         output = dt.datetime.now().time()
+         output = dt.datetime.now().time().replace(microsecond = 0)
          return output
       elif shortcut.upper() == "CONS":
          ppt.prompt_consult()
