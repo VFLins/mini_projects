@@ -1,5 +1,5 @@
 import sqlalchemy as alch
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Query
 from sqlalchemy.ext.declarative import declarative_base
 from time import sleep
 from platform import system
@@ -31,8 +31,6 @@ if SYS_NAME == "Windows":
 else:
    DB_ENGINE = alch.create_engine("sqlite:////DB.sqlite")
 
-#DB_METADATA = alch.MetaData(bind = DB_ENGINE)
-
 DB_SESSION = sessionmaker(bind = DB_ENGINE)
 DB_MSESSION = DB_SESSION()
 
@@ -49,3 +47,10 @@ class tb_entry(DB_DECBASE):
       )
 
 DB_DECBASE.metadata.create_all(DB_ENGINE)
+DB_METADATA = alch.MetaData(bind = DB_ENGINE)
+
+## Preparing for queries
+def querry_all_entry():
+   spacing = "{:<4} {:<10} {:<8} {:>}"
+   for obs in Query(tb_entry, session = DB_MSESSION).order_by(tb_entry.Id):
+      print(obs.Id, obs.Data, obs.Hora, obs.Valor)
