@@ -29,9 +29,7 @@ def prompt_consult():
 
          if sel_mode.upper() == "T":
             this_querry = dm.DB_MSESSION.querry(dm.tb_entry)
-            for obs in this_querry:
-               return obs
-            has_run = True
+            print(type(this_querry))
          
          elif sel_mode.upper() == "D":
             init_date = input("Informe a data inicial [ddmmaaaa]: ")
