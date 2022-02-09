@@ -47,12 +47,12 @@ def inp_date_handle(message) -> dt.date:
          try: tru_date = shortcut_handle(str_input, type = "date")
          except:
             print("Valor inválido para data!")
-            inp_date_handle()
+            inp_date_handle(message)
       else:
          try: tru_date = str_to_date(str_input)
          except:
             print("Valor inválido para data!")
-            inp_date_handle()
+            inp_date_handle(message)
 
       if is_date_type(tru_date): 
          return tru_date
@@ -67,16 +67,16 @@ def inp_time_handle() -> dt.time:
    """
    def str_to_time(str):
       time = dt.time(
-         second = int( str_input[4:] ),
-         minute = int( str_input[2:4] ),
-         hour = int( str_input[0:2] ))
+         second = int( str[4:] ),
+         minute = int( str[2:4] ),
+         hour = int( str[0:2] ))
       return time
 
    def is_time_type(x) -> bool:
       try: return isinstance( x, type(dt.datetime.now().time()) )
       except: return False
 
-   str_input = input("Insira o horário (hhmmss): ")
+   str_input = input("Insira o horário [hhmmss]: ")
    try:
       if str_input.upper() in SHORTCUTS[0].keys():
         try: tru_time = shortcut_handle(str_input, type = "time")
@@ -101,8 +101,7 @@ def inp_float_handle() -> float:
    Returns input from the user as float object.
    """
    def str_to_numeric(str):
-      number = float( str )
-      return number
+      return float(str)
 
    def is_numeric_type(x) -> bool:
       try:
@@ -111,7 +110,7 @@ def inp_float_handle() -> float:
       except:
          return False
 
-   str_input = input("Insira o valor (0000.00): ")
+   str_input = input("Insira o valor [0000.00]: ")
    try:
       if str_input.upper() in SHORTCUTS[0].keys():
          try: tru_numeric = shortcut_handle(str_input)

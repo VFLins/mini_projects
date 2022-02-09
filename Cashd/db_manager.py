@@ -1,3 +1,4 @@
+import datetime as dt
 import sqlalchemy as alch
 from sqlalchemy.orm import sessionmaker, Query
 from sqlalchemy.ext.declarative import declarative_base
@@ -51,10 +52,10 @@ DB_METADATA = alch.MetaData(bind = DB_ENGINE)
 
 ## Preparing for queries
 def querry_all_entry():
-   cur_query = Query(tb_entry, session = DB_MSESSION).order_by(tb_entry.Id)
    spacing = "{:>6}  {:<10}  {:<8}  {:>11}"
 
    try:
+      cur_query = Query(tb_entry, session = DB_MSESSION).order_by(tb_entry.Id)
       if cur_query.count() == 0:
          print("Nada para mostrar aqui, tabela vazia!")
       else:
@@ -65,4 +66,22 @@ def querry_all_entry():
       print("Erro imprevisto ao ler todos os dados:", querry_all_entry_error, sep = "\n")
 
 def querry_range_entry(init, end):
-   return
+   spacing = "{:>6}  {:<10}  {:<8}  {:>11}"
+
+   try:
+      cur_query = Query(tb_entry, session = DB_MSESSION).order_by(tb_entry.Id).filter(tb_entry.Data.between(
+         init, end
+      ))
+      if cur_query.count() == 0:
+         print("Nenhum registro no intervalo especificado!")
+      else:
+         print(spacing.format("Id", "Data", "Hora", "Valor"))
+         for obs in cur_query:
+            print(spacing.format(obs.Id, str(obs.Data), str(obs.Hora), obs.Valor))
+
+   except ValueError:
+      print("A data inicial deve ser inferior ou igual à data final!")
+   except Exception as querry_range_entry_error:
+      print("Erro imprevisto ao ler todos os dados:", querry_range_entry_error, sep = "\n")
+
+      
