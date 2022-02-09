@@ -83,5 +83,3 @@ def querry_range_entry(init, end):
       print("A data inicial deve ser inferior ou igual à data final!")
    except Exception as querry_range_entry_error:
       print("Erro imprevisto ao ler todos os dados:", querry_range_entry_error, sep = "\n")
-
-      
