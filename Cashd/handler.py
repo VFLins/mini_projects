@@ -25,7 +25,7 @@ def countdown_message(message, error, seconds = 15):
       seconds -= 1
    quit()
 
-def inp_date_handle() -> dt.date:
+def inp_date_handle(message) -> dt.date:
    """
    Returns input from the user as a datetime.date object.
    Also deals with attributable shortcuts.
@@ -41,7 +41,7 @@ def inp_date_handle() -> dt.date:
       try: return isinstance( x, type(dt.date.today()) )
       except: return False
 
-   str_input = input("Insira a data [ddmmaaaa]: ")
+   str_input = input(message)
    try:
       if str_input.upper() in SHORTCUTS[0].keys():
          try: tru_date = shortcut_handle(str_input, type = "date")

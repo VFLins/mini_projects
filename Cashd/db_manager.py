@@ -63,3 +63,6 @@ def querry_all_entry():
             print(spacing.format(obs.Id, str(obs.Data), str(obs.Hora), obs.Valor))
    except Exception as querry_all_entry_error:
       print("Erro imprevisto ao ler todos os dados:", querry_all_entry_error, sep = "\n")
+
+def querry_range_entry(init, end):
+   return
