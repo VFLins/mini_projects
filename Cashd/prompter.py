@@ -44,4 +44,7 @@ def prompt_consult():
 
 def prompt_deletion():
     print("\nMODO REMOÇÃO:")
-    return
+
+    str_inp = input("Informe o valor de Id dos registros para remover [#,#,#,...]: ")
+    dm.del_by_id_entry(str_inp)
+    prompt_entry()

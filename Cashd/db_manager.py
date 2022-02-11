@@ -1,3 +1,4 @@
+from ast import Delete
 import datetime as dt
 import sqlalchemy as alch
 from sqlalchemy.orm import sessionmaker, Query
@@ -11,26 +12,26 @@ DB_DECBASE = declarative_base()
 SYS_NAME = system()
 
 try:
-   if SYS_NAME == "Windows":
-      WORK_DIR = expanduser("~") + "\\Appdata\\Roaming\\Cashd"
-      if not isdir(WORK_DIR): mkdir(WORK_DIR)
-   elif SYS_NAME == "Darwin":
-      WORK_DIR = expanduser("~") + "\\Library\\\Preferences\\Cashd"
-      if not isdir(WORK_DIR): mkdir(WORK_DIR)
-   elif SYS_NAME =="Linux":
-      WORK_DIR = expanduser("~") + "\\.local\\Share\\Cashd"
-      if not isdir(WORK_DIR): mkdir(WORK_DIR)
-   chdir(WORK_DIR)
+    if SYS_NAME == "Windows":
+        WORK_DIR = expanduser("~") + "\\Appdata\\Roaming\\Cashd"
+        if not isdir(WORK_DIR): mkdir(WORK_DIR)
+    elif SYS_NAME == "Darwin":
+        WORK_DIR = expanduser("~") + "\\Library\\\Preferences\\Cashd"
+        if not isdir(WORK_DIR): mkdir(WORK_DIR)
+    elif SYS_NAME =="Linux":
+        WORK_DIR = expanduser("~") + "\\.local\\Share\\Cashd"
+        if not isdir(WORK_DIR): mkdir(WORK_DIR)
+    chdir(WORK_DIR)
 except Exception as manage_dir_error:
-   sleep_time = 30
-   print("ERRO FATAL:\n", manage_dir_error, "\nFechando em 30 segundos...", sep="")
-   sleep(30)
-   quit()
+    sleep_time = 30
+    print("ERRO FATAL:\n", manage_dir_error, "\nFechando em 30 segundos...", sep="")
+    sleep(30)
+    quit()
 
 if SYS_NAME == "Windows":
-   DB_ENGINE = alch.create_engine("sqlite:///DB.sqlite")
+    DB_ENGINE = alch.create_engine("sqlite:///DB.sqlite")
 else:
-   DB_ENGINE = alch.create_engine("sqlite:////DB.sqlite")
+    DB_ENGINE = alch.create_engine("sqlite:////DB.sqlite")
 
 DB_SESSION = sessionmaker(bind = DB_ENGINE)
 DB_MSESSION = DB_SESSION()
@@ -52,34 +53,47 @@ DB_METADATA = alch.MetaData(bind = DB_ENGINE)
 
 ## Preparing for queries
 def querry_all_entry():
-   spacing = "{:>6}  {:<10}  {:<8}  {:>11}"
+    spacing = "{:>6}  {:<10}  {:<8}  {:>11}"
 
-   try:
-      cur_query = Query(tb_entry, session = DB_MSESSION).order_by(tb_entry.Id)
-      if cur_query.count() == 0:
-         print("Nada para mostrar aqui, tabela vazia!")
-      else:
-         print(spacing.format("Id", "Data", "Hora", "Valor"))
-         for obs in cur_query:
-            print(spacing.format(obs.Id, str(obs.Data), str(obs.Hora), obs.Valor))
-   except Exception as querry_all_entry_error:
-      print("Erro imprevisto ao ler todos os dados:", querry_all_entry_error, sep = "\n")
+    try:
+        cur_query = Query(tb_entry, session = DB_MSESSION).order_by(tb_entry.Id)
+        if cur_query.count() == 0:
+            print("Nada para mostrar aqui, tabela vazia!")
+        else:
+            print(spacing.format("Id", "Data", "Hora", "Valor"))
+            for obs in cur_query:
+                print(spacing.format(obs.Id, str(obs.Data), str(obs.Hora), obs.Valor))
+    except Exception as querry_all_entry_error:
+        print("Erro imprevisto ao ler todos os dados:", querry_all_entry_error, sep = "\n")
 
 def querry_range_entry(init, end):
-   spacing = "{:>6}  {:<10}  {:<8}  {:>11}"
+    spacing = "{:>6}  {:<10}  {:<8}  {:>11}"
 
-   try:
-      cur_query = Query(tb_entry, session = DB_MSESSION).order_by(tb_entry.Id).filter(tb_entry.Data.between(
-         init, end
-      ))
-      if cur_query.count() == 0:
-         print("Nenhum registro no intervalo especificado!")
-      else:
-         print(spacing.format("Id", "Data", "Hora", "Valor"))
-         for obs in cur_query:
-            print(spacing.format(obs.Id, str(obs.Data), str(obs.Hora), obs.Valor))
+    try:
+        cur_query = Query(tb_entry, session = DB_MSESSION).order_by(tb_entry.Id).filter(tb_entry.Data.between(
+            init, end
+        ))
+        if cur_query.count() == 0:
+            print("Nenhum registro no intervalo especificado!")
+        else:
+            print(spacing.format("Id", "Data", "Hora", "Valor"))
+            for obs in cur_query:
+                print(spacing.format(obs.Id, str(obs.Data), str(obs.Hora), obs.Valor))
 
-   except ValueError:
-      print("A data inicial deve ser inferior ou igual à data final!")
-   except Exception as querry_range_entry_error:
-      print("Erro imprevisto ao ler todos os dados:", querry_range_entry_error, sep = "\n")
+    except ValueError:
+        print("A data inicial deve ser inferior ou igual à data final!")
+    except Exception as querry_range_entry_error:
+        print("Erro imprevisto ao ler todos os dados:", querry_range_entry_error, sep = "\n")
+
+def del_by_id_entry(del_inp):
+    try:
+        id_str_list = list(del_inp.split(","))
+        id_list = [abs(int(x)) for x in id_str_list]
+
+        Query(tb_entry, session = DB_MSESSION).filter(tb_entry.Id.in_(id_list)).delete()
+        DB_MSESSION.commit()
+        print("Dados removidos!")
+
+    except Exception as del_by_id_entry_error:
+        print(del_by_id_entry_error)
+        print("Verifique a os valores digitados e tente novamente... Não digite zeros à esquerda nem espaços!")
