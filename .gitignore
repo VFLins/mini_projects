@@ -3,4 +3,5 @@ sandbox.*
 *.Rproj
 .Rproj.user
 *.pyc
+\.ipynb_checkpoints
 \.venv
