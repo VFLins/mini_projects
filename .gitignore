@@ -5,3 +5,4 @@ sandbox.*
 *.pyc
 \.ipynb_checkpoints
 \.venv
+\.pyenv
