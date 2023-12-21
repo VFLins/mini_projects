@@ -4,4 +4,4 @@ sandbox.*
 *.Rproj
 .Rproj.user
 *.pyc
-/.ipynb_checkpoints/
+*/.ipynb_checkpoints/
