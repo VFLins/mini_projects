@@ -1,7 +1,0 @@
-sandbox.*
-*.html
-*.Rhistory
-*.Rproj
-.Rproj.user
-*.pyc
-*/.ipynb_checkpoints/
