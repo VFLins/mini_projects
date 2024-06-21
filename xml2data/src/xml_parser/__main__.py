@@ -71,10 +71,8 @@ class DictParser:
             self.xml = xmltodict.parse(doc.read())
         self.path = path
 
-        self.erroed = False
-        self.err_type = None
-        self.err_val = None
-        self.err_traceback = None
+        self.erroed: bool = False
+        self.err: Exception | None = None
 
     def __enter__(self):
         self.__init__()
@@ -143,9 +141,7 @@ class DictParser:
             total = self.get_total()
         except Exception as err:
             self.erroed = True
-            self.err_type = type(err)
-            self.err_val = err
-            self.err_traceback = err.__traceback__
+            self.err = err
             return
 
         self.data = {
@@ -157,6 +153,13 @@ class DictParser:
             "TotalDesconto": total["discount"],
             "TotalTributos": total["taxes"],
         }
+
+        try:
+            self.rowdata = db.RowElemSales(**self.data)
+        except Exception as err:
+            self.erroed = True
+            self.err = err
+            return
 
 
 # RUN
@@ -176,10 +179,10 @@ def run(retry_failed = False):
     ]
 
     with open(CACHE_FILE) as cache:
-        processed_nfes = pickle.load(cache)["sucess"]
-        if retry_failed:
-            failed_nfes = pickle.load(cache)["fail"]
-            nfes = nfes + failed_nfes
+        cache: dict = pickle.load(cache)
+        processed_nfes = cache["sucess"]
+        if not retry_failed:
+            processed_nfes = processed_nfes + cache["fail"]
         new_nfes = nfes not in processed_nfes
 
     fail = []
@@ -188,7 +191,11 @@ def run(retry_failed = False):
     for fileparser in jobs:
         fileparser.parse()
         if not fileparser.erroed:
-            row = db.RowElemSales(**fileparser.data)
+            try:
+                row = db.RowElemSales(**fileparser.data)
+            except Exception as err:
+                fileparser.erroed = True
+                fileparser.err = err
             db.insert_sale(row)
             success.append(fileparser.path)
         else:
