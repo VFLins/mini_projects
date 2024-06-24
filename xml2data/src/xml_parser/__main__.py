@@ -71,6 +71,7 @@ class DictParser:
             self.xml = xmltodict.parse(doc.read())
         self.path = path
 
+        self.data = None
         self.erroed: bool = False
         self.err: Exception | None = None
 
@@ -133,34 +134,52 @@ class DictParser:
 
         return {"products": products, "discount": discount, "taxes": taxes}
 
-    def parse(self):
+    def parse(self) -> db.RowElem:
         try:
-            key = self.get_key()
-            dt = self.get_dt()
-            pay = self.get_pay()
-            total = self.get_total()
+            data = {
+                "key": self.get_key(),
+                "dt": self.get_dt(),
+                "pay": self.get_pay(),
+                "total": self.get_total()
+            }
         except Exception as err:
             self.erroed = True
             self.err = err
             return
 
         self.data = {
-            "ChaveNFe": key,
-            "DataHoraEmi": dt,
-            "PagamentoTipo": pay["type"],
-            "PagamentoValor": pay["amount"],
-            "TotalProdutos": total["products"],
-            "TotalDesconto": total["discount"],
-            "TotalTributos": total["taxes"],
-        }
+            "ChaveNFe": data["key"],
+            "DataHoraEmi": data["dt"],
+            "PagamentoTipo": data["pay"]["type"],
+            "PagamentoValor": data["pay"]["amount"],
+            "TotalProdutos": data["total"]["products"],
+            "TotalDesconto": data["total"]["discount"],
+            "TotalTributos": data["total"]["taxes"]}
 
+    def get_rowdata(self):
+        if not self.data:
+            self.parse()
         try:
-            self.rowdata = db.RowElemSales(**self.data)
+            self.rowdata = db.RowElem(**self.data)
+            return self.rowdata
         except Exception as err:
             self.erroed = True
             self.err = err
-            return
 
+
+class DictParserSales(DictParser):
+    def __init__(self, path: str):
+        super().__init__(path)
+    
+    def get_rowdata(self):
+        if not self.data:
+            self.parse()
+        try:
+            self.rowdata = db.RowElemSales(**self.data)
+            return self.rowdata
+        except Exception as err:
+            self.erroed = True
+            self.err = err
 
 # RUN
 ###############
@@ -187,15 +206,10 @@ def run(retry_failed = False):
 
     fail = []
     success = []
-    jobs = (DictParser(f) for f in new_nfes)
+    jobs = (DictParserSales(f) for f in new_nfes)
     for fileparser in jobs:
-        fileparser.parse()
-        if not fileparser.erroed:
-            try:
-                row = db.RowElemSales(**fileparser.data)
-            except Exception as err:
-                fileparser.erroed = True
-                fileparser.err = err
+        row = fileparser.get_rowdata()
+        if row:
             db.insert_sale(row)
             success.append(fileparser.path)
         else:

@@ -53,8 +53,9 @@ class FloatCoercible(str):
 
 class RowElem:
     """
-    Creates a generic data row.
-    It Contains the validation logic, but that should be used by it's children.
+    Creates a generic data row that doesn't perform any validation.
+    
+    [DEV] It Contains the validation logic that should be used by it's children.
     """
 
     def _valid_key(key):
