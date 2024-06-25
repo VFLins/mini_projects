@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 import sqlite3
 import re
 import os
