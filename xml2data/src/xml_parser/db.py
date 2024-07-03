@@ -12,24 +12,26 @@ SCRIPT_PATH = os.path.realpath(__file__)
 SCRIPT_DIR = os.path.split(SCRIPT_PATH)[0]
 DB_PATH = r"C:\databases\pdv.sqlite"
 
-# create table if doesn't exist
-dbcon = sqlite3.connect(DB_PATH)
-dbcur = dbcon.cursor()
-dbcur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS sales (
-        Id INTEGER PRIMARY KEY,
-        ChaveNFe TEXT NOT NULL UNIQUE,
-        DataHoraEmi TEXT,
-        PagamentoTipo TEXT,
-        PagamentoValor TEXT,
-        TotalProdutos REAL,
-        TotalDesconto REAL,
-        TotalTributos REAL
+
+def create_table(table: str):
+    """Create table if doesn't exist"""
+    dbcon = sqlite3.connect(DB_PATH)
+    dbcur = dbcon.cursor()
+    dbcur.execute(
+        f"""
+        CREATE TABLE IF NOT EXISTS {table} (
+            Id INTEGER PRIMARY KEY,
+            ChaveNFe TEXT NOT NULL UNIQUE,
+            DataHoraEmi TEXT,
+            PagamentoTipo TEXT,
+            PagamentoValor TEXT,
+            TotalProdutos REAL,
+            TotalDesconto REAL,
+            TotalTributos REAL
+        )
+        """
     )
-    """
-)
-dbcon.close()
+    dbcon.close()
 
 
 class KeyType(str):
@@ -53,10 +55,26 @@ class FloatCoercible(str):
 
 
 class RowElem:
-    """
-    Creates a generic data row.
-    It Contains the validation logic, but that should be used by it's children.
-    """
+    def __init__(
+        self,
+        ChaveNFe: KeyType,
+        DataHoraEmi: DTType,
+        PagamentoTipo: ListOfNumbers,
+        PagamentoValor: ListOfNumbers,
+        TotalProdutos: FloatCoercible,
+        TotalDesconto: FloatCoercible,
+        TotalTributos: FloatCoercible,
+    ):
+        
+        self.ChaveNFe = ChaveNFe
+        self.DataHoraEmi = DataHoraEmi
+        self.PagamentoTipo = PagamentoTipo
+        self.PagamentoValor = PagamentoValor
+        self.TotalProdutos = TotalProdutos
+        self.TotalDesconto = TotalDesconto
+        self.TotalTributos = TotalTributos
+
+        self._validate_all()
 
     def _valid_key(key):
         if len(key) == 44 and type(key) == str:
@@ -103,44 +121,19 @@ class RowElem:
                 if not self._valid_float(value):
                     raise ValueError(f"Invalid value in {var}: {value}")
 
-    def __init__(self, **rowitems):
-        for key, val in rowitems.items():
-            setattr(self, key, val)
 
-
-class RowElemSales(RowElem):
-    def __init__(
-        self,
-        ChaveNFe: KeyType,
-        DataHoraEmi: DTType,
-        PagamentoTipo: ListOfNumbers,
-        PagamentoValor: ListOfNumbers,
-        TotalProdutos: FloatCoercible,
-        TotalDesconto: FloatCoercible,
-        TotalTributos: FloatCoercible,
-    ):
-
-        self.ChaveNFe = ChaveNFe
-        self.DataHoraEmi = DataHoraEmi
-        self.PagamentoTipo = PagamentoTipo
-        self.PagamentoValor = PagamentoValor
-        self.TotalProdutos = TotalProdutos
-        self.TotalDesconto = TotalDesconto
-        self.TotalTributos = TotalTributos
-
-        self._validate_all()
-
-
-def insert_sale(row: RowElemSales):
-    """Inserts a `RowElemSales` as a row to the `sales` table."""
-    if not type(row) == RowElemSales:
-        raise TypeError(f"Expected type `RowElemSales`, got {type(row)}")
+def insert_row(row: RowElem, table: str):
+    """Inserts a `RowElem` as a row to the `sales` table."""
+    if not type(row) == RowElem:
+        raise TypeError(f"Expected type `RowElem`, got {type(row)}")
+    
+    create_table(table=table)
 
     dbcon = sqlite3.connect(DB_PATH)
     dbcur = dbcon.cursor()
     dbcur.execute(
         f"""
-        INSERT INTO sales (
+        INSERT INTO {table} (
             ChaveNFe,
             DataHoraEmi,
             PagamentoTipo,
