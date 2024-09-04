@@ -1,6 +1,6 @@
 import os
 import cache
-import parse
+from parse import DictParser
 import db
 
 
@@ -10,7 +10,7 @@ import db
 SCRIPT_PATH = os.path.realpath(__file__)
 SCRIPT_DIR = os.path.split(SCRIPT_PATH)[0]
 CACHE_FILE = os.path.join(SCRIPT_DIR, "processed_files.cache")
-DB_PATH = r"C:\databases\pdv.sqlite"
+DB_PATH = os.path.join(SCRIPT_DIR, "data", "main.sqlite")
 
 
 # RUN
@@ -33,7 +33,7 @@ def run(path: str, retry_failed = False):
     ]
 
     with open(CACHE_FILE) as cache:
-        cache: dict = pickle.load(cache)
+        cache: dict = cache.load(cache) # !!!
         processed_nfes = cache["sucess"]
         if not retry_failed:
             processed_nfes = processed_nfes + cache["fail"]
@@ -41,7 +41,7 @@ def run(path: str, retry_failed = False):
 
     fail = []
     success = []
-    jobs = (DictParserSales(f) for f in new_nfes)
+    jobs = (DictParser(f) for f in new_nfes)
     for fileparser in jobs:
         row = fileparser.get_rowdata()
         if row:

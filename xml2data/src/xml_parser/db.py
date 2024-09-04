@@ -123,7 +123,7 @@ class RowElem:
 
 
 def insert_row(row: RowElem, table: str):
-    """Inserts a `RowElem` as a row to the `sales` table."""
+    """Inserts a `RowElem` as a row to `table`."""
     if not type(row) == RowElem:
         raise TypeError(f"Expected type `RowElem`, got {type(row)}")
     
