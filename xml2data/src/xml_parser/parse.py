@@ -37,10 +37,15 @@ def valid_float(val: any):
 ###############
 
 class DictParser:
+    """
+    Classe de objeto que contém os dados de uma nota fiscal .xml em formato
+    de dicionário.
+    """
     def __init__(self, path: str):
         with open(path) as doc:
             self.xml = xmltodict.parse(doc.read())
         self.path = path
+        self.key = self.get_key()
 
         self.erroed: bool = False
         self.err: Exception | None = None

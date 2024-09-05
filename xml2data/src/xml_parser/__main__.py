@@ -1,5 +1,5 @@
 import os
-import cache
+from cache import CacheHandler
 from parse import DictParser
 import db
 
@@ -33,22 +33,26 @@ def run(path: str, retry_failed = False):
     ]
 
     with open(CACHE_FILE) as cache:
-        cache: dict = cache.load(cache) # !!!
-        processed_nfes = cache["sucess"]
-        if not retry_failed:
-            processed_nfes = processed_nfes + cache["fail"]
-        new_nfes = nfes not in processed_nfes
+        success = CacheHandler("success")
+        failed = CacheHandler("failed")
 
-    fail = []
-    success = []
-    jobs = (DictParser(f) for f in new_nfes)
-    for fileparser in jobs:
-        row = fileparser.get_rowdata()
-        if row:
-            db.insert_sale(row)
-            success.append(fileparser.path)
-        else:
-            fail.append(fileparser)
+        ignore_keys = success.data
+        if not retry_failed:
+            ignore_keys = ignore_keys + failed.data
+
+    for file in nfes:
+        parser = DictParser(file)
+        if parser.key in ignore_keys:
+            # TODO: Info pulando arquivo já processado
+            continue
+        
+        try:
+            parser.parse()
+            if parser.rowdata is not None:
+                db.insert_row(parser.rowdata)
+                success.add(parser.key)
+        except Exception:
+            failed.add(parser.key)
 
 if __name__ == "__main__":
     pass

@@ -9,7 +9,8 @@ CACHE_TYPES = ["passed", "failed", "keys"]
 makedirs(CACHE_PATH, exist_ok=True)
 
 
-class RepeatedDocumentError(Exception):
+class AlreadyProcessedError(Exception):
+    """Indica que um arquivo já foi processado antes."""
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 
@@ -27,7 +28,7 @@ class CacheHandler:
         cached = self.load()
 
         if item in cached:
-            raise RepeatedDocumentError("Este arquivo já foi processado antes")
+            raise AlreadyProcessedError("Este arquivo já foi processado antes")
 
         if len(self.data) != len(cached):
             self._heal()
