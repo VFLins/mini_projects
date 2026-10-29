@@ -11,6 +11,9 @@ sandbox.*
 # Jupyter
 */.ipynb_checkpoints/
 
+# Marimo
+*/__marimo__/
+
 # Python virtual environments
 */venv/
 */.venv/
