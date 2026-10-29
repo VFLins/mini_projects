@@ -105,10 +105,11 @@ def _(mo):
 
     Para esta análise, vamos considerar:
 
-    - Vox Brasil
-      - [BR-09623/2026](https://static.poder360.com.br/uploads/2026/10/pesquisa-vox-brasil-9out2026.pdf)
-    - Colectta
-      - [BR-04291/2026](https://www.colectta.com.br/pesquisas/pesquisa-nacional-da-colectta-aponta-cenarios-de-intencao-de-voto-para-presidente-em-2026)
+    - Vox Brasil [BR-09623/2026](https://static.poder360.com.br/uploads/2026/10/pesquisa-vox-brasil-9out2026.pdf)
+    - Data Folha [BR-09956/2026](https://datafolha.folha.uol.com.br/eleicoes/2026/06/lula-pt-mantem-vantagem-no-1o-turno-e-2o-turno.shtml)
+    - Realtime Big Data [BR-03490/2026](https://realtimebigdata.com.br/wp-content/uploads/2026/09/Brasil-BR-03490-2026-Set26.pdf)
+    - Quaest [BR-06591/2026](https://media-blog.genialinvestimentos.com.br/wp-content/uploads/2026/08/05082033/PESQUISA_GENIAL_QUAEST_AGO26.pdf)
+    - [Palver](https://www.palver.com.br/survey/explore?question=recall_rejection_flavio_bolsonaro_h&wave=08_pesquisa_2026_10_21&mode=trend)
     """)
     return
 

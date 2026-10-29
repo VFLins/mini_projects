@@ -19,4 +19,5 @@ sandbox.*
 */.venv/
 
 # Project specific
-/eleicoes2026/data/*
+/eleicoes2026/data/votacao_secao_2026_BR.csv
+/eleicoes2026/data/leiame.pdf
