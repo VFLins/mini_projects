@@ -1,7 +1,19 @@
 sandbox.*
+
+# R project
 *.Rhistory
 *.Rproj
 .Rproj.user
+
+# Python cache
 *.pyc
+
+# Jupyter
 */.ipynb_checkpoints/
+
+# Python virtual environments
 */venv/
+*/.venv/
+
+# Project specific
+/eleicoes2026/data/*
