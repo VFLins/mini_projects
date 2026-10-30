@@ -115,7 +115,7 @@ def _(mo):
     - Vox Brasil: [BR-09623/2026](https://static.poder360.com.br/uploads/2026/10/pesquisa-vox-brasil-9out2026.pdf)
 
 
-    ## Rejeição
+    ## Rejeição do candidato
 
     A principal métrica para avaliar a capacidade de um candidato de receber votos transferidos de outros eleitores que não tinham votado nele no primeiro turno é o nível de rejeição. Se a rejeição a um candidato for maior que 50%, se torna, como dito pelo candidato derrotado, uma "impossibilidade matemática".
 
@@ -129,8 +129,41 @@ def _(mo):
     Existe uma métrica popular, usada especificamente para pesquisas eleitorais baseada na razão de chances logarítmica[^2]
 
     $$
-    A' = \ln \left( \frac{ \hat{A} / \hat{B} }{ A / B } \right)
+    A' = \ln \left( \frac{ \hat A / \hat B }{ A / B } \right)
     $$
+
+    - $\hat A$: Percentual das intenções de voto ao candidato A estimadas pela pesquisa
+    - $\hat B$: Percentual das intenções de voto ao candidato B estimadas pela pesquisa
+    - $A$: Percentual dos votos recebidos pelo candidato A na votação
+    - $B$: Percentual dos votos recebidos pelo candidato B na votação
+
+    O resultado $A'$ obtido é a medida do viés da pesquisa, favorável ao candidato A, se o valor for positivo, o viés é favorável à este candidato, caso contrário, o viés é favorável ao seu adversário, caso $A' = 0$, a  pesquisa não apresenta viés.
+
+    Mesmo que diferente de zero, valor da métrica ainda está sujeito à uma margem de erro para avaliar se o viés medido é estatisticamente significante, isto exige a medida do erro padrão, usando a fórmula de aproximação assintótica de Woolf:
+
+    $$
+    SE(A') = \sqrt{ \frac{ 1 }{ n } + \frac{ 1 }{ m } }
+    $$
+
+    - $n$: Quantidade de votantes
+    - $m$: Quantidade de pessoas entrevistadas na pesquisa
+
+    Com isso nós podemos fazer um intervalo de 95% de confiança para o valor real de $A'$, se zero estiver dentro do intervalo, não podemos considerá-lo significativamente diferente de zero.
+
+    $$
+    IC(A') = A' \pm 1,96 \times SE(A')
+    $$
+
+
+    ### Premissas
+
+    Esta abordagem de análise se apoia em alguns pressupostos, os resultados expostos aqui se tornam inválidos caso ao menos um deles seja falso:
+
+    1. O nível de rejeição é correlacionado com a intenção de voto;
+    2. A rejeição aos candidatos não mudou significativamente entre a data da pesquisa e a data da votação;
+    3. A votação registrada nas urnas eletrônicas é condizente com a realidade.
+
+    Com os dados disponíveis, apenas o primeiro pressuposto pode ser testado, depois que este tenha sido verificado, o leitor baseará seu nível de confiança nos resultados deste estudo na sua crença sobre os outros dois pressupostos.
 
 
 
@@ -149,7 +182,7 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    # "Mas direita ganhou no primeiro turno"
+    ## Argumentos comuns do Flávio Bolsonaro e seus apoiadores
     """)
     return
 
