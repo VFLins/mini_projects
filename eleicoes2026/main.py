@@ -106,24 +106,37 @@ def _(mo):
 
     Se os números estiverem condizentes com o resultado das eleições, os dados devem estar prontos para a análise. Mas antes de começar, vamos buscar mais informações para suportar a análise, para entender a propensão dos eleitores a transferir vontos entre candidatos, vamos apoiar e guiar os testes nas intenções de votos das pesquisas independentes realizadas.
 
+    Para esta análise, vamos considerar as pesquisas de segundo turno:
 
-    ### Rejeição
+    - Data Folha: [BR-09540/2026](https://datafolha.folha.uol.com.br/eleicoes/2026/10/flavio-bolsonaro-51-e-lula-49-chegam-empatados-tecnicamente-ao-dia-da-eleicao.shtml)
+    - Palver: [BR-01794/2026](https://www.palver.com.br/api/surveys/voting-intention-2026-october-w9/report)
+    - Quaest: [BR-06591/2026](https://media-blog.genialinvestimentos.com.br/wp-content/uploads/2026/08/05082033/PESQUISA_GENIAL_QUAEST_AGO26.pdf) (ago. 2026)
+    - Realtime Big Data: [BR-03490/2026](https://realtimebigdata.com.br/wp-content/uploads/2026/09/Brasil-BR-03490-2026-Set26.pdf) (set. 2026)
+    - Vox Brasil: [BR-09623/2026](https://static.poder360.com.br/uploads/2026/10/pesquisa-vox-brasil-9out2026.pdf)
+
+
+    ## Rejeição
 
     A principal métrica para avaliar a capacidade de um candidato de receber votos transferidos de outros eleitores que não tinham votado nele no primeiro turno é o nível de rejeição. Se a rejeição a um candidato for maior que 50%, se torna, como dito pelo candidato derrotado, uma "impossibilidade matemática".
 
     Como veremos mais adiante, muitas pesquisas apontavam vantagem para Flávio Bolsonaro nas intenções de votos, e resultados similarmente favoráveis a ele na rejeição. A diferença entre intenções de votos e o resultado final das votações mostra que existia algum nível de viés nas pesquisas.
 
-    Como já temos os resultados das eleições presidenciais, podemos medir o nível de viés das pesquisas, e ajustar a métrica de rejeição para um nível mais próximo do real. Mas vale ressaltar que o viés não representa necessariamente uma preferência do instituto de pesquisa por um candidato[^1], mas pode surgir naturalmente durante a seleção da amostra.
+    Como já temos os resultados das eleições presidenciais, podemos medir o nível de viés das pesquisas, e ajustar a métrica de rejeição para um nível mais próximo do real. Mas vale ressaltar que o viés não representa necessariamente uma preferência do instituto de pesquisa por um candidato, e pode surgir naturalmente durante a seleção da amostra[^1].
+
+
+    ### Metodologia
+
+    Existe uma métrica popular, usada especificamente para pesquisas eleitorais baseada na razão de chances logarítmica[^2]
+
+    $$
+    A' = \ln \left( \frac{ \hat{A} / \hat{B} }{ A / B } \right)
+    $$
+
+
 
     [^1]: Para saber mais sobre os vieses que podem aparecer em pesquisas eleitorais, veja [este artigo](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) do Daniel Marcelino.
 
-    Para esta análise, vamos considerar as pesquisas de segundo turno:
-
-    - Data Folha: [BR-09540/2026](https://datafolha.folha.uol.com.br/eleicoes/2026/10/flavio-bolsonaro-51-e-lula-49-chegam-empatados-tecnicamente-ao-dia-da-eleicao.shtml) (out. 2026)
-    - [Palver](https://www.palver.com.br/survey/): [BR-01794/2026](https://www.palver.com.br/api/surveys/voting-intention-2026-october-w9/report) (out. 2026)
-    - Quaest: [BR-06591/2026](https://media-blog.genialinvestimentos.com.br/wp-content/uploads/2026/08/05082033/PESQUISA_GENIAL_QUAEST_AGO26.pdf) (ago. 2026)
-    - Realtime Big Data: [BR-03490/2026](https://realtimebigdata.com.br/wp-content/uploads/2026/09/Brasil-BR-03490-2026-Set26.pdf) (set. 2026)
-    - Vox Brasil: [BR-09623/2026](https://static.poder360.com.br/uploads/2026/10/pesquisa-vox-brasil-9out2026.pdf) (out. 2026)
+    [^2]: **Public Opinion Quarterly**. [A Review and Proposal for a New Measure of Poll Accuracy](https://doi.org/10.1093/poq/nfi044)
     """)
     return
 
