@@ -37,13 +37,16 @@ def _(Path, urllib, zipfile):
         "votacao_secao/votacao_secao_2026_BR.zip"
     )
     VOTOS_ZIP = VOTOS_URL.split("/")[-1]
-    print("Fazendo download dos dados...")
-    urllib.request.urlretrieve(VOTOS_URL, VOTOS_ZIP)
-    print(f"Extraindo arquivos para {DOWNLOADS_DIR}")
-    zipfile.ZipFile(PROJECT_ROOT / VOTOS_ZIP).extractall(DOWNLOADS_DIR)
-    print(f"Excluindo arquivo compactado {PROJECT_ROOT / VOTOS_ZIP}")
-    (PROJECT_ROOT / VOTOS_ZIP).unlink()
-    print("Concluído!")
+    VOTOS_CSV = Path(VOTOS_ZIP).with_suffix(".csv")
+
+    if not (DOWNLOADS_DIR / VOTOS_CSV).is_file():
+        print("Fazendo download dos dados...")
+        urllib.request.urlretrieve(VOTOS_URL, VOTOS_ZIP)
+        print(f"Extraindo arquivos para {DOWNLOADS_DIR}")
+        zipfile.ZipFile(PROJECT_ROOT / VOTOS_ZIP).extractall(DOWNLOADS_DIR)
+        print(f"Excluindo arquivo compactado {PROJECT_ROOT / VOTOS_ZIP}")
+        (PROJECT_ROOT / VOTOS_ZIP).unlink()
+        print("Concluído!")
     return (DOWNLOADS_DIR,)
 
 
@@ -101,15 +104,26 @@ def _(mo):
     mo.md(r"""
     ## As pesquisas de intenções
 
-    Se os números estiverem condizentes com o resultado das eleições, os dados devem estar prontos para a análise. Mas antes de começar, vamos buscar mais informações para suportar a análise, para entender a propensão dos eleitores a transferir vontos entre candidatos, vamos apoiare guiar os testes nas intenções de votos das pesquisas independentes realizadas.
+    Se os números estiverem condizentes com o resultado das eleições, os dados devem estar prontos para a análise. Mas antes de começar, vamos buscar mais informações para suportar a análise, para entender a propensão dos eleitores a transferir vontos entre candidatos, vamos apoiar e guiar os testes nas intenções de votos das pesquisas independentes realizadas.
+
+
+    ### Rejeição
+
+    A principal métrica para avaliar a capacidade de um candidato de receber votos transferidos de outros eleitores que não tinham votado nele no primeiro turno é o nível de rejeição. Se a rejeição a um candidato for maior que 50%, se torna, como dito pelo candidato derrotado, uma "impossibilidade matemática".
+
+    Como veremos mais adiante, muitas pesquisas apontavam vantagem para Flávio Bolsonaro nas intenções de votos, e resultados similarmente favoráveis a ele na rejeição. A diferença entre intenções de votos e o resultado final das votações mostra que existia algum nível de viés nas pesquisas.
+
+    Como já temos os resultados das eleições presidenciais, podemos medir o nível de viés das pesquisas, e ajustar a métrica de rejeição para um nível mais próximo do real. Mas vale ressaltar que o viés não representa necessariamente uma preferência do instituto de pesquisa por um candidato, mas pode surgir naturalmente durante a seleção da amostra.
+
+    Para saber mais sobre os vieses que podem aparecer em instituições de pesquisa, veja [este artigo](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) do Daniel Marcelino.
 
     Para esta análise, vamos considerar:
 
-    - Vox Brasil [BR-09623/2026](https://static.poder360.com.br/uploads/2026/10/pesquisa-vox-brasil-9out2026.pdf)
     - Data Folha [BR-09956/2026](https://datafolha.folha.uol.com.br/eleicoes/2026/06/lula-pt-mantem-vantagem-no-1o-turno-e-2o-turno.shtml)
-    - Realtime Big Data [BR-03490/2026](https://realtimebigdata.com.br/wp-content/uploads/2026/09/Brasil-BR-03490-2026-Set26.pdf)
-    - Quaest [BR-06591/2026](https://media-blog.genialinvestimentos.com.br/wp-content/uploads/2026/08/05082033/PESQUISA_GENIAL_QUAEST_AGO26.pdf)
     - [Palver](https://www.palver.com.br/survey/explore?question=recall_rejection_flavio_bolsonaro_h&wave=08_pesquisa_2026_10_21&mode=trend)
+    - Quaest [BR-06591/2026](https://media-blog.genialinvestimentos.com.br/wp-content/uploads/2026/08/05082033/PESQUISA_GENIAL_QUAEST_AGO26.pdf)
+    - Realtime Big Data [BR-03490/2026](https://realtimebigdata.com.br/wp-content/uploads/2026/09/Brasil-BR-03490-2026-Set26.pdf)
+    - Vox Brasil [BR-09623/2026](https://static.poder360.com.br/uploads/2026/10/pesquisa-vox-brasil-9out2026.pdf)
     """)
     return
 
