@@ -113,23 +113,31 @@ def _(mo):
 
     Como veremos mais adiante, muitas pesquisas apontavam vantagem para Flávio Bolsonaro nas intenções de votos, e resultados similarmente favoráveis a ele na rejeição. A diferença entre intenções de votos e o resultado final das votações mostra que existia algum nível de viés nas pesquisas.
 
-    Como já temos os resultados das eleições presidenciais, podemos medir o nível de viés das pesquisas, e ajustar a métrica de rejeição para um nível mais próximo do real. Mas vale ressaltar que o viés não representa necessariamente uma preferência do instituto de pesquisa por um candidato, mas pode surgir naturalmente durante a seleção da amostra.
+    Como já temos os resultados das eleições presidenciais, podemos medir o nível de viés das pesquisas, e ajustar a métrica de rejeição para um nível mais próximo do real. Mas vale ressaltar que o viés não representa necessariamente uma preferência do instituto de pesquisa por um candidato[^1], mas pode surgir naturalmente durante a seleção da amostra.
 
-    Para saber mais sobre os vieses que podem aparecer em instituições de pesquisa, veja [este artigo](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) do Daniel Marcelino.
+    [^1]: Para saber mais sobre os vieses que podem aparecer em pesquisas eleitorais, veja [este artigo](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) do Daniel Marcelino.
 
-    Para esta análise, vamos considerar:
+    Para esta análise, vamos considerar as pesquisas de segundo turno:
 
-    - Data Folha [BR-09956/2026](https://datafolha.folha.uol.com.br/eleicoes/2026/06/lula-pt-mantem-vantagem-no-1o-turno-e-2o-turno.shtml)
-    - [Palver](https://www.palver.com.br/survey/explore?question=recall_rejection_flavio_bolsonaro_h&wave=08_pesquisa_2026_10_21&mode=trend)
-    - Quaest [BR-06591/2026](https://media-blog.genialinvestimentos.com.br/wp-content/uploads/2026/08/05082033/PESQUISA_GENIAL_QUAEST_AGO26.pdf)
-    - Realtime Big Data [BR-03490/2026](https://realtimebigdata.com.br/wp-content/uploads/2026/09/Brasil-BR-03490-2026-Set26.pdf)
-    - Vox Brasil [BR-09623/2026](https://static.poder360.com.br/uploads/2026/10/pesquisa-vox-brasil-9out2026.pdf)
+    - Data Folha: [BR-09540/2026](https://datafolha.folha.uol.com.br/eleicoes/2026/10/flavio-bolsonaro-51-e-lula-49-chegam-empatados-tecnicamente-ao-dia-da-eleicao.shtml) (out. 2026)
+    - [Palver](https://www.palver.com.br/survey/): [BR-01794/2026](https://www.palver.com.br/api/surveys/voting-intention-2026-october-w9/report) (out. 2026)
+    - Quaest: [BR-06591/2026](https://media-blog.genialinvestimentos.com.br/wp-content/uploads/2026/08/05082033/PESQUISA_GENIAL_QUAEST_AGO26.pdf) (ago. 2026)
+    - Realtime Big Data: [BR-03490/2026](https://realtimebigdata.com.br/wp-content/uploads/2026/09/Brasil-BR-03490-2026-Set26.pdf) (set. 2026)
+    - Vox Brasil: [BR-09623/2026](https://static.poder360.com.br/uploads/2026/10/pesquisa-vox-brasil-9out2026.pdf) (out. 2026)
     """)
     return
 
 
 @app.cell
 def _():
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # "Mas direita ganhou no primeiro turno"
+    """)
     return
 
 
