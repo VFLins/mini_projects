@@ -154,16 +154,26 @@ def _(mo):
     IC(A') = A' \pm 1,96 \times SE(A')
     $$
 
+    Para encontrar a "taxa de rejeição real" removendo o viés da pesquisa, vamos usar $A'$ para ajustar o peso das respostas entre os votantes de cada candidato, reduzindo para os super representados ou aumentando para os sub representados.
+
+    $$
+    P' = P \times e^{-A'}
+    $$
+
+    - $P'$: Taxa ajustada para o candidato A
+    - $P$: Taxa medida pela pesquisa para o candidato A
+
 
     ### Premissas
 
     Esta abordagem de análise se apoia em alguns pressupostos, os resultados expostos aqui se tornam inválidos caso ao menos um deles seja falso:
 
     1. O nível de rejeição é correlacionado com a intenção de voto;
-    2. A rejeição aos candidatos não mudou significativamente entre a data da pesquisa e a data da votação;
-    3. A votação registrada nas urnas eletrônicas é condizente com a realidade.
+    2. Forte correlação entre inteção de voto e rejeição;
+    3. A rejeição aos candidatos não mudou significativamente entre a data da pesquisa e a data da votação;
+    4. A votação registrada nas urnas eletrônicas é condizente com a realidade.
 
-    Com os dados disponíveis, apenas o primeiro pressuposto pode ser testado, depois que este tenha sido verificado, o leitor baseará seu nível de confiança nos resultados deste estudo na sua crença sobre os outros dois pressupostos.
+    Com os dados disponíveis, apenas o primeiro pressuposto pode ser testado, depois que este tenha sido verificado, o leitor baseará seu nível de confiança nos resultados deste estudo na sua crença sobre os outros pressupostos.
 
 
 
