@@ -129,7 +129,7 @@ def _(mo):
     Existe uma métrica popular, usada especificamente para pesquisas eleitorais baseada na razão de chances logarítmica[^2]
 
     $$
-    A' = \ln \left( \frac{ \hat A / \hat B }{ A / B } \right)
+    A' = \ln \left( \frac{ \hat A / \hat B }{ A / B } \right) \tag 1
     $$
 
     - $\hat A$: Percentual das intenções de voto ao candidato A estimadas pela pesquisa
@@ -142,7 +142,7 @@ def _(mo):
     Mesmo que diferente de zero, valor da métrica ainda está sujeito à uma margem de erro para avaliar se o viés medido é estatisticamente significante, isto exige a medida do erro padrão, usando a fórmula de aproximação assintótica de Woolf:
 
     $$
-    SE(A') = \sqrt{ \frac{ 1 }{ n } + \frac{ 1 }{ m } }
+    SE(A') = \sqrt{ \frac{ 1 }{ n } + \frac{ 1 }{ m } } \tag 2
     $$
 
     - $n$: Quantidade de votantes
@@ -151,13 +151,13 @@ def _(mo):
     Com isso nós podemos fazer um intervalo de 95% de confiança para o valor real de $A'$, se zero estiver dentro do intervalo, não podemos considerá-lo significativamente diferente de zero.
 
     $$
-    IC(A') = A' \pm 1,96 \times SE(A')
+    IC(A') = A' \pm 1,96 \times SE(A') \tag 3
     $$
 
     Para encontrar a "taxa de rejeição real" removendo o viés da pesquisa, vamos usar $A'$ para ajustar o peso das respostas entre os votantes de cada candidato, reduzindo para os super representados ou aumentando para os sub representados.
 
     $$
-    P' = P \times e^{-A'}
+    P' = P \times e^{-A'} \tag 4
     $$
 
     - $P'$: Taxa ajustada para o candidato A
@@ -169,9 +169,8 @@ def _(mo):
     Esta abordagem de análise se apoia em alguns pressupostos, os resultados expostos aqui se tornam inválidos caso ao menos um deles seja falso:
 
     1. O nível de rejeição é correlacionado com a intenção de voto;
-    2. Forte correlação entre inteção de voto e rejeição;
-    3. A rejeição aos candidatos não mudou significativamente entre a data da pesquisa e a data da votação;
-    4. A votação registrada nas urnas eletrônicas é condizente com a realidade.
+    2. A rejeição aos candidatos não mudou significativamente entre a data da pesquisa e a data da votação;
+    3. A votação registrada nas urnas eletrônicas é condizente com a realidade.
 
     Com os dados disponíveis, apenas o primeiro pressuposto pode ser testado, depois que este tenha sido verificado, o leitor baseará seu nível de confiança nos resultados deste estudo na sua crença sobre os outros pressupostos.
 
