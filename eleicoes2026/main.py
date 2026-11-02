@@ -102,6 +102,16 @@ def _(votos):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    $$
+    B = \frac{1}{k} \sum_{i=1}^{k} \left| A'_i \right|
+    $$
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## As pesquisas de intenções
 
     Se os números estiverem condizentes com o resultado das eleições, os dados devem estar prontos para a análise. Mas antes de começar, vamos buscar mais informações para suportar a análise, para entender a propensão dos eleitores a transferir vontos entre candidatos, vamos apoiar e guiar os testes nas intenções de votos das pesquisas independentes realizadas.
@@ -129,24 +139,21 @@ def _(mo):
     Existe uma métrica popular, usada especificamente para pesquisas eleitorais baseada na razão de chances logarítmica[^2]
 
     $$
-    A' = \ln \left( \frac{ \hat A / \hat B }{ A / B } \right) \tag 1
+    A' = \ln \left( \frac{ \hat p_A / (1 - \hat p_A) }{ p_A / (1 - p_A) } \right) \tag 1
     $$
 
-    - $\hat A$: Percentual das intenções de voto ao candidato A estimadas pela pesquisa
-    - $\hat B$: Percentual das intenções de voto ao candidato B estimadas pela pesquisa
-    - $A$: Percentual dos votos recebidos pelo candidato A na votação
-    - $B$: Percentual dos votos recebidos pelo candidato B na votação
+    - $\hat p_A$: Percentual das intenções de voto ao candidato A estimadas pela pesquisa
+    - $p_A$: Percentual dos votos recebidos pelo candidato A na votação
 
     O resultado $A'$ obtido é a medida do viés da pesquisa, favorável ao candidato A, se o valor for positivo, o viés é favorável à este candidato, caso contrário, o viés é favorável ao seu adversário, caso $A' = 0$, a  pesquisa não apresenta viés.
 
-    Mesmo que diferente de zero, valor da métrica ainda está sujeito à uma margem de erro para avaliar se o viés medido é estatisticamente significante, isto exige a medida do erro padrão, usando a fórmula de aproximação assintótica de Woolf:
+    Mesmo que diferente de zero, valor da métrica ainda está sujeito à uma margem de erro para avaliar se o viés medido é estatisticamente significante, isto exige a medida do erro padrão aproximada pelo método-$\delta$[^3]:
 
     $$
-    SE(A') = \sqrt{ \frac{ 1 }{ n } + \frac{ 1 }{ m } } \tag 2
+    SE(A') = \sqrt{\frac{1}{n \times \hat{p} \times (1 - \hat{p})}} \tag 2
     $$
 
-    - $n$: Quantidade de votantes
-    - $m$: Quantidade de pessoas entrevistadas na pesquisa
+    - $n$: Quantidade de pessoas entrevistadas na pesquisa
 
     Com isso nós podemos fazer um intervalo de 95% de confiança para o valor real de $A'$, se zero estiver dentro do intervalo, não podemos considerá-lo significativamente diferente de zero.
 
@@ -179,6 +186,8 @@ def _(mo):
     [^1]: Para saber mais sobre os vieses que podem aparecer em pesquisas eleitorais, veja [este artigo](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) do Daniel Marcelino.
 
     [^2]: **Public Opinion Quarterly**. [A Review and Proposal for a New Measure of Poll Accuracy](https://doi.org/10.1093/poq/nfi044)
+
+    [^3]: **Constantin Ahlmann-Eltze**. [What is the delta method?](https://const-ae.name/post/2023-02-10_delta_method/delta-method-explainer/)
     """)
     return
 
