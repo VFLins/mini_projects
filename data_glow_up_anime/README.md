@@ -1,4 +1,4 @@
-![Primeiro slide com título: "Entendendo a audiência da galera dos animes" e subtítulo "Análise do público que assiste animes usando um recorte de dados coletados do myanimelist.net"](/data_glow_up_anime/cover.png)
+![Primeiro slide com título: "Entendendo a audiência da galera dos animes" e subtítulo "Análise do público que assiste animes usando um recorte de dados coletados do myanimelist.net"](/cover.png)
 
 ### Descrição
 
