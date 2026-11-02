@@ -20,6 +20,6 @@ Uma breve apresentação dos dados de animes em uma apresentação HTML produzid
 
 ### Acessando a apresentação
 
-Para visualizar o resultado final dos slides produzidos, [clique aqui](https://vflins.github.io/Projects/data_glow_up_anime/presentation.slides.html).
+Para visualizar o resultado final dos slides produzidos, [clique aqui](https://vflins.github.io/mini_projects/data_glow_up_anime/presentation.slides.html).
 
 </details>
