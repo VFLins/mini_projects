@@ -102,6 +102,8 @@ def _(votos):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    Talvez eu use
+
     $$
     B = \frac{1}{k} \sum_{i=1}^{k} \left| A'_i \right|
     $$
@@ -150,7 +152,7 @@ def _(mo):
     Mesmo que diferente de zero, valor da métrica ainda está sujeito à uma margem de erro para avaliar se o viés medido é estatisticamente significante, isto exige a medida do erro padrão aproximada pelo método-$\delta$[^3]:
 
     $$
-    SE(A') = \sqrt{\frac{1}{n \times \hat{p} \times (1 - \hat{p})}} \tag 2
+    SE(A') = \sqrt{\frac{1}{n \times \hat p_A \times (1 - \hat p_A)}} \tag 2
     $$
 
     - $n$: Quantidade de pessoas entrevistadas na pesquisa
