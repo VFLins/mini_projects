@@ -6,9 +6,14 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import pandas as pd
+    import camelot
+    import formulas as f
     import matplotlib.pyplot as plt
-    import urllib.request, zipfile
+    import pandas as pd
+    import tabula
+    import urllib.request
+    import zipfile
+
     from pathlib import Path
 
     return Path, pd, urllib, zipfile
@@ -191,6 +196,15 @@ def _(mo):
 
     [^3]: **Constantin Ahlmann-Eltze**. [What is the delta method?](https://const-ae.name/post/2023-02-10_delta_method/delta-method-explainer/)
     """)
+    return
+
+
+@app.cell
+def _(pd):
+
+
+    polls = pd.DataFrame(
+    )
     return
 
 
