@@ -10,13 +10,12 @@ def _():
     import formulas as f
     import matplotlib.pyplot as plt
     import pandas as pd
-    import tabula
     import urllib.request
     import zipfile
 
     from pathlib import Path
 
-    return Path, pd, urllib, zipfile
+    return Path, f, pd, urllib, zipfile
 
 
 @app.cell
@@ -127,7 +126,8 @@ def _(mo):
 
     - Data Folha: [BR-09540/2026](https://datafolha.folha.uol.com.br/eleicoes/2026/10/flavio-bolsonaro-51-e-lula-49-chegam-empatados-tecnicamente-ao-dia-da-eleicao.shtml)
     - Palver: [BR-01794/2026](https://www.palver.com.br/api/surveys/voting-intention-2026-october-w9/report)
-    - Quaest: [BR-06591/2026](https://media-blog.genialinvestimentos.com.br/wp-content/uploads/2026/08/05082033/PESQUISA_GENIAL_QUAEST_AGO26.pdf) (ago. 2026)
+    - Quaest: [BR-08535/2026](https://g1.globo.com/politica/eleicoes/2026/pesquisa-eleitoral/noticia/2026/10/21/quaest-presidente-21-outubro.ghtml)
+    - Quaest: [BR-09158/2026](https://g1.globo.com/politica/eleicoes/2026/pesquisa-eleitoral/noticia/2026/10/24/quaest-2o-turno-votos-validos.ghtml)
     - Realtime Big Data: [BR-03490/2026](https://realtimebigdata.com.br/wp-content/uploads/2026/09/Brasil-BR-03490-2026-Set26.pdf) (set. 2026)
     - Vox Brasil: [BR-09623/2026](https://static.poder360.com.br/uploads/2026/10/pesquisa-vox-brasil-9out2026.pdf)
 
@@ -200,16 +200,57 @@ def _(mo):
 
 
 @app.cell
-def _(pd):
+def _(f):
+    # Usando:
+    # Candidato A: Flávio Bolsonaro
+    # Candidato B: Lula
 
+    polls = f.PollHandler()
 
-    polls = pd.DataFrame(
+    polls.add(
+        n=4050,
+        name="datafolha_BR-09540/2026",
+        vote_a=0.46, vote_b=0.45,
+        reject_a=0.48, reject_b=0.49
     )
+    polls.add(
+        n=5000,
+        name="palver_BR-01794/2026",
+        vote_a=0.49, vote_b=0.48,
+        reject_a=0.47, reject_b=0.48,
+    )
+    polls.add(
+        n=2100,
+        name="vox_BR-09623/2026",
+        vote_a=0.427, vote_b=0.442,
+        reject_a=0.442, reject_b=0.452,
+    )
+    polls.add(
+        n=2154,
+        name="quaest_BR-08535/2026",
+        vote_a=0.45, vote_b=0.44,
+        reject_a=0.52, reject_b=0.47,
+    )
+    polls.add(
+        n=3702,
+        name="quaest_BR-09158/2026",
+        vote_a=0.46, vote_b=0.45,
+        reject_a=0.49, reject_b=0.47,
+    )
+
+    polls.df
+    return (polls,)
+
+
+@app.cell
+def _(polls):
+    polls.df.plot.scatter(x="vote_a", y="reject_b")
     return
 
 
 @app.cell
-def _():
+def _(polls):
+    polls.df.plot.scatter(x="vote_b", y="reject_a")
     return
 
 

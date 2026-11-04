@@ -45,46 +45,60 @@ def b_metric(*a_metrics: np.float64):
     return np.sum(np.absolute(a_metrics)) / k
 
 
-def poll_data(
-    n: int,
-    name: str,
-    vote_a: float,
-    vote_b: float,
-    reject_a: float,
-    reject_b: float,
-) -> pd.Series:
-    """Build a poll dataset in long format with vote intentions and rejections.
+class PollHandler:
 
-    :param n: Poll sample size.
-    :param name: Poll name, identifying it in the dataset.
-    :param vote_a: Percentage of votes declared to candidate A.
-    :param vote_b: Percentage of votes declared to candidate B.
-    :param unsure_a: Percentage of voters declared unsure about voting on candidate A.
-    :param unsure_b: Percentage of voters declared unsure about voting on candidate B.
-    :paran reject_a: Percentage of voters declared not voting on candidate A.
-    :paran reject_b: Percentage of voters declared not voting on candidate B.
-    """
-    n_va = round(n * vote_a)
-    n_vb = round(n * vote_b)
-    n_ra = round(n * reject_a)
-    n_rb = round(n * reject_b)
-    n_ua = n - n_va - n_ra
-    n_ub = n - n_vb - n_rb
-    unsure_a = n_ua / n
-    unsure_b = n_ub / n
+    @property
+    def df(self) -> pd.DataFrame:
+        return pd.DataFrame(data=self._polls)
 
-    colnames = [
-        "n",
-        "vote_a", "vote_b",
-        "unsure_a", "unsure_b",
-        "reject_a", "reject_b",
-        "n_vote_a", "n_vote_b",
-        "n_unsure_a", "n_unsure_b",
-        "n_reject_a", "n_reject_b",
-    ]
+    @property
+    def polls(self) -> list[pd.Series]:
+        return self._polls
 
-    return pd.Series(
-        [
+    def __init__(self):
+        self._polls: list[pd.Series] = []
+
+    def add(
+        self,
+        n: int,
+        name: str,
+        vote_a: float,
+        vote_b: float,
+        reject_a: float,
+        reject_b: float,
+    ):
+        """Build a poll dataset in long format with vote intentions and rejections.
+
+        :param n: Poll sample size.
+        :param name: Poll name, identifying it in the dataset.
+        :param vote_a: Percentage of votes declared to candidate A.
+        :param vote_b: Percentage of votes declared to candidate B.
+        :param unsure_a: Percentage of voters declared unsure about voting on candidate A.
+        :param unsure_b: Percentage of voters declared unsure about voting on candidate B.
+        :paran reject_a: Percentage of voters declared not voting on candidate A.
+        :paran reject_b: Percentage of voters declared not voting on candidate B.
+        """
+        n_va = round(n * vote_a)
+        n_vb = round(n * vote_b)
+        n_ra = round(n * reject_a)
+        n_rb = round(n * reject_b)
+        n_ua = n - n_va - n_ra
+        n_ub = n - n_vb - n_rb
+        unsure_a = n_ua / n
+        unsure_b = n_ub / n
+
+        colnames = [
+            "n",
+            "vote_a", "vote_b",
+            "unsure_a", "unsure_b",
+            "reject_a", "reject_b",
+            "n_vote_a", "n_vote_b",
+            "n_unsure_a", "n_unsure_b",
+            "n_reject_a", "n_reject_b",
+        ]
+
+        self._polls.append(pd.Series(
+            [
             n,
             vote_a, vote_b,
             unsure_a, unsure_b,
@@ -95,4 +109,4 @@ def poll_data(
         ],
         name=name,
         index=colnames
-    )
+        ))
