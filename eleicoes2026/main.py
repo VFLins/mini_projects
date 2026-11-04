@@ -8,13 +8,14 @@ app = marimo.App(width="medium")
 def _():
     import formulas as f
     import matplotlib.pyplot as plt
+    import numpy as np
     import pandas as pd
     import urllib.request
     import zipfile
 
     from pathlib import Path
 
-    return Path, f, pd, urllib, zipfile
+    return Path, f, np, pd, plt, urllib, zipfile
 
 
 @app.cell
@@ -99,6 +100,27 @@ def _(votos):
     # eleições dos presidenciáveis: 2º turno
     seg_turno = votos.loc[votos["NR_TURNO"] == 2]
     seg_turno.groupby("NM_VOTAVEL")["QT_VOTOS"].sum().sort_values(ascending=False)
+    return (seg_turno,)
+
+
+@app.cell
+def _(seg_turno):
+    seg_turno.loc[seg_turno["NR_VOTAVEL"] == 13]
+    return
+
+
+@app.cell
+def _(seg_turno):
+    n_votos = seg_turno["QT_VOTOS"].sum()
+    n_votos_validos = seg_turno.loc[seg_turno["NR_VOTAVEL"] in (13, 22)]["QT_VOTOS"].sum()
+
+    lula = {
+        "n_votos": seg_turno.loc[seg_turno["NR_VOTAVEL"] == 13]["QT_VOTOS"].sum(),
+        "p_votos": seg_turno.loc[seg_turno["NR_VOTAVEL"] == 13]["QT_VOTOS"].sum() / n_votos,
+        "p_votos": seg_turno.loc[seg_turno["NR_VOTAVEL"] == 13]["QT_VOTOS"].sum() / n_votos_validos,
+    }
+
+    lula
     return
 
 
@@ -206,61 +228,61 @@ def _(f):
     polls = f.PollHandler()
 
     polls.add(
-        n=2154, # revisar
+        n=2154, ic=0.02, # revisar
         name="datafolha1", # revisar
         vote_a=0.49, vote_b=0.45,
         reject_a=0.43, reject_b=0.46
     )
     polls.add(
-        n=2154, # revisar
+        n=2154, ic=0.02, # revisar
         name="datafolha2", # revisar
         vote_a=0.47, vote_b=0.45,
         reject_a=0.44, reject_b=0.46
     )
     polls.add(
-        n=2154,
+        n=2154, ic=0.02,
         name="datafolha3_BR-09540/2026",
         vote_a=0.47, vote_b=0.46,
         reject_a=0.46, reject_b=0.45
     )
     polls.add(
-        n=4050,
+        n=4050, ic=0.02,
         name="datafolha4_BR-09540/2026",
         vote_a=0.46, vote_b=0.45,
         reject_a=0.48, reject_b=0.49
     )
     polls.add(
-        n=5000,
+        n=5000, ic=0.023,
         name="palverw7_BR-08028/2026",
         vote_a=0.49, vote_b=0.48,
         reject_a=0.48, reject_b=0.50,
     )
     polls.add(
-        n=5000,
+        n=5000, ic=0.024,
         name="palverw8_BR-04612/2026,",
         vote_a=0.49, vote_b=0.49,
         reject_a=0.47, reject_b=0.47,
     )
     polls.add(
-        n=5000,
+        n=5000, ic=0.022,
         name="palverw9_BR-01794/2026",
         vote_a=0.49, vote_b=0.48,
         reject_a=0.47, reject_b=0.48,
     )
     polls.add(
-        n=2100,
+        n=2100, ic=0.0215,
         name="vox_BR-09623/2026",
         vote_a=0.427, vote_b=0.442,
         reject_a=0.442, reject_b=0.452,
     )
     polls.add(
-        n=2154,
+        n=2154, ic=0.02,
         name="quaest1_BR-08535/2026",
         vote_a=0.45, vote_b=0.44,
         reject_a=0.52, reject_b=0.47,
     )
     polls.add(
-        n=3702,
+        n=3702, ic=0.02,
         name="quaest2_BR-09158/2026",
         vote_a=0.46, vote_b=0.45,
         reject_a=0.49, reject_b=0.47,
@@ -271,14 +293,34 @@ def _(f):
 
 
 @app.cell
-def _(polls):
-    polls.df.plot.scatter(x="vote_a", y="reject_b")
+def _():
     return
 
 
 @app.cell
-def _(polls):
+def _(np, plt, polls):
+    polls.df.plot.scatter(x="vote_a", y="reject_b")
+    ma, ba = np.polyfit(polls.df["vote_a"], polls.df["reject_b"], 1)
+    print()
+    plt.plot(
+        polls.df["vote_a"],
+        (ma * polls.df["vote_a"] + ba),
+        label=f"slope: {ma:.2f}, intercept: {ba:.2f}",
+    )
+    plt.legend()
+    return
+
+
+@app.cell
+def _(np, plt, polls):
     polls.df.plot.scatter(x="vote_b", y="reject_a")
+    mb, bb = np.polyfit(polls.df["vote_b"], polls.df["reject_a"], 1)
+    plt.plot(
+        polls.df["vote_b"],
+        (mb * polls.df["vote_b"] + bb),
+        label=f"slope: {mb:.2f}, intercept: {bb:.2f}",
+    )
+    plt.legend()
     return
 
 

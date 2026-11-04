@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from decimal import Decimal
 
 
 def a_metric(
@@ -61,34 +62,34 @@ class PollHandler:
     def add(
         self,
         n: int,
+        ic: float,
         name: str,
         vote_a: float,
         vote_b: float,
         reject_a: float,
         reject_b: float,
     ):
-        """Build a poll dataset in long format with vote intentions and rejections.
+        """Adds a poll dataset with vote intentions and rejections.
 
         :param n: Poll sample size.
+        :param ic: Poll estimated confidence interval in percentage points.
         :param name: Poll name, identifying it in the dataset.
         :param vote_a: Percentage of votes declared to candidate A.
         :param vote_b: Percentage of votes declared to candidate B.
-        :param unsure_a: Percentage of voters declared unsure about voting on candidate A.
-        :param unsure_b: Percentage of voters declared unsure about voting on candidate B.
         :paran reject_a: Percentage of voters declared not voting on candidate A.
         :paran reject_b: Percentage of voters declared not voting on candidate B.
         """
-        n_va = round(n * vote_a)
-        n_vb = round(n * vote_b)
-        n_ra = round(n * reject_a)
-        n_rb = round(n * reject_b)
+        n_va = n * vote_a
+        n_vb = n * vote_b
+        n_ra = n * reject_a
+        n_rb = n * reject_b
         n_ua = n - n_va - n_ra
         n_ub = n - n_vb - n_rb
         unsure_a = n_ua / n
         unsure_b = n_ub / n
 
         colnames = [
-            "n",
+            "n", "ic",
             "vote_a", "vote_b",
             "unsure_a", "unsure_b",
             "reject_a", "reject_b",
@@ -99,7 +100,7 @@ class PollHandler:
 
         self._polls.append(pd.Series(
             [
-            n,
+            n, ic,
             vote_a, vote_b,
             unsure_a, unsure_b,
             reject_a, reject_b,
