@@ -6,7 +6,6 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import camelot
     import formulas as f
     import matplotlib.pyplot as plt
     import pandas as pd
@@ -124,10 +123,9 @@ def _(mo):
 
     Para esta análise, vamos considerar as pesquisas de segundo turno:
 
-    - Data Folha: [BR-09540/2026](https://datafolha.folha.uol.com.br/eleicoes/2026/10/flavio-bolsonaro-51-e-lula-49-chegam-empatados-tecnicamente-ao-dia-da-eleicao.shtml)
-    - Palver: [BR-01794/2026](https://www.palver.com.br/api/surveys/voting-intention-2026-october-w9/report)
-    - Quaest: [BR-08535/2026](https://g1.globo.com/politica/eleicoes/2026/pesquisa-eleitoral/noticia/2026/10/21/quaest-presidente-21-outubro.ghtml)
-    - Quaest: [BR-09158/2026](https://g1.globo.com/politica/eleicoes/2026/pesquisa-eleitoral/noticia/2026/10/24/quaest-2o-turno-votos-validos.ghtml)
+    - Data Folha: [BR-09709/2026](https://g1.globo.com/politica/eleicoes/2026/pesquisa-eleitoral/noticia/2026/10/22/datafolha-presidente-segundo-turno-22-outubro.ghtml) e [BR-09540/2026](https://datafolha.folha.uol.com.br/eleicoes/2026/10/flavio-bolsonaro-51-e-lula-49-chegam-empatados-tecnicamente-ao-dia-da-eleicao.shtml)
+    - Palver: [BR-00198/2026](https://www.palver.com.br/api/surveys/voting-intention-2026-october-w6/report), [BR-08028/2026](https://www.palver.com.br/api/surveys/voting-intention-2026-october-w7/report), [BR-04612/2026](https://www.palver.com.br/api/surveys/voting-intention-2026-october-w8/report), e [BR-01794/2026](https://www.palver.com.br/api/surveys/voting-intention-2026-october-w9/report)
+    - Quaest: [BR-08535/2026](https://g1.globo.com/politica/eleicoes/2026/pesquisa-eleitoral/noticia/2026/10/21/quaest-presidente-21-outubro.ghtml) e [BR-09158/2026](https://g1.globo.com/politica/eleicoes/2026/pesquisa-eleitoral/noticia/2026/10/24/quaest-2o-turno-votos-validos.ghtml)
     - Realtime Big Data: [BR-03490/2026](https://realtimebigdata.com.br/wp-content/uploads/2026/09/Brasil-BR-03490-2026-Set26.pdf) (set. 2026)
     - Vox Brasil: [BR-09623/2026](https://static.poder360.com.br/uploads/2026/10/pesquisa-vox-brasil-9out2026.pdf)
 
@@ -208,14 +206,44 @@ def _(f):
     polls = f.PollHandler()
 
     polls.add(
+        n=2154, # revisar
+        name="datafolha1", # revisar
+        vote_a=0.49, vote_b=0.45,
+        reject_a=0.43, reject_b=0.46
+    )
+    polls.add(
+        n=2154, # revisar
+        name="datafolha2", # revisar
+        vote_a=0.47, vote_b=0.45,
+        reject_a=0.44, reject_b=0.46
+    )
+    polls.add(
+        n=2154,
+        name="datafolha3_BR-09540/2026",
+        vote_a=0.47, vote_b=0.46,
+        reject_a=0.46, reject_b=0.45
+    )
+    polls.add(
         n=4050,
-        name="datafolha_BR-09540/2026",
+        name="datafolha4_BR-09540/2026",
         vote_a=0.46, vote_b=0.45,
         reject_a=0.48, reject_b=0.49
     )
     polls.add(
         n=5000,
-        name="palver_BR-01794/2026",
+        name="palverw7_BR-08028/2026",
+        vote_a=0.49, vote_b=0.48,
+        reject_a=0.48, reject_b=0.50,
+    )
+    polls.add(
+        n=5000,
+        name="palverw8_BR-04612/2026,",
+        vote_a=0.49, vote_b=0.49,
+        reject_a=0.47, reject_b=0.47,
+    )
+    polls.add(
+        n=5000,
+        name="palverw9_BR-01794/2026",
         vote_a=0.49, vote_b=0.48,
         reject_a=0.47, reject_b=0.48,
     )
@@ -227,13 +255,13 @@ def _(f):
     )
     polls.add(
         n=2154,
-        name="quaest_BR-08535/2026",
+        name="quaest1_BR-08535/2026",
         vote_a=0.45, vote_b=0.44,
         reject_a=0.52, reject_b=0.47,
     )
     polls.add(
         n=3702,
-        name="quaest_BR-09158/2026",
+        name="quaest2_BR-09158/2026",
         vote_a=0.46, vote_b=0.45,
         reject_a=0.49, reject_b=0.47,
     )
