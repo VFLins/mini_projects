@@ -74,11 +74,15 @@ class PollHandler:
         :param n: Poll sample size.
         :param ic: Poll estimated confidence interval in percentage points.
         :param name: Poll name, identifying it in the dataset.
-        :param vote_a: Percentage of votes declared to candidate A.
-        :param vote_b: Percentage of votes declared to candidate B.
-        :paran reject_a: Percentage of voters declared not voting on candidate A.
-        :paran reject_b: Percentage of voters declared not voting on candidate B.
+        :param vote_flavio: Percentage of votes declared to candidate Flávio.
+        :param vote_lula: Percentage of votes declared to candidate Lula.
+        :paran reject_flavio: Percentage of voters declared not voting on candidate Flávio.
+        :paran reject_lula: Percentage of voters declared not voting on candidate Lula.
         """
+        vote_a_hi, vote_a_lo = vote_a + ic, vote_a - ic
+        vote_b_hi, vote_b_lo = vote_b + ic, vote_b - ic
+        reject_a_hi, reject_a_lo = reject_a + ic, reject_a - ic
+        reject_b_hi, reject_b_lo = reject_b + ic, reject_b - ic
         n_va = n * vote_a
         n_vb = n * vote_b
         n_ra = n * reject_a
@@ -87,12 +91,17 @@ class PollHandler:
         n_ub = n - n_vb - n_rb
         unsure_a = n_ua / n
         unsure_b = n_ub / n
+        unsure_a_hi, unsure_a_lo = unsure_a + ic, unsure_a - ic
+        unsure_b_hi, unsure_b_lo = unsure_b + ic, unsure_b - ic
 
         colnames = [
             "n", "ic",
-            "vote_a", "vote_b",
-            "unsure_a", "unsure_b",
-            "reject_a", "reject_b",
+            "vote_a", "vote_a_hi", "vote_a_lo",
+            "vote_b", "vote_b_hi", "vote_b_lo",
+            "unsure_a", "unsure_a_hi", "unsure_a_lo",
+            "unsure_b", "unsure_b_hi", "unsure_b_lo",
+            "reject_a", "reject_a_hi", "reject_a_lo",
+            "reject_b", "reject_b_hi", "reject_b_lo",
             "n_vote_a", "n_vote_b",
             "n_unsure_a", "n_unsure_b",
             "n_reject_a", "n_reject_b",
@@ -101,9 +110,12 @@ class PollHandler:
         self._polls.append(pd.Series(
             [
             n, ic,
-            vote_a, vote_b,
-            unsure_a, unsure_b,
-            reject_a, reject_b,
+            vote_a, vote_a_hi, vote_a_lo,
+            vote_b, vote_b_hi, vote_b_lo,
+            unsure_a, unsure_a_hi, unsure_a_lo,
+            unsure_b, unsure_b_hi, unsure_b_lo,
+            reject_a, reject_a_hi, reject_a_lo,
+            reject_b, reject_b_hi, reject_b_lo,
             n_va, n_vb,
             n_ua, n_ub,
             n_ra, n_rb,

@@ -145,11 +145,16 @@ def _(mo):
 
     Para esta análise, vamos considerar as pesquisas de segundo turno:
 
-    - Data Folha: [BR-09709/2026](https://g1.globo.com/politica/eleicoes/2026/pesquisa-eleitoral/noticia/2026/10/22/datafolha-presidente-segundo-turno-22-outubro.ghtml) e [BR-09540/2026](https://datafolha.folha.uol.com.br/eleicoes/2026/10/flavio-bolsonaro-51-e-lula-49-chegam-empatados-tecnicamente-ao-dia-da-eleicao.shtml)
-    - Palver: [BR-00198/2026](https://www.palver.com.br/api/surveys/voting-intention-2026-october-w6/report), [BR-08028/2026](https://www.palver.com.br/api/surveys/voting-intention-2026-october-w7/report), [BR-04612/2026](https://www.palver.com.br/api/surveys/voting-intention-2026-october-w8/report), e [BR-01794/2026](https://www.palver.com.br/api/surveys/voting-intention-2026-october-w9/report)
-    - Quaest: [BR-08535/2026](https://g1.globo.com/politica/eleicoes/2026/pesquisa-eleitoral/noticia/2026/10/21/quaest-presidente-21-outubro.ghtml) e [BR-09158/2026](https://g1.globo.com/politica/eleicoes/2026/pesquisa-eleitoral/noticia/2026/10/24/quaest-2o-turno-votos-validos.ghtml)
-    - Realtime Big Data: [BR-03490/2026](https://realtimebigdata.com.br/wp-content/uploads/2026/09/Brasil-BR-03490-2026-Set26.pdf) (set. 2026)
-    - Vox Brasil: [BR-09623/2026](https://static.poder360.com.br/uploads/2026/10/pesquisa-vox-brasil-9out2026.pdf)
+    - [Atlas Intel](https://atlasintel.org/polls/general-release-polls): BR-02418/2026 e BR-04739/2026
+    - [CNT](https://cnt.org.br/pesquisas): BR-00652/2026 e BR-021362026
+    - [Data Folha](https://datafolha.folha.uol.com.br/): BR-09709/2026 e BR-09540/2026
+    - [Gerp](https://www.gerp.com.br/relatorios.html): BR-07877/2026, BR-05187/2026, BR-03835/2026, e BR-09327/2026
+    - [Nexus](https://www.nexus.fsb.com.br/estudos-divulgados/): BR-07997/2026, BR-044499/2026 e BR-08234/2026
+    - [Palver](https://www.palver.com.br/survey): BR-00198/2026, BR-08028/2026, BR-04612/2026, e BR-01794/2026
+    - [Poder Data](https://www.poder360.com.br/poderdata/): BR-08134/2026, BR-07926/2026, BR-04258/2026, BR-02586/2026 e BR-01209/2026
+    - [Quaest](https://quaest.com.br/relatorios-quaest/): BR-08535/2026 e BR-09158/2026
+    - [Realtime Big Data](https://realtimebigdata.com.br/pesquisas/): BR-02952/2026 e BR-09670/2026
+    - [Vox Brasil](https://voxbrasilpesquisas.com.br/imprensa/): BR-09623/2026, BR-04332/2026 e BR-03259/2026
 
 
     ## Rejeição do candidato
@@ -250,6 +255,48 @@ def _(f):
         name="datafolha4_BR-09540/2026",
         vote_a=0.46, vote_b=0.45,
         reject_a=0.48, reject_b=0.49
+    )
+    polls.add(
+        n=2400, ic=0.02,
+        name="gerp1_BR-07877/2026",
+        vote_a=0.53, vote_b=0.44,
+        reject_a=0.42, reject_b=0.53
+    )
+    polls.add(
+        n=2400, ic=0.02,
+        name="gerp2_BR-05187/2026",
+        vote_a=0.50, vote_b=0.45,
+        reject_a=0.46, reject_b=0.49
+    )
+    polls.add(
+        n=2400, ic=0.02,
+        name="gerp3_BR-03835/2026",
+        vote_a=0.50, vote_b=0.45,
+        reject_a=0.46, reject_b=0.49
+    )
+    polls.add(
+        n=2400, ic=0.02,
+        name="gerp4_ BR-09327/2026",
+        vote_a=0.49, vote_b=0.46,
+        reject_a=0.45, reject_b=0.48
+    )
+    polls.add(
+        n=2002, ic=0.02,
+        name="nexus1_BR-07997/2026",
+        vote_a=0.48, vote_b=0.45,
+        reject_a=0.47, reject_b=0.51
+    )
+    polls.add(
+        n=2002, ic=0.02,
+        name="nexus2_BR-04499/2026",
+        vote_a=0.465, vote_b=0.459,
+        reject_a=0.468, reject_b=0.478
+    )
+    polls.add(
+        n=2000, ic=0.022,
+        name="nexus2_BR-04499/2026",
+        vote_a=0.47, vote_b=0.46,
+        reject_a=0.465, reject_b=0.491
     )
     polls.add(
         n=5000, ic=0.023,
