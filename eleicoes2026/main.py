@@ -145,8 +145,8 @@ def _(mo):
 
     Para esta análise, vamos considerar as pesquisas de segundo turno:
 
-    - [Atlas Intel](https://atlasintel.org/polls/general-release-polls): BR-02418/2026 e BR-04739/2026
-    - [CNT](https://cnt.org.br/pesquisas): BR-00652/2026 e BR-021362026
+    - [CNT](https://cnt.org.br/pesquisas): BR-00652/2026 e BR-02136/2026
+    - [Futura](https://www.futurainteligencia.com.br/pesquisas): BR-00650/2026, BR-00650/2026, BR-06715/2026
     - [Data Folha](https://datafolha.folha.uol.com.br/): BR-09709/2026 e BR-09540/2026
     - [Gerp](https://www.gerp.com.br/relatorios.html): BR-07877/2026, BR-05187/2026, BR-03835/2026, e BR-09327/2026
     - [Nexus](https://www.nexus.fsb.com.br/estudos-divulgados/): BR-07997/2026, BR-044499/2026 e BR-08234/2026
@@ -233,46 +233,76 @@ def _(f):
     polls = f.PollHandler()
 
     polls.add(
+        n=2000, ic=0.022,
+        name="futura1_BR-00650/2026",
+        vote_a=0.50, vote_b=0.466,
+        reject_a=0.454, reject_b=0.486,
+    )
+    polls.add(
+        n=2000, ic=0.022,
+        name="futura2_BR-03761/2026",
+        vote_a=0.49, vote_b=0.475,
+        reject_a=0.461, reject_b=0.472,
+    )
+    polls.add(
+        n=2000, ic=0.022,
+        name="futura3_BR-06715/2026",
+        vote_a=0.483, vote_b=0.475,
+        reject_a=0.458, reject_b=0.474,
+    )
+    polls.add(
+        n=2000, ic=0.022,
+        name="futura4_BR-06614/2026",
+        vote_a=0.489, vote_b=0.468,
+        reject_a=0.452, reject_b=0.473,
+    )
+    polls.add(
+        n=2000, ic=0.022,
+        name="futura5_BR-09726/2026",
+        vote_a=0.482, vote_b=0.479,
+        reject_a=0.466, reject_b=0.4662,
+    )
+    polls.add(
         n=2154, ic=0.02, # revisar
         name="datafolha1", # revisar
         vote_a=0.49, vote_b=0.45,
-        reject_a=0.43, reject_b=0.46
+        reject_a=0.43, reject_b=0.46,
     )
     polls.add(
         n=2154, ic=0.02, # revisar
         name="datafolha2", # revisar
         vote_a=0.47, vote_b=0.45,
-        reject_a=0.44, reject_b=0.46
+        reject_a=0.44, reject_b=0.46,
     )
     polls.add(
         n=2154, ic=0.02,
         name="datafolha3_BR-09540/2026",
         vote_a=0.47, vote_b=0.46,
-        reject_a=0.46, reject_b=0.45
+        reject_a=0.46, reject_b=0.45,
     )
     polls.add(
         n=4050, ic=0.02,
         name="datafolha4_BR-09540/2026",
         vote_a=0.46, vote_b=0.45,
-        reject_a=0.48, reject_b=0.49
+        reject_a=0.48, reject_b=0.49,
     )
     polls.add(
         n=2400, ic=0.02,
         name="gerp1_BR-07877/2026",
         vote_a=0.53, vote_b=0.44,
-        reject_a=0.42, reject_b=0.53
+        reject_a=0.42, reject_b=0.53,
     )
     polls.add(
         n=2400, ic=0.02,
         name="gerp2_BR-05187/2026",
         vote_a=0.50, vote_b=0.45,
-        reject_a=0.46, reject_b=0.49
+        reject_a=0.46, reject_b=0.49,
     )
     polls.add(
         n=2400, ic=0.02,
         name="gerp3_BR-03835/2026",
         vote_a=0.50, vote_b=0.45,
-        reject_a=0.46, reject_b=0.49
+        reject_a=0.46, reject_b=0.49,
     )
     polls.add(
         n=2400, ic=0.02,
@@ -284,19 +314,19 @@ def _(f):
         n=2002, ic=0.02,
         name="nexus1_BR-07997/2026",
         vote_a=0.48, vote_b=0.45,
-        reject_a=0.47, reject_b=0.51
+        reject_a=0.47, reject_b=0.51,
     )
     polls.add(
         n=2002, ic=0.02,
         name="nexus2_BR-04499/2026",
         vote_a=0.465, vote_b=0.459,
-        reject_a=0.468, reject_b=0.478
+        reject_a=0.468, reject_b=0.478,
     )
     polls.add(
         n=2000, ic=0.022,
         name="nexus2_BR-04499/2026",
         vote_a=0.47, vote_b=0.46,
-        reject_a=0.465, reject_b=0.491
+        reject_a=0.465, reject_b=0.491,
     )
     polls.add(
         n=5000, ic=0.023,
