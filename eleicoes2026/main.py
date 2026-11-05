@@ -149,6 +149,7 @@ def _(mo):
     - [Futura](https://www.futurainteligencia.com.br/pesquisas): BR-00650/2026, BR-00650/2026, BR-06715/2026
     - [Data Folha](https://datafolha.folha.uol.com.br/): BR-09709/2026 e BR-09540/2026
     - [Gerp](https://www.gerp.com.br/relatorios.html): BR-07877/2026, BR-05187/2026, BR-03835/2026, e BR-09327/2026
+    - [Instituto França](https://www.instagram.com/institutofranca.br/): BR-07896/2026, BR-04863/2026 e BR-09459/2026
     - [Nexus](https://www.nexus.fsb.com.br/estudos-divulgados/): BR-07997/2026, BR-044499/2026 e BR-08234/2026
     - [Palver](https://www.palver.com.br/survey): BR-00198/2026, BR-08028/2026, BR-04612/2026, e BR-01794/2026
     - [Poder Data](https://www.poder360.com.br/poderdata/): BR-08134/2026, BR-07926/2026, BR-04258/2026, BR-02586/2026 e BR-01209/2026
@@ -370,7 +371,26 @@ def _(f):
 
 
 @app.cell
-def _():
+def _(f, polls):
+    f.scatterplot(
+        x=polls.df["vote_a"],
+        y=polls.df["reject_b"],
+        x_label="Vota Flávio Bolsonaro",
+        y_label="Rejeita Lula",
+        with_regression=True,
+    )
+    return
+
+
+@app.cell
+def _(f, polls):
+    f.scatterplot(
+        x=polls.df["vote_b"],
+        y=polls.df["reject_a"],
+        x_label="Vota Lula",
+        y_label="Rejeita Flávio Bolsonaro",
+        with_regression=True,
+    )
     return
 
 
@@ -382,7 +402,7 @@ def _(np, plt, polls):
     plt.plot(
         polls.df["vote_a"],
         (ma * polls.df["vote_a"] + ba),
-        label=f"slope: {ma:.2f}, intercept: {ba:.2f}",
+        label=f"Intercepto: {ba:.2f}\nInclinação: {ma:.2f}".replace(".", ","),
     )
     plt.legend()
     return

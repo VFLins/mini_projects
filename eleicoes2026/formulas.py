@@ -1,6 +1,14 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
 from decimal import Decimal
+from scipy import stats
+from typing import Sequence
+
+
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Space Mono"]
 
 
 def a_metric(
@@ -123,3 +131,46 @@ class PollHandler:
         name=name,
         index=colnames
         ))
+
+
+def scatterplot(
+    x: Sequence,
+    y: Sequence,
+    with_regression: bool = False,
+    title: str | None = None,
+    x_label: str | None = None,
+    y_label: str | None = None,
+):
+    plt.scatter(x, y, c="#374451", s=100)
+
+    plt.tick_params(axis="both", labelsize=9, length=0, pad=6)
+    if title:
+        plt.title(title, fontweight="bold")
+    if x_label:
+        plt.xlabel(x_label, fontsize=12, labelpad=10)
+    if y_label:
+        plt.ylabel(y_label, fontsize=12, labelpad=10)
+
+    if with_regression:
+        res = stats.linregress(x, y)
+        df = len(x) - 2
+        slope = res.slope
+        intercept = res.intercept
+        t_intercept = intercept / res.intercept_stderr
+        p_intercept = 2 * (1 - stats.t.cdf(abs(t_intercept), df))
+        y_pred = slope * x + intercept
+        label_reg = (
+            f"Intercepto: {intercept:.2f} "
+            f"(Conf.: {100 - (p_intercept * 100):.1f}%)\n"
+            f"Inclinação: {slope:.2f} "
+            f"(Conf.: {100 - (res.pvalue * 100):.1f}%)"
+        )
+        plt.plot(x, y_pred, color="#008181", linewidth=2, label=label_reg)
+        plt.legend(frameon=False, fontsize=9)
+
+    ax = plt.gca()
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["bottom"].set_linewidth(1.8)
+    ax.spines["left"].set_linewidth(1.8)
+    plt.show()
