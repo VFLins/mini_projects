@@ -8,7 +8,7 @@ from typing import Sequence
 
 
 plt.rcParams["font.family"] = "sans-serif"
-plt.rcParams["font.sans-serif"] = ["Space Mono"]
+plt.rcParams["font.sans-serif"] = ["Inter"]
 
 
 def a_metric(
@@ -141,15 +141,16 @@ def scatterplot(
     x_label: str | None = None,
     y_label: str | None = None,
 ):
-    plt.scatter(x, y, c="#374451", s=100)
+    fig, ax = plt.subplots(figsize=(7, 5))
+    ax.scatter(x, y, c="#009e9c", s=100)
+    ax.tick_params(axis="both", labelsize=9, length=0, pad=6)
 
-    plt.tick_params(axis="both", labelsize=9, length=0, pad=6)
     if title:
         plt.title(title, fontweight="bold")
     if x_label:
-        plt.xlabel(x_label, fontsize=12, labelpad=10)
+        plt.xlabel(x_label, fontsize=12, labelpad=14)
     if y_label:
-        plt.ylabel(y_label, fontsize=12, labelpad=10)
+        plt.ylabel(y_label, fontsize=12, labelpad=14)
 
     if with_regression:
         res = stats.linregress(x, y)
@@ -165,12 +166,14 @@ def scatterplot(
             f"Inclinação: {slope:.2f} "
             f"(Conf.: {100 - (res.pvalue * 100):.1f}%)"
         )
-        plt.plot(x, y_pred, color="#008181", linewidth=2, label=label_reg)
-        plt.legend(frameon=False, fontsize=9)
+        ax.plot(x, y_pred, color="#374451", linewidth=2, label=label_reg)
+        ax.legend(frameon=False, fontsize=9)
 
-    ax = plt.gca()
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["bottom"].set_linewidth(1.8)
-    ax.spines["left"].set_linewidth(1.8)
-    plt.show()
+    for k, v in ax.spines.items():
+        if k in ["top", "right"]:
+            v.set_visible(False)
+        else:
+            v.set_linewidth(1.8)
+            v.set_color("#98a7b4")
+
+    return fig, ax

@@ -8,6 +8,7 @@ app = marimo.App(width="medium")
 def _():
     import formulas as f
     import matplotlib.pyplot as plt
+    import matplotlib.ticker as ticker
     import numpy as np
     import pandas as pd
     import urllib.request
@@ -15,7 +16,7 @@ def _():
 
     from pathlib import Path
 
-    return Path, f, np, pd, plt, urllib, zipfile
+    return Path, f, pd, plt, ticker, urllib, zipfile
 
 
 @app.cell
@@ -371,53 +372,56 @@ def _(f):
 
 
 @app.cell
-def _(f, polls):
-    f.scatterplot(
+def _(f, plt, polls, ticker):
+    fig1, ax1 = f.scatterplot(
         x=polls.df["vote_a"],
         y=polls.df["reject_b"],
         x_label="Vota Flávio Bolsonaro",
         y_label="Rejeita Lula",
         with_regression=True,
     )
+    (
+        ax1
+        .yaxis
+        .set_major_formatter(
+            ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
+        )
+    )
+    (
+        ax1
+        .xaxis
+        .set_major_formatter(
+            ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
+        )
+    )
+    plt.show()
     return
 
 
 @app.cell
-def _(f, polls):
-    f.scatterplot(
+def _(f, plt, polls, ticker):
+    fig2, ax2 = f.scatterplot(
         x=polls.df["vote_b"],
         y=polls.df["reject_a"],
         x_label="Vota Lula",
         y_label="Rejeita Flávio Bolsonaro",
         with_regression=True,
     )
-    return
-
-
-@app.cell
-def _(np, plt, polls):
-    polls.df.plot.scatter(x="vote_a", y="reject_b")
-    ma, ba = np.polyfit(polls.df["vote_a"], polls.df["reject_b"], 1)
-    print()
-    plt.plot(
-        polls.df["vote_a"],
-        (ma * polls.df["vote_a"] + ba),
-        label=f"Intercepto: {ba:.2f}\nInclinação: {ma:.2f}".replace(".", ","),
+    (
+        ax2
+        .yaxis
+        .set_major_formatter(
+            ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
+        )
     )
-    plt.legend()
-    return
-
-
-@app.cell
-def _(np, plt, polls):
-    polls.df.plot.scatter(x="vote_b", y="reject_a")
-    mb, bb = np.polyfit(polls.df["vote_b"], polls.df["reject_a"], 1)
-    plt.plot(
-        polls.df["vote_b"],
-        (mb * polls.df["vote_b"] + bb),
-        label=f"slope: {mb:.2f}, intercept: {bb:.2f}",
+    (
+        ax2
+        .xaxis
+        .set_major_formatter(
+            ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
+        )
     )
-    plt.legend()
+    plt.show()
     return
 
 
