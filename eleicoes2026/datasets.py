@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import pandas as pd
 import marimo as mo
 import urllib.request
@@ -18,49 +19,53 @@ VOTOS_ZIP = VOTOS_URL.split("/")[-1]
 VOTOS_CSV = Path(VOTOS_ZIP).with_suffix(".csv")
 
 
-def download_vote_data():
-    if not (DOWNLOADS_DIR / VOTOS_CSV).is_file():
-        print("Fazendo download dos dados...")
-        urllib.request.urlretrieve(VOTOS_URL, VOTOS_ZIP)
-        print(f"Extraindo arquivos para {DOWNLOADS_DIR}")
-        zipfile.ZipFile(PROJECT_ROOT / VOTOS_ZIP).extractall(DOWNLOADS_DIR)
-        print(f"Excluindo arquivo compactado {PROJECT_ROOT / VOTOS_ZIP}")
-        (PROJECT_ROOT / VOTOS_ZIP).unlink()
-        print("Concluído!")
-    else:
-        print("Arquivo já encontrado no diretório esperado, nada para fazer.")
-
-
-def load_vote_data() -> pd.DataFrame:
-    return pd.read_csv(
-        DOWNLOADS_DIR / "votacao_secao_2026_BR.csv",
-        sep=";",
-        encoding="latin1",
-        usecols=["NR_VOTAVEL", "NM_VOTAVEL", "NR_TURNO", "QT_VOTOS"],
-        dtype={
-            "NR_VOTAVEL": "int16",
-            "NM_VOTAVEL": "category",
-            "NR_TURNO": "int16",
-            "QT_VOTOS": "int64",
-        }
-    )
-
-
-def ask_download_vote_data() -> pd.DataFrame | None:
-    if not (DOWNLOADS_DIR / VOTOS_CSV).is_file():
-        confirm_download = (
-            mo.ui.checkbox(
-                label="Baixar os dados de votação antes de continuar? (1,6 GB)"
-            )
+class VoteData:
+    def __init__(self):
+        self.ask_download = (
+            mo.ui.checkbox(value=True, label="Baixar os dados de votação (1,6 GB)")
             .form(submit_button_label="Continuar")
         )
-        if confirm_download:
-            download_vote_data()
-            return load_vote_data()
+
+    @property
+    def file_exists(self) -> bool:
+        return (DOWNLOADS_DIR / VOTOS_CSV).is_file()
+
+
+    def download(self):
+        if self.ask_download.value is False:
+            print("Ignorando download como solicitado pelo usuário.")
+            return
+
+        if not self.file_exists:
+            print("Fazendo download dos dados...")
+            urllib.request.urlretrieve(VOTOS_URL, VOTOS_ZIP)
+            print(f"Extraindo arquivos para {DOWNLOADS_DIR}")
+            zipfile.ZipFile(PROJECT_ROOT / VOTOS_ZIP).extractall(DOWNLOADS_DIR)
+            print(f"Excluindo arquivo compactado {PROJECT_ROOT / VOTOS_ZIP}")
+            (PROJECT_ROOT / VOTOS_ZIP).unlink()
+            print("Download concluído.")
         else:
-            return None
-    else:
-        return load_vote_data()
+            print("Dados já encontrados no diretório esperado, ignorando download.")
+
+    def load(self):
+        if not self.file_exists:
+            print("Ignorando carregamento, dados não encontrados.")
+            return
+
+        print("Carregando dados...")
+        self.df = pd.read_csv(
+            DOWNLOADS_DIR / "votacao_secao_2026_BR.csv",
+            sep=";",
+            encoding="latin1",
+            usecols=["NR_VOTAVEL", "NM_VOTAVEL", "NR_TURNO", "QT_VOTOS"],
+            dtype={
+                "NR_VOTAVEL": "int16",
+                "NM_VOTAVEL": "category",
+                "NR_TURNO": "int16",
+                "QT_VOTOS": "int64",
+            }
+        )
+        print("Dados carregados.")
 
 
 class RejectionPolls:

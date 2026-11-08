@@ -45,28 +45,26 @@ def _(mo):
 
 
 @app.cell
-def _(d, mo):
-    votos = d.ask_download_vote_data()
-    if votos is not None:
-       mo.output.replace(votos.dtypes)
+def _(d):
+    votos = d.VoteData()
+    if not votos.file_exists:
+        votos.ask_download
     return (votos,)
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    A explicação dos códigos acima está no arquivo `"data/leiame.pdf"`.
-
-    Para validar se os dados de votos foram coletados corretamente, vamos tentar reproduzir os resultados das votações em tabelas  abaixo:
-    """)
+@app.cell
+def _(mo, votos):
+    mo.stop(votos.ask_download.value is None)
+    votos.download()
+    votos.load()
     return
 
 
 @app.cell
 def _(mo, votos):
     # eleições dos presidenciáveis: 1º turno
-    if votos is not None:
-        prim_turno = votos.loc[votos["NR_TURNO"] == 1]
+    if hasattr(votos, "df"):
+        prim_turno = votos.df.loc[votos.df["NR_TURNO"] == 1]
         mo.output.replace(
             prim_turno
             .groupby("NM_VOTAVEL")["QT_VOTOS"]
@@ -79,8 +77,8 @@ def _(mo, votos):
 @app.cell
 def _(mo, votos):
     # eleições dos presidenciáveis: 2º turno
-    if votos is not None:
-        seg_turno = votos.loc[votos["NR_TURNO"] == 2]
+    if hasattr(votos, "df"):
+        seg_turno = votos.df.loc[votos.df["NR_TURNO"] == 2]
         mo.output.replace(
             seg_turno
             .groupby("NM_VOTAVEL")["QT_VOTOS"]
