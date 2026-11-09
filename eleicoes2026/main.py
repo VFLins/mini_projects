@@ -1,7 +1,10 @@
 import marimo
 
 __generated_with = "0.25.2"
-app = marimo.App(width="medium")
+app = marimo.App(
+    app_title="Entendendo a transferência de votos entre o primeiro e segundo turno das eleições presidenciais de 2026",
+    css_file="theme.css",
+)
 
 
 @app.cell
@@ -54,7 +57,11 @@ def _(d):
 
 @app.cell
 def _(mo, votos):
-    mo.stop(votos.ask_download.value is None)
+    mo.stop(
+        not votos.file_exists,
+        mo.md("Dados de votação não solicitados, pulando..."),
+    )
+
     votos.download()
     votos.load()
     return
@@ -62,50 +69,32 @@ def _(mo, votos):
 
 @app.cell
 def _(mo, votos):
-    # eleições dos presidenciáveis: 1º turno
-    if hasattr(votos, "df"):
-        prim_turno = votos.df.loc[votos.df["NR_TURNO"] == 1]
-        mo.output.replace(
-            prim_turno
-            .groupby("NM_VOTAVEL")["QT_VOTOS"]
-            .sum()
-            .sort_values(ascending=False)
-        )
-    return
+    mo.stop(not hasattr(votos, "df"))
+    seg_turno = votos.df.loc[votos.df["NR_TURNO"] == 2]
 
+    _is_valid = seg_turno["NR_VOTAVEL"].isin([13, 22])
+    _voted_lula = seg_turno["NR_VOTAVEL"] == 13
+    _voted_flavio = seg_turno["NR_VOTAVEL"] == 22
 
-@app.cell
-def _(mo, votos):
-    # eleições dos presidenciáveis: 2º turno
-    if hasattr(votos, "df"):
-        seg_turno = votos.df.loc[votos.df["NR_TURNO"] == 2]
-        mo.output.replace(
-            seg_turno
-            .groupby("NM_VOTAVEL")["QT_VOTOS"]
-            .sum()
-            .sort_values(ascending=False)
-        )
-    return (seg_turno,)
-
-
-@app.cell
-def _(seg_turno):
-    seg_turno.loc[seg_turno["NR_VOTAVEL"] == 13]
-    return
-
-
-@app.cell
-def _(seg_turno):
     n_votos = seg_turno["QT_VOTOS"].sum()
-    n_votos_validos = seg_turno.loc[seg_turno["NR_VOTAVEL"] in (13, 22)]["QT_VOTOS"].sum()
+    n_votos_validos = seg_turno.loc[_is_valid]["QT_VOTOS"].sum()
 
-    lula = {
-        "n_votos": seg_turno.loc[seg_turno["NR_VOTAVEL"] == 13]["QT_VOTOS"].sum(),
-        "p_votos": seg_turno.loc[seg_turno["NR_VOTAVEL"] == 13]["QT_VOTOS"].sum() / n_votos,
-        "p_votos": seg_turno.loc[seg_turno["NR_VOTAVEL"] == 13]["QT_VOTOS"].sum() / n_votos_validos,
-    }
-
-    lula
+    vote_stats = dict(
+        lula = {
+            "n": seg_turno.loc[_voted_lula]["QT_VOTOS"].sum(),
+            "p": seg_turno.loc[_voted_lula]["QT_VOTOS"].sum() / n_votos,
+            "p_validos": seg_turno.loc[_voted_lula]["QT_VOTOS"].sum() / n_votos_validos,
+        },
+        flavio = {
+            "n": seg_turno.loc[_voted_flavio]["QT_VOTOS"].sum(),
+            "p": seg_turno.loc[_voted_flavio]["QT_VOTOS"].sum() / n_votos,
+            "p_validos": seg_turno.loc[_voted_flavio]["QT_VOTOS"].sum() / n_votos_validos,
+        },
+        votos = {
+            "n": n_votos,
+            "n_validos": n_votos_validos,
+        },
+    )
     return
 
 
@@ -223,7 +212,7 @@ def _(d, g, plot2, ticker):
             f"Produzido com dados de {len(d.rpolls.polls)} pesquisas de 8 institutos "
             'diferentes realizadas\napós os resultados do primeiro turno. "Vota Flávio '
             'Bolsonaro" representa o\npercentual de entrevistados que responderam '
-            '"votaria no candidato com\ncerteza" na pesquisa estimulada, enquanto que '
+            '"vou votar no candidato com\ncerteza" na pesquisa estimulada, enquanto que '
             '"Rejeita Lula" representa os\nentrevistados que responderam "não '
             'votaria no candidato de jeito nenhum".'
         ),
@@ -250,6 +239,14 @@ def _(d, g, plot2, ticker):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    <br />
+    """)
+    return
+
+
 @app.cell
 def _(d, g, ticker):
     plot2 = g.ScatterPlot(
@@ -261,9 +258,9 @@ def _(d, g, ticker):
         disclaimer=(
             f"Produzido com dados de {len(d.rpolls.polls)} pesquisas de 8 institutos "
             'diferentes realizadas\napós os resultados do primeiro turno. "Vota Lula" '
-            'representa o percentual de\nentrevistados que responderam "votaria no '
-            'candidato com certeza" na pesquisa estimulada, enquanto que "Rejeita '
-            'Flávio Bolsonaro" representa os entrevistados\nque responderam "não '
+            'representa o percentual de\nentrevistados que responderam "vou votar no '
+            'candidato com certeza" na\npesquisa estimulada, enquanto que "Rejeita '
+            'Flávio Bolsonaro" representa os\nentrevistados que responderam "não '
             'votaria no candidato de jeito nenhum".'
         ),
     )

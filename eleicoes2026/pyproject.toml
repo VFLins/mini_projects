@@ -1,0 +1,2 @@
+[tool.marimo.display]
+custom_css = ["theme.css"]

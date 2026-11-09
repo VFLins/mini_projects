@@ -1,0 +1,43 @@
+:root {
+  --marimo-heading-font: "Space Mono", courier new, courier, monospace;
+  --marimo-text-font: "Inter", Arial, sans-serif;
+}
+
+h1 {
+    font-family: space mono, courier new, Courier, monospace;
+    font-weight: 700;
+    font-size: 40px;
+    text-transform: uppercase;
+    line-height: 1.1;
+}
+
+h2 {
+    font-family: space mono, courier new, Courier, monospace;
+    font-size: 32px;
+    line-height: 1.1;
+}
+
+h3 {
+    font-family: space mono, courier new, Courier, monospace;
+    font-weight: 400;
+    font-size: 25px;
+    line-height: 1.1;
+}
+
+h4 {
+    font-family: space mono, courier new, Courier, monospace;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 1.1;
+}
+
+.katex, .katex span.mord {
+    font-family: "Noto Sans Math", KaTeX_Main, "Times New Roman", serif;
+}
+
+
+.markdown, .paragraph {
+    font-family: "Inter", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+}
