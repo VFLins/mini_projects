@@ -80,7 +80,7 @@ class BasePlot:
 
     def show(self):
         self.build_plot()
-        plt.show()
+        return self.fig, self.ax
 
 
 class ScatterPlot(BasePlot):
