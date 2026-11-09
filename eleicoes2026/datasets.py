@@ -57,12 +57,21 @@ class VoteData:
             DOWNLOADS_DIR / "votacao_secao_2026_BR.csv",
             sep=";",
             encoding="latin1",
-            usecols=["NR_VOTAVEL", "NM_VOTAVEL", "NR_TURNO", "QT_VOTOS"],
+            usecols=[
+                "NR_VOTAVEL",
+                "NM_VOTAVEL",
+                "NR_TURNO",
+                "QT_VOTOS",
+                "NR_SECAO",
+                "NR_ZONA"
+            ],
             dtype={
                 "NR_VOTAVEL": "int16",
                 "NM_VOTAVEL": "category",
                 "NR_TURNO": "int16",
                 "QT_VOTOS": "int64",
+                "NR_SECAO": "int64",
+                "NR_ZONA": "int64",
             }
         )
         print("Dados carregados.")

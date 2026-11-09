@@ -14,9 +14,10 @@ def _():
     import numpy as np
     import pandas as pd
 
+    from datetime import date
     from pathlib import Path
 
-    return (ticker,)
+    return date, ticker
 
 
 @app.cell
@@ -32,13 +33,32 @@ def _():
     import datasets as d
     import graphics as g
 
-    return d, g
+    return d, f, g
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     # Entendendo a transferência de votos entre o primeiro e segundo turno das eleições presidenciais de 2026
+    """)
+    return
+
+
+@app.cell
+def _(date, mo):
+    mo.hstack(
+        items=[
+            mo.md("Por: [Vitor Lins](https://vitorlins.com.br)"),
+            mo.md(f"{date.today().strftime("%d/%m/%Y")}"),
+        ],
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ---
 
     O candidato Flávio Bolsonaro terminou o primeiro turno com uma votação maior que a do seu principal adversário Lula, isto levou os bolsonaristas a acreditar que a vitória no segundo turno seria certa, já que históricamente, o primeiro colocado no primeiro turno sempre acabava ganhando a disputa no segundo turno.
 
@@ -95,7 +115,7 @@ def _(mo, votos):
             "n_validos": n_votos_validos,
         },
     )
-    return
+    return (vote_stats,)
 
 
 @app.cell(hide_code=True)
@@ -297,10 +317,62 @@ def _(mo):
     return
 
 
+@app.cell
+def _(d):
+    _w = d.rpolls.df["n"] / d.rpolls.df["n"].sum()
+
+    poll_stats = dict(
+        lula={
+            "p": d.rpolls.df["vote_b"].mean(), # avg. percentage
+            "wp": (d.rpolls.df["vote_b"] * _w).sum(), # weighted avg. percentage
+            "n": d.rpolls.df["n_vote_b"],
+        },
+        flavio={
+            "p": d.rpolls.df["vote_a"].mean(),
+            "wp": (d.rpolls.df["vote_a"] * _w).sum(),
+            "n": d.rpolls.df["n_vote_a"],
+        },
+        votos={
+            "n": d.rpolls.df["n"].sum(),
+            "n_validos": (d.rpolls.df["n_vote_a"] + d.rpolls.df["n_vote_b"]).sum(),
+        },
+    )
+    return (poll_stats,)
+
+
+@app.cell(hide_code=True)
+def _(mo, poll_stats):
+    mo.md(rf"""
+    ## Rejeição ao Lula ajustada
+
+    Agora podemos seguir a metodologia proposta para estimar um nível de rejeição sem o viés a favor do Flávio Bolsonaro. O ajuste deve retornar uma rejeição menor que a média das pesquisas, ponderada pelo tamanho amostral de cada uma, de {str(round(poll_stats["lula"]["wp"] * 100, 1)).replace(".", ",")}%.
+    """)
+    return
+
+
+@app.cell
+def _(d, f, vote_stats):
+    A = f.a_metric(
+        a=vote_stats["lula"]["p"],
+        a_estimate=d.rpolls.df["vote_b"].mean(),
+    )
+    A_SE = f.a_std_error(
+        n=d.rpolls.df["n"].sum(),
+        a_estimate=d.rpolls.df["vote_b"].mean(),
+    )
+    return
+
+
+@app.cell
+def _(votos):
+    votos.df.head()
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Rejeição ao Lula ajustada
+    ## Estimando a transferência real de votos
     """)
     return
 
@@ -308,7 +380,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Argumentos comuns do Flávio Bolsonaro e seus apoiadores
+    ## Argumentos comuns do Flávio e seus apoiadores
     """)
     return
 
