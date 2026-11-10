@@ -4,17 +4,17 @@
 }
 
 h1 {
-    font-family: space mono, courier new, Courier, monospace;
-    font-weight: 700;
-    font-size: 40px;
-    text-transform: uppercase;
-    line-height: 1.1;
+  font-family: space mono, courier new, Courier, monospace;
+  font-weight: 700;
+  font-size: 40px;
+  text-transform: uppercase;
+  line-height: 1.1;
 }
 
 h2 {
-    font-family: space mono, courier new, Courier, monospace;
-    font-size: 32px;
-    line-height: 1.1;
+  font-family: space mono, courier new, Courier, monospace;
+  font-size: 32px;
+  line-height: 1.1;
 }
 
 h3 {
@@ -25,19 +25,50 @@ h3 {
 }
 
 h4 {
-    font-family: space mono, courier new, Courier, monospace;
-    font-weight: 700;
-    font-size: 20px;
-    line-height: 1.1;
+  font-family: space mono, courier new, Courier, monospace;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.1;
 }
 
 .katex, .katex span.mord {
-    font-family: "Noto Sans Math", KaTeX_Main, "Times New Roman", serif;
+  font-family: "Noto Sans Math", KaTeX_Main, "Times New Roman", serif;
 }
 
 
 .markdown, .paragraph {
-    font-family: "Inter", Arial, sans-serif;
-    font-size: 16px;
-    line-height: 1.5;
+  font-family: "Inter", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+
+a, a:visited {
+  text-decoration: none !important;
+  color: #008181 !important;
+}
+a:focus, a:hover {
+  color: #12bbb7 !important;
+  transition: color .1s ease-in;
+}
+
+
+table {
+  border-spacing: 0;
+  font-family: Inter, Arial, sans-serif;
+  border-bottom: 2px solid #212c38;
+  width: fit-content;
+}
+thead {
+  font-family: space mono, courier new, Courier, monospace;
+  text-transform: uppercase;
+  border-bottom: 2px solid #212c38 !important;
+}
+th {
+  padding: 12px;
+}
+td {
+  padding: 12px;
+  line-height: 1.5;
+  background-color: var(--background);
 }

@@ -49,7 +49,7 @@ def _(date, mo):
     mo.hstack(
         items=[
             mo.md("Por: [Vitor Lins](https://vitorlins.com.br)"),
-            mo.md(f"{date.today().strftime("%d/%m/%Y")}"),
+            mo.md(f"{date.today().strftime('%d/%m/%Y')}"),
         ],
     )
     return
@@ -100,17 +100,19 @@ def _(mo, votos):
     n_votos_validos = seg_turno.loc[_is_valid]["QT_VOTOS"].sum()
 
     vote_stats = dict(
-        lula = {
+        lula={
             "n": seg_turno.loc[_voted_lula]["QT_VOTOS"].sum(),
             "p": seg_turno.loc[_voted_lula]["QT_VOTOS"].sum() / n_votos,
-            "p_validos": seg_turno.loc[_voted_lula]["QT_VOTOS"].sum() / n_votos_validos,
+            "p_validos": seg_turno.loc[_voted_lula]["QT_VOTOS"].sum()
+            / n_votos_validos,
         },
-        flavio = {
+        flavio={
             "n": seg_turno.loc[_voted_flavio]["QT_VOTOS"].sum(),
             "p": seg_turno.loc[_voted_flavio]["QT_VOTOS"].sum() / n_votos,
-            "p_validos": seg_turno.loc[_voted_flavio]["QT_VOTOS"].sum() / n_votos_validos,
+            "p_validos": seg_turno.loc[_voted_flavio]["QT_VOTOS"].sum()
+            / n_votos_validos,
         },
-        votos = {
+        votos={
             "n": n_votos,
             "n_validos": n_votos_validos,
         },
@@ -222,7 +224,7 @@ def _(mo):
 
     [^1]: **Jota**. ['House effects' explicam por que pesquisas eleitorais são tão diferentes](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) por Daniel Marcelino.
 
-    [^2]: **Public Opinion Quarterly**. [A Review and Proposal for a New Measure of Poll Accuracy](https://doi.org/10.1093/poq/nfi044)
+    [^2]: **Public Opinion Quarterly**. [A Review and Proposal for a New Measure of Poll Accuracy](https://doi.org/10.1093/poq/nfi044) por Elizabeth A. Martin, Michael W. Traugott e Courtney Kennedy
 
     [^3]: **Constantin Ahlmann-Eltze**. [What is the delta method?](https://const-ae.name/post/2023-02-10_delta_method/delta-method-explainer/)
     """)
@@ -253,8 +255,16 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    <br />
+    """)
+    return
+
+
 @app.cell
-def _(d, g, plot2, ticker):
+def _(d, g, ticker):
     plot1 = g.ScatterPlot(
         x=d.rpolls.df["vote_a"],
         y=d.rpolls.df["reject_b"],
@@ -270,38 +280,18 @@ def _(d, g, plot2, ticker):
             'votaria no candidato de jeito nenhum".'
         ),
     )
-    plot2.cfg["disclaimer"]["clearance"] = 0.35
+    plot1.cfg["disclaimer"]["clearance"] = 0.35
     (
-        plot1
-        .ax
-        .yaxis
-        .set_major_formatter(
+        plot1.ax.yaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
         )
     )
     (
-        plot1
-        .ax
-        .xaxis
-        .set_major_formatter(
+        plot1.ax.xaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
         )
     )
-    plot1.resize(9, 7)
-    plot1.show()
-    return
 
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    <br />
-    """)
-    return
-
-
-@app.cell
-def _(d, g, ticker):
     plot2 = g.ScatterPlot(
         x=d.rpolls.df["vote_b"],
         y=d.rpolls.df["reject_a"],
@@ -319,23 +309,24 @@ def _(d, g, ticker):
     )
     plot2.cfg["disclaimer"]["clearance"] = 0.35
     (
-        plot2
-        .ax
-        .yaxis
-        .set_major_formatter(
+        plot2.ax.yaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
         )
     )
     (
-        plot2
-        .ax
-        .xaxis
-        .set_major_formatter(
+        plot2.ax.xaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
         )
     )
-    plot2.show()
+
+    plot1.show()
     return (plot2,)
+
+
+@app.cell
+def _(plot2):
+    plot2.show()
+    return
 
 
 @app.cell(hide_code=True)
@@ -352,10 +343,10 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(rf"""
+    mo.md(r"""
     ## Ajustando as pesquisas eleitorais
 
-    As pesquisas eleitorais apontavam um cenário favorável para o candidato Flávio Bolsonaro no segundo turno, agora vamos testar o
+    As pesquisas eleitorais apontavam um cenário favorável para o candidato Flávio Bolsonaro no segundo turno, agora vamos comparar o resultado previsto pelas pesquisas, o das pesquisas ajustado pela métrica $A'$ de Martin et al. (2005), e comparar com o resultado real das votações:
     """)
     return
 
@@ -369,11 +360,10 @@ def _(d, f, np, poll_stats, vote_stats):
     )
     Aa_SE = f.a_std_error(
         n=d.rpolls.df["n"].sum(),
-        a_estimate=poll_stats["lula"]["wp_valid"],
+        a_estimate=poll_stats["flavio"]["wp_valid"],
     )
     ICa_HI, ICa_LO = (Aa + 1.96 * Aa_SE), (Aa - 1.96 * Aa_SE)
     ZERO_NOT_IN_ICa = np.sign(ICa_HI) * np.sign(ICa_LO) == 1
-
 
     # Lula
     Ab = f.a_metric(
@@ -386,7 +376,6 @@ def _(d, f, np, poll_stats, vote_stats):
     )
     ICb_HI, ICb_LO = (Ab + 1.96 * Ab_SE), (Ab - 1.96 * Ab_SE)
     ZERO_NOT_IN_ICb = np.sign(ICb_HI) * np.sign(ICb_LO) == 1
-
 
     print(ZERO_NOT_IN_ICa, ZERO_NOT_IN_ICb)
     return Aa, Ab
@@ -407,18 +396,29 @@ def _(poll_stats, vote_stats):
     adj_poll_b = round(poll_stats["lula"]["adj_wp_valid"] * 100, 1)
     vote_a = round(vote_stats["flavio"]["p_validos"] * 100, 1)
     vote_b = round(vote_stats["lula"]["p_validos"] * 100, 1)
-    return adj_poll_a, adj_poll_b, poll_a, poll_b, vote_a, vote_b
+    return adj_poll_a, poll_a, poll_b, vote_a, vote_b
 
 
 @app.cell(hide_code=True)
-def _(adj_poll_a, adj_poll_b, mo, poll_a, poll_b, vote_a, vote_b):
+def _(adj_poll_a, mo, poll_a, poll_b, vote_a, vote_b):
+    def _f(v):
+        return str(v).replace(".", ",")
+
+
     mo.md(rf"""
-    |                         |     Flávio    |     Lula      |
-    | :---                    |     :---:     |     :---:     |
-    | **Pesquisas**           | {poll_a}%     | {poll_b}%     |
-    | **Pesquisas ajustadas** | {adj_poll_a}% | {adj_poll_b}% |
-    | **Votação**             | {vote_a}%     | {vote_b}%     |
+    |                         |       Flávio      |         Lula            |
+    | :---                    |       :---:       |         :---:           |
+    | **Pesquisas**           | {_f(poll_a)}%     | {_f(poll_b)}%           |
+    | **Pesquisas ajustadas** | {_f(adj_poll_a)}% | {_f(100 - adj_poll_a)}% |
+    | **Votação**             | {_f(vote_a)}%     | {_f(vote_b)}%           |
+
+
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _():
     return
 
 
