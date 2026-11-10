@@ -253,9 +253,29 @@ rpolls.add(
     vote_a=0.49, vote_b=0.48, reject_a=0.47, reject_b=0.48,
 )
 rpolls.add(
-    n=2100, ic=0.0215,
-    name="vox_BR-09623/2026",
-    vote_a=0.427, vote_b=0.442, reject_a=0.442, reject_b=0.452,
+    n=3000, ic=0.018,
+    name="poderdata1_BR-08134/2026",
+    vote_a=0.49, vote_b=0.44, reject_a=0.43, reject_b=0.46,
+)
+rpolls.add(
+    n=3000, ic=0.018,
+    name="poderdata2_BR-01209/2026",
+    vote_a=0.48, vote_b=0.46, reject_a=0.44, reject_b=0.46,
+)
+rpolls.add(
+    n=3000, ic=0.018,
+    name="poderdata3_BR-04258/2026",
+    vote_a=0.47, vote_b=0.47, reject_a=0.45, reject_b=0.46,
+)
+rpolls.add(
+    n=3000, ic=0.018,
+    name="poderdata4_BR-07926/2026",
+    vote_a=0.49, vote_b=0.48, reject_a=0.45, reject_b=0.47,
+)
+rpolls.add(
+    n=3000, ic=0.018,
+    name="poderdata5_BR-02586/2026",
+    vote_a=0.49, vote_b=0.46, reject_a=0.44, reject_b=0.48,
 )
 rpolls.add(
     n=2154, ic=0.02,
@@ -266,16 +286,6 @@ rpolls.add(
     n=3702, ic=0.02,
     name="quaest2_BR-09158/2026",
     vote_a=0.46, vote_b=0.45, reject_a=0.49, reject_b=0.47,
-)
-rpolls.add(
-    n=2000, ic=0.02,
-    name="realtime1_BR-02952/2026",
-    vote_a=0.48, vote_b=0.45, reject_a=0.61, reject_b=0.63,
-)
-rpolls.add(
-    n=2000, ic=0.02,
-    name="realtime2_BR-09670/2026",
-    vote_a=0.49, vote_b=0.45, reject_a=0.61, reject_b=0.64,
 )
 rpolls.add(
     n=2100, ic=0.0215,

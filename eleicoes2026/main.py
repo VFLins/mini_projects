@@ -8,31 +8,6 @@ app = marimo.App(
 
 
 @app.cell
-def _(mo):
-    mo.hstack(
-        items=[
-            mo.md(
-                "[![Voltar](https://img.shields.io/badge/"
-                "ver%20outros%20projetos-white.svg?"
-                "style=for-the-badge&logo=data:image/svg%2bxml;base64,"
-                "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZ"
-                "pZXdCb3g9IjAgMCA0OCA0OCIgaGVpZ2h0PSI0OHB4IiB3aWR0aD0iNDhweCI"
-                "gZmlsbD0iIzIxMmMzOCI+PHBhdGggZD0iTTIxLjIsNDUuMkwwL"
-                "DI0TDIxLjIsMi44bDQsNC4wNUw4LjA1LDI0TDI1LjIsNDEuMTVsL"
-                "TQsNC4wNVoiLz48L3N2Zz4=)](https://vflins.github.io/mini_projects/)"
-            ),
-            mo.md(
-                "[![Repositório](https://img.shields.io/badge/"
-                "Reposit%C3%B3rio-white?logo=github&"
-                "logoColor=212c38&style=for-the-badge)](https://"
-                "github.com/VFLins/mini_projects/tree/main/eleicoes2026)"
-            ),
-        ],
-    )
-    return
-
-
-@app.cell
 def _():
     import matplotlib.pyplot as plt
     import matplotlib.ticker as ticker
@@ -59,37 +34,6 @@ def _():
     import graphics as g
 
     return d, f, g
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    # Entendendo a transferência de votos entre o primeiro e segundo turno das eleições presidenciais de 2026
-    """)
-    return
-
-
-@app.cell
-def _(date, mo):
-    mo.hstack(
-        items=[
-            mo.md("Por: [Vitor Lins](https://vitorlins.com.br)"),
-            mo.md(date.today().strftime('%d/%m/%Y')),
-        ],
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ---
-
-    O candidato Flávio Bolsonaro terminou o primeiro turno com uma votação maior que a do seu principal adversário Lula, isto levou os bolsonaristas a acreditar que a vitória no segundo turno seria certa, já que históricamente, o primeiro colocado no primeiro turno sempre acabava ganhando a disputa no segundo turno.
-
-    Depois da derrota, já nos Estados Unidos, Flávio Bolsonaro alegou uma "impossibilidade matemática", que permitiu que o seu adversário Lula ganhasse mais de 10 Milhões de votos do primeiro para o segundo turno. O objetivo desta análise é combinar os dados de votação com os resultados de pesquisas de opinião anteriores às votações para entender se esta transferência é realmente impossível como alegado.
-    """)
-    return
 
 
 @app.cell
@@ -179,26 +123,110 @@ def _(d):
     return (poll_stats,)
 
 
+@app.cell
+def _(mo):
+    mo.hstack(
+        items=[
+            mo.md(
+                "[![Ver outros projetos](https://img.shields.io/badge/"
+                "ver%20outros%20projetos-white.svg?"
+                "style=for-the-badge&logo=data:image/svg%2bxml;base64,"
+                "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZ"
+                "pZXdCb3g9IjAgMCA0OCA0OCIgaGVpZ2h0PSI0OHB4IiB3aWR0aD0iNDhweCI"
+                "gZmlsbD0iIzIxMmMzOCI+PHBhdGggZD0iTTIxLjIsNDUuMkwwL"
+                "DI0TDIxLjIsMi44bDQsNC4wNUw4LjA1LDI0TDI1LjIsNDEuMTVsL"
+                "TQsNC4wNVoiLz48L3N2Zz4=)](https://vflins.github.io/mini_projects/)"
+            ),
+            mo.md(
+                "[![Repositório](https://img.shields.io/badge/"
+                "Reposit%C3%B3rio-white?logo=github&"
+                "logoColor=212c38&style=for-the-badge)](https://"
+                "github.com/VFLins/mini_projects/tree/main/eleicoes2026)"
+            ),
+        ],
+    )
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## As pesquisas de intenções
-
-    Se os números estiverem condizentes com o resultado das eleições, os dados devem estar prontos para a análise. Mas antes de começar, vamos buscar mais informações para suportar a análise, para entender a propensão dos eleitores a transferir vontos entre candidatos, vamos apoiar e guiar os testes nas intenções de votos das pesquisas independentes realizadas.
-
-    Para esta análise, vamos considerar as pesquisas de segundo turno:
-
-    - [Futura](https://www.futurainteligencia.com.br/pesquisas): BR-00650/2026, BR-00650/2026, BR-06715/2026
-    - [Data Folha](https://datafolha.folha.uol.com.br/): BR-09709/2026 e BR-09540/2026
-    - [Gerp](https://www.gerp.com.br/relatorios.html): BR-07877/2026, BR-05187/2026, BR-03835/2026, e BR-09327/2026
-    - [Nexus](https://www.nexus.fsb.com.br/estudos-divulgados/): BR-07997/2026, BR-044499/2026 e BR-08234/2026
-    - [Palver](https://www.palver.com.br/survey): BR-00198/2026, BR-08028/2026, BR-04612/2026, e BR-01794/2026
-    - [Poder Data](https://www.poder360.com.br/poderdata/): BR-08134/2026, BR-07926/2026, BR-04258/2026, BR-02586/2026 e BR-01209/2026
-    - [Quaest](https://quaest.com.br/relatorios-quaest/): BR-08535/2026 e BR-09158/2026
-    - [Realtime Big Data](https://realtimebigdata.com.br/pesquisas/): BR-02952/2026 e BR-09670/2026
-    - [Vox Brasil](https://voxbrasilpesquisas.com.br/imprensa/): BR-09623/2026, BR-04332/2026 e BR-03259/2026
+    # Entendendo a transferência de votos entre o primeiro e segundo turno das eleições presidenciais de 2026
+    """)
+    return
 
 
+@app.cell
+def _(date, mo):
+    mo.hstack(
+        items=[
+            mo.md("Por: [Vitor Lins](https://vitorlins.com.br)"),
+            mo.md(date.today().strftime('%d/%m/%Y')),
+        ],
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ---
+
+    O candidato Flávio Bolsonaro terminou o primeiro turno com uma votação maior que a do seu principal adversário Lula, isto levou os bolsonaristas a acreditar que a vitória no segundo turno seria certa, já que historicamente, o primeiro colocado no primeiro turno sempre acabava ganhando a disputa no segundo turno.
+
+    Depois da derrota, já nos Estados Unidos, Flávio Bolsonaro alegou uma "impossibilidade matemática", que permitiu que o seu adversário Lula ganhasse mais de 10 Milhões de votos do primeiro para o segundo turno. O objetivo desta análise é combinar os dados de votação com os resultados de pesquisas de opinião anteriores às votações do segundo turno para entender se esta transferência é realmente impossível como alegado.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Metodologia
+
+    Antes de começar, vamos buscar informações para suportar a análise, para entender a propensão dos eleitores a transferir vontos entre candidatos, vamos apoiar e guiar os testes nas intenções de votos das pesquisas independentes realizadas.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Dados de rejeição e intenção de votos
+
+    A rejeição é medida em um questionário por uma pergunta do tipo "Em qual(is) candidatos você não votaria de jeito nenhum?". A diferença entre a rejeição e a intenção de voto de um candidato é composto por, eleitores que ainda não decidiram o voto e eleitores decididos a votar em outro candidato.
+
+    Para entender quantos votos podem ser adquiridos por um candidato no segundo turno, precisamos saber sua rejeição e os votos decididos para o seu adversário. As pessoas que não se encaixam em nenhum dos dois grupos são os votos mais possíveis de conquistar.
+
+    A primeira etapa desta pesquisa consiste em montar um conjunto de dados com as intenções de voto e rejeição, todas as pesquisas selecionadas foram feitas após os resultados do primeiro turno:
+
+    1. [Futura](https://www.futurainteligencia.com.br/pesquisas): BR-00650/2026, BR-00650/2026, BR-06715/2026
+    2. [Data Folha](https://datafolha.folha.uol.com.br/): BR-09709/2026 e BR-09540/2026
+    3. [Gerp](https://www.gerp.com.br/relatorios.html): BR-07877/2026, BR-05187/2026, BR-03835/2026, e BR-09327/2026
+    4. [Nexus](https://www.nexus.fsb.com.br/estudos-divulgados/): BR-07997/2026, BR-044499/2026 e BR-08234/2026
+    5. [Palver](https://www.palver.com.br/survey): BR-00198/2026, BR-08028/2026, BR-04612/2026, e BR-01794/2026
+    6. [Poder Data](https://www.poder360.com.br/poderdata/): BR-08134/2026, BR-07926/2026, BR-04258/2026, BR-02586/2026 e BR-01209/2026
+    7. [Quaest](https://quaest.com.br/relatorios-quaest/): BR-08535/2026 e BR-09158/2026
+    8. [Vox Brasil](https://voxbrasilpesquisas.com.br/imprensa/): BR-09623/2026, BR-04332/2026 e BR-03259/2026
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Segundo auditoria independente de Barberia et al. (2026)[^4], os institutos de pesquisa apresentaram um viés consistente entre os turnos, em que a maioria superestimou o desempenho do candidato Lula no primeiro turno e depois o subestimou no segundo.
+
+
+
+    [^4]: **Jota**. [A eleição de 2026 terminou. Agora, abram seus dados](https://www.jota.info/opiniao-e-analise/colunas/lorena-barberia/a-eleicao-de-2026-terminou-agora-abram-seus-dados) por Lorena G. Barberia, Natália de Paula Moreira e Gustavo Fernandes de Paula
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## Rejeição do candidato
 
     A principal métrica para avaliar a capacidade de um candidato de receber votos transferidos de outros eleitores que não tinham votado nele no primeiro turno é o nível de rejeição. Se a rejeição a um candidato for maior que 50%, se torna, como dito pelo candidato derrotado, uma "impossibilidade matemática".
@@ -208,6 +236,15 @@ def _(mo):
     Como já temos os resultados das eleições presidenciais, podemos medir o nível de viés das pesquisas, e ajustar a métrica de rejeição para um nível mais próximo do real. Mas vale ressaltar que o viés não representa necessariamente uma preferência do instituto de pesquisa por um candidato, e pode surgir naturalmente durante a seleção da amostra[^1].
 
 
+
+    [^1]: **Jota**. ['House effects' explicam por que pesquisas eleitorais são tão diferentes](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) por Daniel Marcelino.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ### Metodologia
 
     Existe uma métrica popular, usada especificamente para pesquisas eleitorais baseada na razão de chances logarítmica[^2]
@@ -244,7 +281,6 @@ def _(mo):
     - $P'_A$: Taxa ajustada para o candidato A
 
 
-    [^1]: **Jota**. ['House effects' explicam por que pesquisas eleitorais são tão diferentes](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) por Daniel Marcelino.
 
     [^2]: **Public Opinion Quarterly**. [A Review and Proposal for a New Measure of Poll Accuracy](https://doi.org/10.1093/poq/nfi044) por Elizabeth A. Martin, Michael W. Traugott e Courtney Kennedy
 
@@ -267,12 +303,6 @@ def _(mo):
     Com os dados disponíveis, apenas o primeiro pressuposto pode ser testado, depois que este tenha sido verificado, o leitor baseará seu nível de confiança nos resultados deste estudo na sua crença sobre os outros pressupostos. Para testar a primeira hipótese, vamos verificar se existe uma correlação significativa entre o voto em um candidato, e a rejeição pelo seu adversário.
 
     Para fazer esta análise rapidamente, vamos usar os dados de diversas pesquisas eleitorais, comparando as pesquisas de intenção de voto estimuladas com o percentual de rejeição, onde o entrevistado responde "Não votaria em ___ de jeito nenhum".
-
-    Todas a pesquisas eleitorais utilizadas foram realizadas após os resultados do primeiro turno, isto ajuda a normalizar o viés, já que foi encontrado em uma auditoria independente[^4] que as pesquisas eleitorais apresentaram, em conjunto, vieses para lados diferentes entre o primeiro e segundo turno.
-
-
-
-    [^4]: **Jota**. [A eleição de 2026 terminou. Agora, abram seus dados](https://www.jota.info/opiniao-e-analise/colunas/lorena-barberia/a-eleicao-de-2026-terminou-agora-abram-seus-dados) por Lorena G. Barberia, Natália de Paula Moreira e Gustavo Fernandes de Paula
     """)
     return
 
