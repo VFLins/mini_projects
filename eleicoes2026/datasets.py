@@ -267,4 +267,28 @@ rpolls.add(
     name="quaest2_BR-09158/2026",
     vote_a=0.46, vote_b=0.45, reject_a=0.49, reject_b=0.47,
 )
-
+rpolls.add(
+    n=2000, ic=0.02,
+    name="realtime1_BR-02952/2026",
+    vote_a=0.48, vote_b=0.45, reject_a=0.61, reject_b=0.63,
+)
+rpolls.add(
+    n=2000, ic=0.02,
+    name="realtime2_BR-09670/2026",
+    vote_a=0.49, vote_b=0.45, reject_a=0.61, reject_b=0.64,
+)
+rpolls.add(
+    n=2100, ic=0.0215,
+    name="vox1_BR-09623/2026",
+    vote_a=0.427, vote_b=0.442, reject_a=0.442, reject_b=0.452,
+)
+rpolls.add(
+    n=2100, ic=0.0215,
+    name="vox2_BR-04332/2026",
+    vote_a=0.446, vote_b=0.464, reject_a=0.453, reject_b=0.453,
+)
+rpolls.add(
+    n=2100, ic=0.0215,
+    name="vox3_BR-03259/2026",
+    vote_a=0.443, vote_b=0.454, reject_a=0.471, reject_b=0.448,
+)

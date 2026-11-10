@@ -188,11 +188,9 @@ def _(mo):
 
     Para esta análise, vamos considerar as pesquisas de segundo turno:
 
-    - [CNT](https://cnt.org.br/pesquisas): BR-00652/2026 e BR-02136/2026
     - [Futura](https://www.futurainteligencia.com.br/pesquisas): BR-00650/2026, BR-00650/2026, BR-06715/2026
     - [Data Folha](https://datafolha.folha.uol.com.br/): BR-09709/2026 e BR-09540/2026
     - [Gerp](https://www.gerp.com.br/relatorios.html): BR-07877/2026, BR-05187/2026, BR-03835/2026, e BR-09327/2026
-    - [Instituto França](https://www.instagram.com/institutofranca.br/): BR-07896/2026, BR-04863/2026 e BR-09459/2026
     - [Nexus](https://www.nexus.fsb.com.br/estudos-divulgados/): BR-07997/2026, BR-044499/2026 e BR-08234/2026
     - [Palver](https://www.palver.com.br/survey): BR-00198/2026, BR-08028/2026, BR-04612/2026, e BR-01794/2026
     - [Poder Data](https://www.poder360.com.br/poderdata/): BR-08134/2026, BR-07926/2026, BR-04258/2026, BR-02586/2026 e BR-01209/2026
