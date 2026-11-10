@@ -8,6 +8,31 @@ app = marimo.App(
 
 
 @app.cell
+def _(mo):
+    mo.hstack(
+        items=[
+            mo.md(
+                "[![Voltar](https://img.shields.io/badge/"
+                "ver%20outros%20projetos-white.svg?"
+                "style=for-the-badge&logo=data:image/svg%2bxml;base64,"
+                "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZ"
+                "pZXdCb3g9IjAgMCA0OCA0OCIgaGVpZ2h0PSI0OHB4IiB3aWR0aD0iNDhweCI"
+                "gZmlsbD0iIzIxMmMzOCI+PHBhdGggZD0iTTIxLjIsNDUuMkwwL"
+                "DI0TDIxLjIsMi44bDQsNC4wNUw4LjA1LDI0TDI1LjIsNDEuMTVsL"
+                "TQsNC4wNVoiLz48L3N2Zz4=)](https://vflins.github.io/mini_projects/)"
+            ),
+            mo.md(
+                "[![Repositório](https://img.shields.io/badge/"
+                "Reposit%C3%B3rio-white?logo=github&"
+                "logoColor=212c38&style=for-the-badge)](https://"
+                "github.com/VFLins/mini_projects/tree/main/eleicoes2026)"
+            ),
+        ],
+    )
+    return
+
+
+@app.cell
 def _():
     import matplotlib.pyplot as plt
     import matplotlib.ticker as ticker
@@ -49,7 +74,7 @@ def _(date, mo):
     mo.hstack(
         items=[
             mo.md("Por: [Vitor Lins](https://vitorlins.com.br)"),
-            mo.md(f"{date.today().strftime('%d/%m/%Y')}"),
+            mo.md(date.today().strftime('%d/%m/%Y')),
         ],
     )
     return
@@ -215,11 +240,10 @@ def _(mo):
     Para encontrar a "taxa de rejeição real" removendo o viés da pesquisa, vamos usar $A'$ para ajustar o peso das respostas entre os votantes de cada candidato, reduzindo para os super representados ou aumentando para os sub representados.
 
     $$
-    P' = P \times e^{-A'} \tag 4
+    P'_A = \hat p_A \times e^{-A'} \tag 4
     $$
 
-    - $P'$: Taxa ajustada para o candidato A
-    - $P$: Taxa medida pela pesquisa para o candidato A
+    - $P'_A$: Taxa ajustada para o candidato A
 
 
     [^1]: **Jota**. ['House effects' explicam por que pesquisas eleitorais são tão diferentes](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) por Daniel Marcelino.
