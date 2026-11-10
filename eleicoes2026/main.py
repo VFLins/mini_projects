@@ -17,7 +17,7 @@ def _():
     from datetime import date
     from pathlib import Path
 
-    return date, ticker
+    return date, np, ticker
 
 
 @app.cell
@@ -118,6 +118,40 @@ def _(mo, votos):
     return (vote_stats,)
 
 
+@app.cell
+def _(d):
+    _n = d.rpolls.df["n"]
+    _nua = d.rpolls.df["n_unsure_a"]
+    _nub = d.rpolls.df["n_unsure_b"]
+    _w = d.rpolls.df["n"] / _n.sum()
+
+    poll_stats = dict(
+        lula={
+            "p": d.rpolls.df["vote_b"].mean(), # avg. percentage
+            "wp": (d.rpolls.df["vote_b"] * _w).sum(), # weighted avg. percentage
+            "p_valid": (d.rpolls.df["n_vote_b"] / (_n - _nub)).mean(),
+            "wp_valid": (d.rpolls.df["n_vote_b"] * _w / (_n - _nub)).sum(),
+            "r": d.rpolls.df["reject_b"].mean(),
+            "wr": (d.rpolls.df["reject_b"] * _w).sum(),
+            "n": d.rpolls.df["n_vote_b"].sum().round(),
+        },
+        flavio={
+            "p": d.rpolls.df["vote_a"].mean(),
+            "wp": (d.rpolls.df["vote_a"] * _w).sum(),
+            "p_valid": (d.rpolls.df["n_vote_a"] / (_n - _nua)).mean(),
+            "wp_valid": (d.rpolls.df["n_vote_a"] * _w / (_n - _nua)).sum(),
+            "r": d.rpolls.df["reject_a"].mean(),
+            "wr": (d.rpolls.df["reject_a"] * _w).sum(),
+            "n": d.rpolls.df["n_vote_a"].sum().round(),
+        },
+        votos={
+            "n": d.rpolls.df["n"].sum(),
+            "n_validos": (d.rpolls.df["n_vote_a"] + d.rpolls.df["n_vote_b"]).sum(),
+        },
+    )
+    return (poll_stats,)
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
@@ -184,7 +218,6 @@ def _(mo):
 
     - $P'$: Taxa ajustada para o candidato A
     - $P$: Taxa medida pela pesquisa para o candidato A
-
 
 
     [^1]: **Jota**. ['House effects' explicam por que pesquisas eleitorais são tão diferentes](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) por Daniel Marcelino.
@@ -317,55 +350,75 @@ def _(mo):
     return
 
 
-@app.cell
-def _(d):
-    _w = d.rpolls.df["n"] / d.rpolls.df["n"].sum()
-
-    poll_stats = dict(
-        lula={
-            "p": d.rpolls.df["vote_b"].mean(), # avg. percentage
-            "wp": (d.rpolls.df["vote_b"] * _w).sum(), # weighted avg. percentage
-            "n": d.rpolls.df["n_vote_b"],
-        },
-        flavio={
-            "p": d.rpolls.df["vote_a"].mean(),
-            "wp": (d.rpolls.df["vote_a"] * _w).sum(),
-            "n": d.rpolls.df["n_vote_a"],
-        },
-        votos={
-            "n": d.rpolls.df["n"].sum(),
-            "n_validos": (d.rpolls.df["n_vote_a"] + d.rpolls.df["n_vote_b"]).sum(),
-        },
-    )
-    return (poll_stats,)
-
-
 @app.cell(hide_code=True)
-def _(mo, poll_stats):
+def _(mo):
     mo.md(rf"""
-    ## Rejeição ao Lula ajustada
+    ## Ajustando as pesquisas eleitorais
 
-    Agora podemos seguir a metodologia proposta para estimar um nível de rejeição sem o viés a favor do Flávio Bolsonaro. O ajuste deve retornar uma rejeição menor que a média das pesquisas, ponderada pelo tamanho amostral de cada uma, de {str(round(poll_stats["lula"]["wp"] * 100, 1)).replace(".", ",")}%.
+    As pesquisas eleitorais apontavam um cenário favorável para o candidato Flávio Bolsonaro no segundo turno, agora vamos testar o
     """)
     return
 
 
 @app.cell
-def _(d, f, vote_stats):
-    A = f.a_metric(
-        a=vote_stats["lula"]["p"],
-        a_estimate=d.rpolls.df["vote_b"].mean(),
+def _(d, f, np, poll_stats, vote_stats):
+    # Flávio
+    Aa = f.a_metric(
+        a=vote_stats["flavio"]["p_validos"],
+        a_estimate=poll_stats["flavio"]["wp_valid"],
     )
-    A_SE = f.a_std_error(
+    Aa_SE = f.a_std_error(
         n=d.rpolls.df["n"].sum(),
-        a_estimate=d.rpolls.df["vote_b"].mean(),
+        a_estimate=poll_stats["lula"]["wp_valid"],
     )
+    ICa_HI, ICa_LO = (Aa + 1.96 * Aa_SE), (Aa - 1.96 * Aa_SE)
+    ZERO_NOT_IN_ICa = np.sign(ICa_HI) * np.sign(ICa_LO) == 1
+
+
+    # Lula
+    Ab = f.a_metric(
+        a=vote_stats["lula"]["p_validos"],
+        a_estimate=poll_stats["lula"]["wp_valid"],
+    )
+    Ab_SE = f.a_std_error(
+        n=d.rpolls.df["n"].sum(),
+        a_estimate=poll_stats["lula"]["wp_valid"],
+    )
+    ICb_HI, ICb_LO = (Ab + 1.96 * Ab_SE), (Ab - 1.96 * Ab_SE)
+    ZERO_NOT_IN_ICb = np.sign(ICb_HI) * np.sign(ICb_LO) == 1
+
+
+    print(ZERO_NOT_IN_ICa, ZERO_NOT_IN_ICb)
+    return Aa, Ab
+
+
+@app.cell
+def _(Aa, Ab, np, poll_stats):
+    poll_stats["flavio"]["adj_wp_valid"] = poll_stats["flavio"]["wp_valid"] * np.exp(-Aa)
+    poll_stats["lula"]["adj_wp_valid"] = poll_stats["lula"]["wp_valid"] * np.exp(-Ab)
     return
 
 
 @app.cell
-def _(votos):
-    votos.df.head()
+def _(poll_stats, vote_stats):
+    poll_a = round(poll_stats["flavio"]["wp_valid"] * 100, 1)
+    poll_b = round(poll_stats["lula"]["wp_valid"] * 100, 1)
+    adj_poll_a = round(poll_stats["flavio"]["adj_wp_valid"] * 100, 1)
+    adj_poll_b = round(poll_stats["lula"]["adj_wp_valid"] * 100, 1)
+    vote_a = round(vote_stats["flavio"]["p_validos"] * 100, 1)
+    vote_b = round(vote_stats["lula"]["p_validos"] * 100, 1)
+    return adj_poll_a, adj_poll_b, poll_a, poll_b, vote_a, vote_b
+
+
+@app.cell(hide_code=True)
+def _(adj_poll_a, adj_poll_b, mo, poll_a, poll_b, vote_a, vote_b):
+    mo.md(rf"""
+    |                         |     Flávio    |     Lula      |
+    | :---                    |     :---:     |     :---:     |
+    | **Pesquisas**           | {poll_a}%     | {poll_b}%     |
+    | **Pesquisas ajustadas** | {adj_poll_a}% | {adj_poll_b}% |
+    | **Votação**             | {vote_a}%     | {vote_b}%     |
+    """)
     return
 
 

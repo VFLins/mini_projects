@@ -79,10 +79,6 @@ class VoteData:
 
 class RejectionPolls:
     @property
-    def df(self) -> pd.DataFrame:
-        return pd.DataFrame(data=self._polls)
-
-    @property
     def polls(self) -> list[pd.Series]:
         return self._polls
 
@@ -153,6 +149,7 @@ class RejectionPolls:
         name=name,
         index=colnames
         ))
+        self.df = pd.DataFrame(data=self._polls)
 
 
 # Usando:
