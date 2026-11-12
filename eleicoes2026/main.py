@@ -172,6 +172,16 @@ def _(mo):
     mo.md(r"""
     ---
 
+    </br>
+
+    /// note | Resumo
+    Vou colocar o resumo aqui quando o trabalho estiver pronto.
+    ///
+
+    <br/ >
+
+    ## Introdução
+
     O candidato Flávio Bolsonaro terminou o primeiro turno com uma votação maior que a do seu principal adversário Lula, isto levou os bolsonaristas a acreditar que a vitória no segundo turno seria certa, já que historicamente, o primeiro colocado no primeiro turno sempre acabava ganhando a disputa no segundo turno.
 
     Depois da derrota, já nos Estados Unidos, Flávio Bolsonaro alegou uma "impossibilidade matemática", que permitiu que o seu adversário Lula ganhasse mais de 10 Milhões de votos do primeiro para o segundo turno. O objetivo desta análise é combinar os dados de votação com os resultados de pesquisas de opinião anteriores às votações do segundo turno para entender se esta transferência é realmente impossível como alegado.
@@ -208,6 +218,30 @@ def _(mo):
     6. [Poder Data](https://www.poder360.com.br/poderdata/): BR-08134/2026, BR-07926/2026, BR-04258/2026, BR-02586/2026 e BR-01209/2026
     7. [Quaest](https://quaest.com.br/relatorios-quaest/): BR-08535/2026 e BR-09158/2026
     8. [Vox Brasil](https://voxbrasilpesquisas.com.br/imprensa/): BR-09623/2026, BR-04332/2026 e BR-03259/2026
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Potencial de conquistar votos
+
+    Os dias de votação das eleições presidenciais de 2026 foram 4 de outubro para o primeiro turno e 25 do mesmo mês para o segundo. Os candidatos tiveram um período de apenas três semanas para convencer o eleitorado e atrair votos para si.
+
+    Neste cenário de curto período de tempo, é mais seguro considerar que os esforços de campnha devem ser concentrados nos eleitores indecisos, esta acabou sendo a estratégia da campanha do então candidato Lula no segundo turno[^1].
+
+    Por outro lado, para alguns especialistas[^2] e até para a própria equipe de campanha do Flávio Bolsonaro[^3], sua vitória parecia ser muito segura. No fim das contas não foi feita nenhuma grande estratégia para garantir a vitória no segundo turno.
+
+    Para analisar o potencial de receber votos de cada candidato,
+
+
+
+    [^1]: **Terra**. [A revolução da linguagem no segundo turno das eleições de 2026](https://www.terra.com.br/noticias/a-revolucao-da-linguagem-no-segundo-turno-das-eleicoes-de-2026,23066fe203723310bd23f18087066c3f15bi85pz.html?utm_source=clipboard) por Djiovanni Marioto
+
+    [^2]: **Veja**. [A estratégia de Flávio e o dilema de Lula no segundo turno](https://veja.abril.com.br/politica/a-estrategia-de-flavio-e-o-dilema-de-lula-no-segundo-turno/)
+
+    [^3]: **BBC**. ['Ele achou que já estava eleito': os erros da campanha de Flávio Bolsonaro no segundo turno apontados por analistas](https://www.bbc.com/portuguese/articles/cmrryxg991d8o)
     """)
     return
 
