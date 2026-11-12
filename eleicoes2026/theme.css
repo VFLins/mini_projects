@@ -5,7 +5,7 @@
 
 h1 {
   font-family: space mono, courier new, Courier, monospace;
-  font-weight: 700;
+  font-weight: 700 !important;
   font-size: 40px;
   text-transform: uppercase;
   line-height: 1.1;
@@ -13,6 +13,7 @@ h1 {
 
 h2 {
   font-family: space mono, courier new, Courier, monospace;
+  font-weight: 700 !important;
   font-size: 32px;
   line-height: 1.1;
 }
@@ -26,7 +27,7 @@ h3 {
 
 h4 {
   font-family: space mono, courier new, Courier, monospace;
-  font-weight: 700;
+  font-weight: 700 !important;
   font-size: 20px;
   line-height: 1.1;
 }

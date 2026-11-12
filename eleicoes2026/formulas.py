@@ -40,6 +40,67 @@ def a_std_error(n: float, a_estimate) -> np.float64:
     )
 
 
+def frechet_limits(a_vote, b_vote, a_reject, b_reject, max_self_rejection=0.0):
+    """Compute Fréchet bounds for the winnable voters of candidates A and B.
+
+    Winnable voters of a candidate are the undecided voters who do not reject
+    that candidate. The undecided share is derived as
+    ``1 - a_vote - b_vote``.
+
+    For candidate A, with :math:`x = V_A \\cap R_A` bounded by
+    ``max_self_rejection``:
+
+    * upper bound: ``undecided - max(0, (a_reject - x) - b_vote)``
+    * lower bound: ``undecided - min(undecided, a_reject)``
+
+    The bounds for B are symmetric.
+
+    :param a_vote: Share of voters who intend to vote for A (0 to 1).
+    :type a_vote: float
+    :param b_vote: Share of voters who intend to vote for B (0 to 1).
+    :type b_vote: float
+    :param a_reject: Share of voters who reject A (0 to 1).
+    :type a_reject: float
+    :param b_reject: Share of voters who reject B (0 to 1).
+    :type b_reject: float
+    :param max_self_rejection: Upper bound for the share of voters who vote for
+        a candidate and also reject that candidate. With ``0.0``, voters of X
+        are assumed not to reject X.
+    :type max_self_rejection: float
+    :returns: ``((hi_a, lo_a), (hi_b, lo_b))``, the upper and lower bounds of
+        the winnable share for A and for B, as proportions of the electorate.
+    :rtype: tuple[tuple[float, float], tuple[float, float]]
+    :raises ValueError: If any share is outside [0, 1], if
+        ``a_vote + b_vote`` exceeds 1, or if a rejection share is larger than
+        the part of the electorate that does not vote for that candidate.
+
+    Example::
+
+        >>> frechet_limits(0.40, 0.40, 0.30, 0.25)
+        ((0.2, 0.0), (0.2, 0.0))
+    """
+    if min(a_vote, b_vote, a_reject, b_reject) < 0 \
+            or max(a_vote, b_vote, a_reject, b_reject) > 1:
+        raise ValueError("Shares must be in [0, 1]")
+
+    undecided = 1 - a_vote - b_vote
+    if undecided < 0:
+        raise ValueError(f"a_vote + b_vote must not exceed 1, got {a_vote + b_vote}")
+
+    def _bounds(own_vote, other_vote, reject):
+        x_max = min(max_self_rejection, own_vote, reject)
+        if reject - x_max > 1 - own_vote:
+            raise ValueError("Rejection is inconsistent with the vote composition")
+        hi = undecided - max(0.0, (reject - x_max) - other_vote)
+        lo = undecided - min(undecided, reject)
+        return max(0.0, hi), max(0.0, lo)
+
+    return (
+        _bounds(a_vote, b_vote, a_reject),  # winnable by A
+        _bounds(b_vote, a_vote, b_reject),  # winnable by B
+    )
+
+
 def b_metric(*a_metrics: np.float64):
     """https://dx.doi.org/10.1093/pan/mpt012
 

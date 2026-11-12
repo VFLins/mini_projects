@@ -194,7 +194,7 @@ def _(mo):
     mo.md(r"""
     ## Metodologia
 
-    Antes de começar, vamos buscar informações para suportar a análise, para entender a propensão dos eleitores a transferir vontos entre candidatos, vamos apoiar e guiar os testes nas intenções de votos das pesquisas independentes realizadas.
+    Nesta seção vamos entender os dados que serão usados e como a análise será feita dos dados será feita. Vamos começar buscando informações adicionais para suportar a análise, para entender a propensão dos eleitores a transferir vontos entre candidatos, vamos apoiar e guiar os testes nas intenções de votos das pesquisas independentes realizadas.
     """)
     return
 
@@ -233,7 +233,43 @@ def _(mo):
 
     Por outro lado, para alguns especialistas[^2] e até para a própria equipe de campanha do Flávio Bolsonaro[^3], sua vitória parecia ser muito segura. No fim das contas não foi feita nenhuma grande estratégia para garantir a vitória no segundo turno.
 
-    Para analisar o potencial de receber votos de cada candidato,
+    Para analisar o potencial de receber votos de cada candidato, vamos seguir um modelo que considera que os candidatos só podem conquistar votos dos eleitores que:
+
+    1. Não tenham seu voto decidido para nenhum candidato, e
+    2. Não o rejeita.
+
+    Isto coloca os eleitores entrevistados em diferentes grupos em relação a cada candidato e sua rejeição ou decisão de voto:
+
+    |                   | Flávio | Lula  | Não definido |
+    | :---              | :---:  | :---: |     :---:    |
+    | **Voto decidido** | $V_A$  | $V_B$ |     $V_U$    |
+    | **Rejeita**       | $R_A$  | $R_B$ |     $R_U$    |
+
+    Para viabilizar a análise neste modelo, vamos precisar definir algumas restrições lógicas:
+
+    1. Uma pessoa que rejeita um candidato não pode pretender votar no mesmo,
+    2. Uma pessoa com voto indefinido não pode ter voto decidio por um candidato,
+    3. Uma pessoa com voto decidido em um candidato não pode também ter voto decidido em outro ou indefinido.
+
+    Esta última foi colocada por que usaremos apenas dados de pesquisas realizadas entre o primeiro e segundo turno, neste intervalo de tempo de 21 dias, um eleitor com voto decidido dificilmente mudaria de opinião.
+
+    Estas restrições facilitam a análise porque eliminam a possibilidade de algumas intersecções ocorrerem entre os grupos, alguns tipos de intersecções possíveis incluem ter o voto decidido no Flávio e rejeitar seu adversário $(V_A \cap R_B)$ ou ter o voto decidido no Flávio e não rejeitar nenhum $(V_A \cap R_U)$.
+
+    Conhecer estas intersecções é importante para descobrir o "Potencial de aquisição de votos" de cada candidato $P_A$ e $P_B$, este número indicaria a quantidade de eleitores podem ser conquistados por um candidato no segundo turno. Voltando na definição dada antes e o total de entrevistados $N$:
+
+    > os candidatos só podem conquistar votos dos eleitores que:
+    > 1. Não tenham seu voto decidido para nenhum candidato, e
+    > 2. Não o rejeita.
+
+    $$
+    P_A = V_U \cap (N - R_A) \tag 1
+    $$
+
+    $$
+    P_B = V_U \cap (N - R_A) \tag 2
+    $$
+
+    Podemos resolver (R_B \cup R_U) como sendo simplesmente a população que não rejeita o candidato A
 
 
 
@@ -500,6 +536,17 @@ def _(adj_poll_a, mo, poll_a, poll_b, vote_a, vote_b):
 
 
     """)
+    return
+
+
+@app.cell
+def _(f, poll_stats):
+    f.frechet_limits(
+        va=poll_stats["flavio"]["wp"],
+        vb=poll_stats["lula"]["wp"],
+        ra=poll_stats["flavio"]["r"],
+        rb=poll_stats["lula"]["r"],
+    )
     return
 
 
