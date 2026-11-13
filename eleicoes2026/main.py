@@ -551,7 +551,9 @@ def _(f, poll_stats):
 
 
 @app.cell(hide_code=True)
-def _():
+def _(VUTransfer, build_matrices):
+    X, Y, report = build_matrices(["VOTACAO_SECAO_2022_SP.csv"], cargo=1, a_num=13, b_num=22)
+    model = VUTransfer(idx_a=0, idx_b=1, u_cols=[2, 3, 4]).fit(X.values, Y.values)
     return
 
 

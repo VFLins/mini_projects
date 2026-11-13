@@ -40,29 +40,29 @@ def a_std_error(n: float, a_estimate) -> np.float64:
     )
 
 
-def frechet_limits(a_vote, b_vote, a_reject, b_reject, max_self_rejection=0.0):
+def frechet_limits(va, vb, ra, rb, max_self_rejection=0.0):
     """Compute Fréchet bounds for the winnable voters of candidates A and B.
 
     Winnable voters of a candidate are the undecided voters who do not reject
     that candidate. The undecided share is derived as
-    ``1 - a_vote - b_vote``.
+    ``1 - va - vb``.
 
     For candidate A, with :math:`x = V_A \\cap R_A` bounded by
     ``max_self_rejection``:
 
-    * upper bound: ``undecided - max(0, (a_reject - x) - b_vote)``
-    * lower bound: ``undecided - min(undecided, a_reject)``
+    * upper bound: ``undecided - max(0, (ra - x) - vb)``
+    * lower bound: ``undecided - min(undecided, ra)``
 
     The bounds for B are symmetric.
 
-    :param a_vote: Share of voters who intend to vote for A (0 to 1).
-    :type a_vote: float
-    :param b_vote: Share of voters who intend to vote for B (0 to 1).
-    :type b_vote: float
-    :param a_reject: Share of voters who reject A (0 to 1).
-    :type a_reject: float
-    :param b_reject: Share of voters who reject B (0 to 1).
-    :type b_reject: float
+    :param va: Share of voters who intend to vote for A (0 to 1).
+    :type va: float
+    :param vb: Share of voters who intend to vote for B (0 to 1).
+    :type vb: float
+    :param ra: Share of voters who reject A (0 to 1).
+    :type ra: float
+    :param rb: Share of voters who reject B (0 to 1).
+    :type rb: float
     :param max_self_rejection: Upper bound for the share of voters who vote for
         a candidate and also reject that candidate. With ``0.0``, voters of X
         are assumed not to reject X.
@@ -71,7 +71,7 @@ def frechet_limits(a_vote, b_vote, a_reject, b_reject, max_self_rejection=0.0):
         the winnable share for A and for B, as proportions of the electorate.
     :rtype: tuple[tuple[float, float], tuple[float, float]]
     :raises ValueError: If any share is outside [0, 1], if
-        ``a_vote + b_vote`` exceeds 1, or if a rejection share is larger than
+        ``va + vb`` exceeds 1, or if a rejection share is larger than
         the part of the electorate that does not vote for that candidate.
 
     Example::
@@ -79,13 +79,13 @@ def frechet_limits(a_vote, b_vote, a_reject, b_reject, max_self_rejection=0.0):
         >>> frechet_limits(0.40, 0.40, 0.30, 0.25)
         ((0.2, 0.0), (0.2, 0.0))
     """
-    if min(a_vote, b_vote, a_reject, b_reject) < 0 \
-            or max(a_vote, b_vote, a_reject, b_reject) > 1:
+    if min(va, vb, ra, rb) < 0 \
+            or max(va, vb, ra, rb) > 1:
         raise ValueError("Shares must be in [0, 1]")
 
-    undecided = 1 - a_vote - b_vote
+    undecided = 1 - va - vb
     if undecided < 0:
-        raise ValueError(f"a_vote + b_vote must not exceed 1, got {a_vote + b_vote}")
+        raise ValueError(f"va + vb must not exceed 1, got {va + vb}")
 
     def _bounds(own_vote, other_vote, reject):
         x_max = min(max_self_rejection, own_vote, reject)
@@ -96,8 +96,8 @@ def frechet_limits(a_vote, b_vote, a_reject, b_reject, max_self_rejection=0.0):
         return max(0.0, hi), max(0.0, lo)
 
     return (
-        _bounds(a_vote, b_vote, a_reject),  # winnable by A
-        _bounds(b_vote, a_vote, b_reject),  # winnable by B
+        _bounds(va, vb, ra),  # winnable by A
+        _bounds(vb, va, rb),  # winnable by B
     )
 
 
@@ -114,101 +114,128 @@ def b_metric(*a_metrics: np.float64):
     return np.sum(np.absolute(a_metrics)) / k
 
 
-class DirichletTransferring:
-    """
-    Hierarchical Multinomial-Dirichlet ecological inference model
-    (Rosen, Jiang, King & Tanner, 2001), for vote transfer between two rounds.
- 
-    For each polling station i and each Round 1 option k::
- 
-        alpha_km  ~ Gamma(lambda1, lambda2)            # shared hyperparameters
-        beta_ik   ~ Dirichlet(alpha_k)                 # station-level transfers
-        theta_i    = sum_k X_prop[i, k] * beta_ik
-        Y_i       ~ Multinomial(n_i, theta_i)
- 
-    The estimated transition matrix is the aggregate
-    ``B_km = sum_i X[i,k] * beta_ikm / sum_i X[i,k]``.
- 
-    :param draws: Posterior samples per chain.
-    :param tune: Tuning iterations.
-    :param chains: Number of chains.
-    :param random_seed: Random seed.
-    :param lambda1: Shape of the Gamma hyperprior on alpha.
-    :param lambda2: Rate of the Gamma hyperprior on alpha.
-    :param target_accept: NUTS target acceptance (high values help with divergences).
-    :param hdi_prob: Probability mass of the HDI.
-    """
- 
-    def __init__(
-        self,
-        draws=1000,
-        tune=1000,
-        chains=2,
-        random_seed=42,
-        lambda1=4.0,
-        lambda2=2.0,
-        target_accept=0.95,
-        hdi_prob=0.94,
-    ):
-        self.draws = draws
-        self.tune = tune
-        self.chains = chains
-        self.random_seed = random_seed
-        self.lambda1 = lambda1
-        self.lambda2 = lambda2
-        self.target_accept = target_accept
-        self.hdi_prob = hdi_prob
+class DirichletTransfer:
+    def __init__(self, idx_a, idx_b, u_cols, draws=1000):
+      """Ecological inference restricted to the undecided reservoir V_U.
+  
+      Assumes voters of A and B in Round 1 vote for the same candidate in
+      Round 2 (T_AA = T_BB = 1). The Round 2 counts of A and B are reduced by
+      their Round 1 counts, and only the residual is explained by transfers
+      from the origins in V_U.
+  
+      :param idx_a: Column of A in X (Round 1) and in Y (Round 2).
+      :param idx_b: Column of B in X and in Y.
+      :param u_cols: Columns of X that make up V_U.
+      :param draws: Posterior samples per chain.
+      """
+      self.idx_a, self.idx_b, self.u_cols = idx_a, idx_b, list(u_cols)
+      self.draws = draws
 
-        self.model = None
-        self.trace = None
-        self.mean_ = None
-        self.hdi_low_ = None
-        self.hdi_high_ = None
- 
     def fit(self, X, Y):
         """
-        :param X: Round 1 vote counts, shape (stations, K).
-        :param Y: Round 2 vote counts (integers), shape (stations, M).
+        :param X: Round 1 counts of eligible voters, shape (stations, K),
+            including abstention.
+        :param Y: Round 2 counts, shape (stations, M), same electorate.
         """
-        X = np.asarray(X, dtype=float)
-        Y = np.asarray(Y, dtype=float)
+        X, Y = np.asarray(X, float), np.asarray(Y, float)
 
-        # Drop stations with no votes in either round
-        keep = (X.sum(axis=1) > 0) & (Y.sum(axis=1) > 0)
-        X, Y = X[keep], np.round(Y[keep]).astype(int)
-        N, K = X.shape
+        # Residual of A and B; negative values violate the assumption
+        res = np.column_stack([Y[:, self.idx_a] - X[:, self.idx_a],
+                               Y[:, self.idx_b] - X[:, self.idx_b]])
+        self.resid_ = pd.DataFrame(res, columns=["res_A", "res_B"])
+        ok = (res >= 0).all(axis=1)
+        self.share_violated_ = 1 - ok.mean()
+
+        X, Y = X[ok], Y[ok].copy()
+        Y[:, self.idx_a] -= X[:, self.idx_a]
+        Y[:, self.idx_b] -= X[:, self.idx_b]
+        Y = np.round(Y).astype(int)
+
+        XU = X[:, self.u_cols]
+        keep = (XU.sum(axis=1) > 0) & (Y.sum(axis=1) > 0)
+        XU, Y = XU[keep], Y[keep]
+        N, K = XU.shape
         M = Y.shape[1]
 
-        X_prop = X / X.sum(axis=1, keepdims=True)  # (N, K)
-        w = X / X.sum(axis=0, keepdims=True)       # (N, K) weights per origin
-        n_votes = Y.sum(axis=1)                    # (N,)
+        X_prop = XU / XU.sum(axis=1, keepdims=True)
+        w = XU / XU.sum(axis=0, keepdims=True)
 
-        with pm.Model() as model:
-            alpha = pm.Gamma("alpha", alpha=self.lambda1, beta=self.lambda2, shape=(K, M))
-            beta_i = pm.Dirichlet("beta_i", a=alpha * np.ones((N, 1, 1)))  # (N, K, M)
-            theta = (X_prop[:, :, None] * beta_i).sum(axis=1)              # (N, M)
-            pm.Multinomial("y", n=n_votes, p=theta, observed=Y)
-            pm.Deterministic("B", (w[:, :, None] * beta_i).sum(axis=0))    # (K, M)
+        with pm.Model():
+            alpha = pm.Gamma("alpha", 4.0, 2.0, shape=(K, M))
+            beta_i = pm.Dirichlet("beta_i", a=alpha * np.ones((N, 1, 1)))
+            theta = (X_prop[:, :, None] * beta_i).sum(axis=1)
+            pm.Multinomial("y", n=Y.sum(axis=1), p=theta, observed=Y)
+            pm.Deterministic("B", (w[:, :, None] * beta_i).sum(axis=0))
+            self.trace = pm.sample(draws=self.draws, target_accept=0.95)
 
-            self.trace = pm.sample(
-                draws=self.draws,
-                tune=self.tune,
-                chains=self.chains,
-                random_seed=self.random_seed,
-                target_accept=self.target_accept,
-                progressbar=True,
-            )
-        self.model = model
-
+        self.XU_ = XU
         self.mean_ = self.trace.posterior["B"].mean(dim=("chain", "draw")).values
-        hdi = az.hdi(self.trace, var_names=["B"], hdi_prob=self.hdi_prob)["B"]
-        self.hdi_low_ = hdi.sel(hdi="lower").values
-        self.hdi_high_ = hdi.sel(hdi="higher").values
         return self
 
+    def flows(self):
+        """Posterior mean voters: origin in V_U (rows) -> destination (columns)."""
+        return pd.DataFrame(self.XU_.sum(axis=0)[:, None] * self.mean_)
+
     def summary(self):
-        """Posterior mean transition matrix (origin x destination) as a DataFrame."""
-        if self.mean_ is None:
-            raise ValueError("Call .fit(X, Y) first.")
-        return pd.DataFrame(self.mean_)
- 
+        """R-hat, ESS and HDI of the aggregate transition matrix."""
+        return az.summary(self.trace, var_names=["B"])
+
+
+
+def build_matrices(df, cargo, a_num, b_num):
+    """Build the X (Round 1) and Y (Round 2) matrices of the ecological model.
+
+    Abstention is the difference in total votes between rounds in the same
+    station: the round with fewer votes receives the difference as abstention
+    and the other receives zero. The electorate of a station is therefore the
+    larger of the two vote totals, and every row of X and Y sums to it.
+
+    :param df: VOTACAO_SECAO already loaded as a DataFrame (both rounds). It
+        must contain ``CD_MUNICIPIO``, ``NR_ZONA``, ``NR_SECAO``,
+        ``CD_CARGO``, ``NR_TURNO``, ``NR_VOTAVEL`` and ``QT_VOTOS``.
+    :param cargo: ``CD_CARGO`` of the race (e.g. 1 = President, 3 = Governor).
+    :param a_num: ``NR_VOTAVEL`` of candidate A (Round 2 finalist).
+    :param b_num: ``NR_VOTAVEL`` of candidate B (Round 2 finalist).
+    :returns: ``(X, Y, report)``. X columns are ``[A, B, OUT, BN, ABS]`` and
+        Y columns are ``[A, B, BN, ABS]``; with the VUTransfer class use
+        ``idx_a=0, idx_b=1, u_cols=[2, 3, 4]``.
+    """
+    v = df.loc[df["CD_CARGO"] == cargo,
+               KEY + ["NR_TURNO", "NR_VOTAVEL", "QT_VOTOS"]]
+
+    grp = np.select(
+        [v["NR_VOTAVEL"] == a_num, v["NR_VOTAVEL"] == b_num,
+         v["NR_VOTAVEL"].isin(BLANK_NULL)],
+        ["A", "B", "BN"], default="OUT")
+
+    table = (v.assign(grp=grp)
+             .groupby(KEY + ["NR_TURNO", "grp"])["QT_VOTOS"].sum()
+             .unstack("grp", fill_value=0)
+             .reindex(columns=["A", "B", "OUT", "BN"], fill_value=0))
+
+    r1 = table.xs(1, level="NR_TURNO")
+    r2 = table.xs(2, level="NR_TURNO")
+    both = r1.join(r2, how="inner", lsuffix="_1", rsuffix="_2")
+
+    t1 = both[["A_1", "B_1", "OUT_1", "BN_1"]].sum(axis=1)
+    t2 = both[["A_2", "B_2", "OUT_2", "BN_2"]].sum(axis=1)
+    electorate = np.maximum(t1, t2)
+    both["ABS_1"] = electorate - t1
+    both["ABS_2"] = electorate - t2
+
+    keep = electorate > 0
+    report = {
+        "stations_round1": len(r1),
+        "stations_round2": len(r2),
+        "stations_in_both": len(both),
+        "stations_kept": int(keep.sum()),
+        "share_abs_round1_positive": float((both["ABS_1"][keep] > 0).mean()),
+        "share_abs_round2_positive": float((both["ABS_2"][keep] > 0).mean()),
+    }
+    both = both[keep]
+
+    X = both[["A_1", "B_1", "OUT_1", "BN_1", "ABS_1"]]
+    X.columns = ["A", "B", "OUT", "BN", "ABS"]
+    Y = both[["A_2", "B_2", "BN_2", "ABS_2"]]
+    Y.columns = ["A", "B", "BN", "ABS"]
+    return X, Y, report
