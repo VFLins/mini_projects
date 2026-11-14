@@ -121,6 +121,10 @@ class DirichletTransfer:
     (T_AA = T_BB = 1). The Round 2 counts of A and B are reduced by their Round 1
     counts, and only the residual is explained by transfers from the origins in V_U.
 
+    ..reference::
+      ROSEN, Ori et al. Bayesian and frequentist inference for ecological inference:
+      The R× C case. Statistica neerlandica, v. 55, n. 2, p. 134-156, 2001.
+
     :param idx_a: Column of A in X (Round 1) and in Y (Round 2).
     :param idx_b: Column of B in X and in Y.
     :param u_cols: Columns of X that make up V_U, the pool of voters who may change

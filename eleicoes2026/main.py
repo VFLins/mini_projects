@@ -233,43 +233,16 @@ def _(mo):
 
     Por outro lado, para alguns especialistas[^2] e até para a própria equipe de campanha do Flávio Bolsonaro[^3], sua vitória parecia ser muito segura. No fim das contas não foi feita nenhuma grande estratégia para garantir a vitória no segundo turno.
 
-    Para analisar o potencial de receber votos de cada candidato, vamos seguir um modelo que considera que os candidatos só podem conquistar votos dos eleitores que:
+    Para estimar a transferência de votos, será um modelo de inferência de Rosen et al. (2001)[^4], mas com uma restrição: Não há transferência de votos entre os candidatos do primeiro turno. Isto significa que todo o potencial de receber votos dos candidatos no segundo turno está entre os eleitores que:
 
-    1. Não tenham seu voto decidido para nenhum candidato, e
-    2. Não o rejeita.
+    1. Votaram em outros candidatos que não passaram para o segundo turno,
+    2. Votaram Branco ou anularam o voto,
+    3. Se abstiveram de votar no primeiro turno.
 
-    Isto coloca os eleitores entrevistados em diferentes grupos em relação a cada candidato e sua rejeição ou decisão de voto:
+    Esta restrição assume que todos os que votaram no Lula no primeiro turno vão continuar votando nele, e o mesmo vale para o Flávio. Embora crie um pressuposto capaz de introduzir viés no modelo, também traz outros dois benefícios importantes na minha análise.
 
-    |                   | Flávio | Lula  | Não definido |
-    | :---              | :---:  | :---: |     :---:    |
-    | **Voto decidido** | $V_A$  | $V_B$ |     $V_U$    |
-    | **Rejeita**       | $R_A$  | $R_B$ |     $R_U$    |
+    Como não tenho _hardware_ suficiente para treinar um modelo irrestrito,
 
-    Para viabilizar a análise neste modelo, vamos precisar definir algumas restrições lógicas:
-
-    1. Uma pessoa que rejeita um candidato não pode pretender votar no mesmo,
-    2. Uma pessoa com voto indefinido não pode ter voto decidio por um candidato,
-    3. Uma pessoa com voto decidido em um candidato não pode também ter voto decidido em outro ou indefinido.
-
-    Esta última foi colocada por que usaremos apenas dados de pesquisas realizadas entre o primeiro e segundo turno, neste intervalo de tempo de 21 dias, um eleitor com voto decidido dificilmente mudaria de opinião.
-
-    Estas restrições facilitam a análise porque eliminam a possibilidade de algumas intersecções ocorrerem entre os grupos, alguns tipos de intersecções possíveis incluem ter o voto decidido no Flávio e rejeitar seu adversário $(V_A \cap R_B)$ ou ter o voto decidido no Flávio e não rejeitar nenhum $(V_A \cap R_U)$.
-
-    Conhecer estas intersecções é importante para descobrir o "Potencial de aquisição de votos" de cada candidato $P_A$ e $P_B$, este número indicaria a quantidade de eleitores podem ser conquistados por um candidato no segundo turno. Voltando na definição dada antes e o total de entrevistados $N$:
-
-    > os candidatos só podem conquistar votos dos eleitores que:
-    > 1. Não tenham seu voto decidido para nenhum candidato, e
-    > 2. Não o rejeita.
-
-    $$
-    P_A = V_U \cap (N - R_A) \tag 1
-    $$
-
-    $$
-    P_B = V_U \cap (N - R_A) \tag 2
-    $$
-
-    Podemos resolver (R_B \cup R_U) como sendo simplesmente a população que não rejeita o candidato A
 
 
 
@@ -278,6 +251,8 @@ def _(mo):
     [^2]: **Veja**. [A estratégia de Flávio e o dilema de Lula no segundo turno](https://veja.abril.com.br/politica/a-estrategia-de-flavio-e-o-dilema-de-lula-no-segundo-turno/)
 
     [^3]: **BBC**. ['Ele achou que já estava eleito': os erros da campanha de Flávio Bolsonaro no segundo turno apontados por analistas](https://www.bbc.com/portuguese/articles/cmrryxg991d8o)
+
+    [^4]: **Statistica Neerlandica**. [Bayesian and Frequentist Inference for Ecological Inference: The R×C Case](https://onlinelibrary.wiley.com/doi/abs/10.1111/1467-9574.00162) por Ori Rosen, Wenxin Jiang, Gary King e Martin A. Tanner
     """)
     return
 
@@ -377,14 +352,6 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    <br />
-    """)
-    return
-
-
 @app.cell
 def _(d, g, ticker):
     plot1 = g.ScatterPlot(
@@ -414,6 +381,13 @@ def _(d, g, ticker):
         )
     )
 
+    plot1.show()
+    return
+
+
+@app.cell
+def _(d, g, ticker):
+
     plot2 = g.ScatterPlot(
         x=d.rpolls.df["vote_b"],
         y=d.rpolls.df["reject_a"],
@@ -440,13 +414,6 @@ def _(d, g, ticker):
             ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
         )
     )
-
-    plot1.show()
-    return (plot2,)
-
-
-@app.cell
-def _(plot2):
     plot2.show()
     return
 
@@ -563,7 +530,7 @@ def _(f, votos):
 
 @app.cell(hide_code=True)
 def _(Path, X, Y, d, f, mo):
-    mo.stop(Path(d.PROJECT_ROOT, "data", "model_flows.csv").is_file())
+    mo.stop(Path(d.DOWNLOADS_DIR, "model_flows.csv").is_file())
     model = (
         f.DirichletTransfer(
             idx_a=0,
@@ -573,6 +540,8 @@ def _(Path, X, Y, d, f, mo):
         )
         .fit(X.values, Y.values)
     )
+    model.summary().to_csv(Path(d.DOWNLOADS_DIR, "model_summary.csv"), index=True)
+    model.flows().to_csv(Path(d.DOWNLOADS_DIR, "model_flows.csv"), index=True)
     return
 
 
@@ -584,8 +553,14 @@ def _(Path, d, g, pd):
         flows * 1000,
         left_labels=["Outros candidatos", "Branco/Nulo", "Abstenções"],
         right_labels=["Flávio", "Lula", "Branco/Nulo", "Abstenções"],
-        right_colors=["#008181", "#942020", "0.6", "0.8"],
+        right_colors=["#008181", "#942020", "#212c38", "#98a7b4"],
+        disclaimer=(
+            "Estimado com modelo de inferência ecológica adaptado para "
+            'assumir que não existe\n"roubo de votos" entre os vencedores '
+            "do primeiro turno."
+        )
     )
+    plot3.cfg["disclaimer"]["clearance"] = 0.15
     plot3.show()
     return
 
