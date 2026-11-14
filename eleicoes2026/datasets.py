@@ -58,6 +58,10 @@ class VoteData:
             sep=";",
             encoding="latin1",
             usecols=[
+                "CD_CARGO",
+                "CD_MUNICIPIO",
+                "NR_ZONA",
+                "NR_SECAO",
                 "NR_VOTAVEL",
                 "NM_VOTAVEL",
                 "NR_TURNO",
@@ -66,6 +70,7 @@ class VoteData:
                 "NR_ZONA"
             ],
             dtype={
+                "CD_CARGO": "int16",
                 "NR_VOTAVEL": "int16",
                 "NM_VOTAVEL": "category",
                 "NR_TURNO": "int16",

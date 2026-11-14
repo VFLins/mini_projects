@@ -17,7 +17,7 @@ def _():
     from datetime import date
     from pathlib import Path
 
-    return date, np, ticker
+    return Path, date, np, pd, ticker
 
 
 @app.cell
@@ -541,19 +541,52 @@ def _(adj_poll_a, mo, poll_a, poll_b, vote_a, vote_b):
 
 @app.cell
 def _(f, poll_stats):
-    f.frechet_limits(
-        va=poll_stats["flavio"]["wp"],
-        vb=poll_stats["lula"]["wp"],
-        ra=poll_stats["flavio"]["r"],
-        rb=poll_stats["lula"]["r"],
+    limits = dict(
+        frechet=f.frechet_limits(
+            va=poll_stats["flavio"]["wp"],
+            vb=poll_stats["lula"]["wp"],
+            ra=poll_stats["flavio"]["r"],
+            rb=poll_stats["lula"]["r"],
+        ),
     )
     return
 
 
+@app.cell
+def _(f, votos):
+    # total de eleitores tirado de https://www.tse.jus.br/comunicacao/noticias/2026/Setembro/faltam-30-dias-brasil-tem-mais-de-158-milhoes-de-eleitoras-e-eleitores-aptos-a-votar
+    X, Y, report = f.build_matrices(
+        votos.df, cargo=1, a_num=22, b_num=13, electorate_total=158_700_000
+    )
+    return X, Y
+
+
 @app.cell(hide_code=True)
-def _(VUTransfer, build_matrices):
-    X, Y, report = build_matrices(["VOTACAO_SECAO_2022_SP.csv"], cargo=1, a_num=13, b_num=22)
-    model = VUTransfer(idx_a=0, idx_b=1, u_cols=[2, 3, 4]).fit(X.values, Y.values)
+def _(Path, X, Y, d, f, mo):
+    mo.stop(Path(d.PROJECT_ROOT, "data", "model_flows.csv").is_file())
+    model = (
+        f.DirichletTransfer(
+            idx_a=0,
+            idx_b=1,
+            u_cols=[2, 3, 4],
+            max_stations=1000,
+        )
+        .fit(X.values, Y.values)
+    )
+    return
+
+
+@app.cell
+def _(Path, d, g, pd):
+    flows = pd.read_csv(Path(d.PROJECT_ROOT, "data", "model_flows.csv"))
+
+    plot3 = g.SankeyPlot(
+        flows * 1000,
+        left_labels=["Outros candidatos", "Branco/Nulo", "Abstenções"],
+        right_labels=["Flávio", "Lula", "Branco/Nulo", "Abstenções"],
+        right_colors=["#008181", "#942020", "0.6", "0.8"],
+    )
+    plot3.show()
     return
 
 

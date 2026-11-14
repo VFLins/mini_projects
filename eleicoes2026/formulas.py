@@ -115,21 +115,29 @@ def b_metric(*a_metrics: np.float64):
 
 
 class DirichletTransfer:
-    def __init__(self, idx_a, idx_b, u_cols, draws=1000):
-      """Ecological inference restricted to the undecided reservoir V_U.
-  
-      Assumes voters of A and B in Round 1 vote for the same candidate in
-      Round 2 (T_AA = T_BB = 1). The Round 2 counts of A and B are reduced by
-      their Round 1 counts, and only the residual is explained by transfers
-      from the origins in V_U.
-  
-      :param idx_a: Column of A in X (Round 1) and in Y (Round 2).
-      :param idx_b: Column of B in X and in Y.
-      :param u_cols: Columns of X that make up V_U.
-      :param draws: Posterior samples per chain.
-      """
-      self.idx_a, self.idx_b, self.u_cols = idx_a, idx_b, list(u_cols)
-      self.draws = draws
+    """Ecological inference restricted to the undecided reservoir V_U.
+
+    Assumes voters of A and B in Round 1 vote for the same candidate in Round 2
+    (T_AA = T_BB = 1). The Round 2 counts of A and B are reduced by their Round 1
+    counts, and only the residual is explained by transfers from the origins in V_U.
+
+    :param idx_a: Column of A in X (Round 1) and in Y (Round 2).
+    :param idx_b: Column of B in X and in Y.
+    :param u_cols: Columns of X that make up V_U, the pool of voters who may change
+        destination (e.g. eliminated candidates, blank/null and abstention). Must be
+        exactly the columns of X that are neither ``idx_a`` nor ``idx_b``.
+    :param draws: Posterior samples per chain.
+    :param max_stations: Maximum number of stations used in the fit. If more stations
+        remain after removing those that violate the assumption, a random subsample of
+        this size is drawn (seeded by ``seed``). Memory and sampling time grow roughly
+        linearly with the number of stations, since the model has one set of transfer
+        rates per station.
+    :param seed: Random subsampling seed.
+    """
+
+    def __init__(self, idx_a, idx_b, u_cols, draws=1000, max_stations=30_000, seed=42):
+        self.idx_a, self.idx_b, self.u_cols = idx_a, idx_b, list(u_cols)
+        self.draws, self.max_stations, self.seed = draws, max_stations, seed
 
     def fit(self, X, Y):
         """
@@ -139,7 +147,6 @@ class DirichletTransfer:
         """
         X, Y = np.asarray(X, float), np.asarray(Y, float)
 
-        # Residual of A and B; negative values violate the assumption
         res = np.column_stack([Y[:, self.idx_a] - X[:, self.idx_a],
                                Y[:, self.idx_b] - X[:, self.idx_b]])
         self.resid_ = pd.DataFrame(res, columns=["res_A", "res_B"])
@@ -154,9 +161,15 @@ class DirichletTransfer:
         XU = X[:, self.u_cols]
         keep = (XU.sum(axis=1) > 0) & (Y.sum(axis=1) > 0)
         XU, Y = XU[keep], Y[keep]
+
+        # Random subsample of stations to bound memory and sampling time
+        if len(XU) > self.max_stations:
+            idx = np.random.default_rng(self.seed).choice(
+                len(XU), self.max_stations, replace=False)
+            XU, Y = XU[idx], Y[idx]
+
         N, K = XU.shape
         M = Y.shape[1]
-
         X_prop = XU / XU.sum(axis=1, keepdims=True)
         w = XU / XU.sum(axis=0, keepdims=True)
 
@@ -166,7 +179,17 @@ class DirichletTransfer:
             theta = (X_prop[:, :, None] * beta_i).sum(axis=1)
             pm.Multinomial("y", n=Y.sum(axis=1), p=theta, observed=Y)
             pm.Deterministic("B", (w[:, :, None] * beta_i).sum(axis=0))
-            self.trace = pm.sample(draws=self.draws, target_accept=0.95)
+            self.trace = pm.sample(
+                tune=2000,
+                draws=self.draws,
+                chains=4,
+                target_accept=0.95,
+                nuts_sampler="numpyro",
+                nuts={"chain_method": "vectorized"},
+                idata_kwargs={"log_likelihood": False},
+                var_names=["alpha", "B"],
+                random_seed=self.seed
+            )
 
         self.XU_ = XU
         self.mean_ = self.trace.posterior["B"].mean(dim=("chain", "draw")).values
@@ -182,7 +205,7 @@ class DirichletTransfer:
 
 
 
-def build_matrices(df, cargo, a_num, b_num):
+def build_matrices(df, cargo, a_num, b_num, electorate_total):
     """Build the X (Round 1) and Y (Round 2) matrices of the ecological model.
 
     Abstention is the difference in total votes between rounds in the same
@@ -196,22 +219,31 @@ def build_matrices(df, cargo, a_num, b_num):
     :param cargo: ``CD_CARGO`` of the race (e.g. 1 = President, 3 = Governor).
     :param a_num: ``NR_VOTAVEL`` of candidate A (Round 2 finalist).
     :param b_num: ``NR_VOTAVEL`` of candidate B (Round 2 finalist).
+    :param electorate_total: Total eligible voters.
     :returns: ``(X, Y, report)``. X columns are ``[A, B, OUT, BN, ABS]`` and
         Y columns are ``[A, B, BN, ABS]``; with the VUTransfer class use
         ``idx_a=0, idx_b=1, u_cols=[2, 3, 4]``.
     """
-    v = df.loc[df["CD_CARGO"] == cargo,
-               KEY + ["NR_TURNO", "NR_VOTAVEL", "QT_VOTOS"]]
+    KEY = ["CD_MUNICIPIO", "NR_ZONA", "NR_SECAO"]
+    BLANK_NULL = {95, 96, 97}
 
+    v = df.loc[
+        df["CD_CARGO"] == cargo, KEY + ["NR_TURNO", "NR_VOTAVEL", "QT_VOTOS"]
+    ]
     grp = np.select(
-        [v["NR_VOTAVEL"] == a_num, v["NR_VOTAVEL"] == b_num,
-         v["NR_VOTAVEL"].isin(BLANK_NULL)],
-        ["A", "B", "BN"], default="OUT")
-
-    table = (v.assign(grp=grp)
-             .groupby(KEY + ["NR_TURNO", "grp"])["QT_VOTOS"].sum()
-             .unstack("grp", fill_value=0)
-             .reindex(columns=["A", "B", "OUT", "BN"], fill_value=0))
+        [
+            v["NR_VOTAVEL"] == a_num, v["NR_VOTAVEL"] == b_num,
+            v["NR_VOTAVEL"].isin(BLANK_NULL)
+        ],
+        ["A", "B", "BN"],
+        default="OUT"
+    )
+    table = (
+        v.assign(grp=grp)
+        .groupby(KEY + ["NR_TURNO", "grp"])["QT_VOTOS"].sum()
+        .unstack("grp", fill_value=0)
+        .reindex(columns=["A", "B", "OUT", "BN"], fill_value=0)
+    )
 
     r1 = table.xs(1, level="NR_TURNO")
     r2 = table.xs(2, level="NR_TURNO")
@@ -219,20 +251,31 @@ def build_matrices(df, cargo, a_num, b_num):
 
     t1 = both[["A_1", "B_1", "OUT_1", "BN_1"]].sum(axis=1)
     t2 = both[["A_2", "B_2", "OUT_2", "BN_2"]].sum(axis=1)
-    electorate = np.maximum(t1, t2)
-    both["ABS_1"] = electorate - t1
-    both["ABS_2"] = electorate - t2
+    base = np.maximum(t1, t2)
 
-    keep = electorate > 0
+    both["ABS_1"] = base - t1
+    both["ABS_2"] = base - t2
+    keep = base > 0
+    both, base = both[keep], base[keep]
+    extra = electorate_total - base.sum()
+    if extra < 0:
+        raise ValueError(
+            f"Votes in kept stations ({base.sum():,}) exceed "
+            f"electorate_total ({electorate_total:,}); check the territory."
+        )
+    common = np.round(extra * base / base.sum()).astype(int)
+    both["ABS_1"] += common
+    both["ABS_2"] += common
+
     report = {
         "stations_round1": len(r1),
         "stations_round2": len(r2),
-        "stations_in_both": len(both),
-        "stations_kept": int(keep.sum()),
-        "share_abs_round1_positive": float((both["ABS_1"][keep] > 0).mean()),
-        "share_abs_round2_positive": float((both["ABS_2"][keep] > 0).mean()),
+        "stations_kept": len(both),
+        "net_abstention_part": int(base.sum() - t1[keep].sum()),
+        "common_abstention_added": int(common.sum()),
+        "abstention_rate_round1": float(both["ABS_1"].sum() / electorate_total),
+        "abstention_rate_round2": float(both["ABS_2"].sum() / electorate_total),
     }
-    both = both[keep]
 
     X = both[["A_1", "B_1", "OUT_1", "BN_1", "ABS_1"]]
     X.columns = ["A", "B", "OUT", "BN", "ABS"]
