@@ -131,9 +131,9 @@ class ScatterPlot(BasePlot):
 
 
 class SankeyPlot(BasePlot):
-    """Two-column Sankey (origin -> destination).
+    """Two-column Sankey plot (origin -> destination).
 
-    :param flows: Matrix of voters, origins in rows and destinations in columns.
+    :param flows: Flow matrix, origins in rows and destinations in columns.
     :param left_labels: Names of the origins (rows).
     :param right_labels: Names of the destinations (columns).
     :param right_colors: One color per destination; ribbons take the color of
@@ -196,32 +196,56 @@ class SankeyPlot(BasePlot):
                 left_off[j] += h
                 right_off[k] += h
                 xa, xb, xm = x0 + w, x1, (x0 + x1) / 2
-                verts = [(xa, yl), (xm, yl), (xm, yr), (xb, yr),
-                         (xb, yr + h), (xm, yr + h), (xm, yl + h), (xa, yl + h),
-                         (xa, yl)]
-                codes = [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4,
-                         Path.LINETO, Path.CURVE4, Path.CURVE4, Path.CURVE4,
-                         Path.CLOSEPOLY]
-                ax.add_patch(PathPatch(Path(verts, codes),
-                                       facecolor=self.right_colors[k],
-                                       alpha=0.45, edgecolor="none"))
+                verts = [
+                    (xa, yl), (xm, yl), (xm, yr), (xb, yr),
+                    (xb, yr + h), (xm, yr + h), (xm, yl + h), (xa, yl + h),
+                    (xa, yl),
+                ]
+                codes = [
+                    Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4,
+                    Path.LINETO, Path.CURVE4, Path.CURVE4, Path.CURVE4,
+                    Path.CLOSEPOLY,
+                ]
+                ax.add_patch(
+                    PathPatch(
+                        Path(verts, codes),
+                        facecolor=self.right_colors[k],
+                        alpha=0.55,
+                        edgecolor="none",
+                    )
+                )
 
-        fs = self.cfg["font"]["size"]["base"]
+        fs = self.cfg["font"]["size"]["legend"]
         for j in range(K):
-            ax.add_patch(Rectangle((x0, left_top[j]), w, left_size[j] * scale,
-                                   color="0.25"))
-            ax.text(x0 - 0.01, left_top[j] + left_size[j] * scale / 2,
-                    f"{self.left_labels[j]}\n{self._fmt(left_size[j])}",
-                    ha="right", va="center", fontsize=fs)
+            ax.add_patch(
+                Rectangle((x0, left_top[j]), w, left_size[j] * scale, color="#212c38")
+            )
+            ax.text(
+                x0 - 0.01,
+                left_top[j] + left_size[j] * scale / 2,
+                f"{self.left_labels[j]}\n{self._fmt(left_size[j])}",
+                ha="right", va="center", fontsize=fs
+            )
         for k in range(M):
-            ax.add_patch(Rectangle((x1, right_top[k]), w, right_size[k] * scale,
-                                   color=self.right_colors[k]))
-            ax.text(x1 + w + 0.01, right_top[k] + right_size[k] * scale / 2,
-                    f"{self.right_labels[k]}\n{self._fmt(right_size[k])}",
-                    ha="left", va="center", fontsize=fs)
+            ax.add_patch(
+                Rectangle(
+                    (x1, right_top[k]),
+                    w,
+                    right_size[k] * scale,
+                    color=self.right_colors[k]
+                )
+            )
+            ax.text(
+                x1 + w + 0.01,
+                right_top[k] + right_size[k] * scale / 2,
+                f"{self.right_labels[k]}\n{self._fmt(right_size[k])}",
+                ha="left", va="center", fontsize=fs
+            )
 
-        bottom = max(left_top[-1] + left_size[-1] * scale,
-                     right_top[-1] + right_size[-1] * scale)
+        bottom = max(
+            left_top[-1] + left_size[-1] * scale,
+            right_top[-1] + right_size[-1] * scale,
+        )
         ax.set_xlim(-0.3, 1.3)
         ax.set_ylim(bottom + 0.02, -0.02)
         ax.axis("off")

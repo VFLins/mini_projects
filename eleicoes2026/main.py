@@ -225,13 +225,13 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Potencial de conquistar votos
+    ### Transferência de votos inferida
 
     Os dias de votação das eleições presidenciais de 2026 foram 4 de outubro para o primeiro turno e 25 do mesmo mês para o segundo. Os candidatos tiveram um período de apenas três semanas para convencer o eleitorado e atrair votos para si.
 
-    Neste cenário de curto período de tempo, é mais seguro considerar que os esforços de campnha devem ser concentrados nos eleitores indecisos, esta acabou sendo a estratégia da campanha do então candidato Lula no segundo turno[^1].
+    Neste cenário de curto período de tempo, é razoavelmente seguro considerar que os esforços de campnha tenham se concentrado nos eleitores indecisos, como foi a estratégia da campanha do então candidato a reeleição Lula no segundo turno[^1].
 
-    Por outro lado, para alguns especialistas[^2] e até para a própria equipe de campanha do Flávio Bolsonaro[^3], sua vitória parecia ser muito segura. No fim das contas não foi feita nenhuma grande estratégia para garantir a vitória no segundo turno.
+    Por outro lado, para alguns especialistas[^2] e até para a própria equipe de campanha do Flávio Bolsonaro, sua vitória parecia ser muito segura. No fim das contas não foi feita nenhuma grande estratégia para garantir a vitória no segundo turno[^3].
 
     Para estimar a transferência de votos, será um modelo de inferência de Rosen et al. (2001)[^4], mas com uma restrição: Não há transferência de votos entre os candidatos do primeiro turno. Isto significa que todo o potencial de receber votos dos candidatos no segundo turno está entre os eleitores que:
 
@@ -241,8 +241,9 @@ def _(mo):
 
     Esta restrição assume que todos os que votaram no Lula no primeiro turno vão continuar votando nele, e o mesmo vale para o Flávio. Embora crie um pressuposto capaz de introduzir viés no modelo, também traz outros dois benefícios importantes na minha análise.
 
-    Como não tenho _hardware_ suficiente para treinar um modelo irrestrito,
+    O viés potencialmente introduzido por esta restrição está relacionado com a diferença entre as datas de votações dos turnos. Como a possibilidade de convencer um eleitor aumenta como tempo disponível para a campanha, o prazo de 21 dias entre os turnos torna razoável esperar que quem votou em um dos finalistas no primeio turno manterá o seu voto no segundo.
 
+    Por limitações de _hardware_, além de aplicar as restrições na modelagem, o modelo também precisará ser executado com algumas restrições nos parâmetros
 
 
 
@@ -523,7 +524,11 @@ def _(f, poll_stats):
 def _(f, votos):
     # total de eleitores tirado de https://www.tse.jus.br/comunicacao/noticias/2026/Setembro/faltam-30-dias-brasil-tem-mais-de-158-milhoes-de-eleitoras-e-eleitores-aptos-a-votar
     X, Y, report = f.build_matrices(
-        votos.df, cargo=1, a_num=22, b_num=13, electorate_total=158_700_000
+        votos.df,
+        cargo=1,
+        a_num=22,
+        b_num=13,
+        electorate_total=158_700_000
     )
     return X, Y
 
@@ -536,12 +541,13 @@ def _(Path, X, Y, d, f, mo):
             idx_a=0,
             idx_b=1,
             u_cols=[2, 3, 4],
-            max_stations=1000,
+            draws=500,
+            max_stations=3000,
         )
         .fit(X.values, Y.values)
     )
-    model.summary().to_csv(Path(d.DOWNLOADS_DIR, "model_summary.csv"), index=True)
-    model.flows().to_csv(Path(d.DOWNLOADS_DIR, "model_flows.csv"), index=True)
+    model.summary().to_csv(Path(d.DOWNLOADS_DIR, "model_summary.csv"), index=False)
+    model.flows().to_csv(Path(d.DOWNLOADS_DIR, "model_flows.csv"), index=False)
     return
 
 
@@ -550,7 +556,7 @@ def _(Path, d, g, pd):
     flows = pd.read_csv(Path(d.PROJECT_ROOT, "data", "model_flows.csv"))
 
     plot3 = g.SankeyPlot(
-        flows * 1000,
+        flows * 160, # Ajuste para se adequar à quantidade real de votos ganhos
         left_labels=["Outros candidatos", "Branco/Nulo", "Abstenções"],
         right_labels=["Flávio", "Lula", "Branco/Nulo", "Abstenções"],
         right_colors=["#008181", "#942020", "#212c38", "#98a7b4"],

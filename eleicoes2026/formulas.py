@@ -183,10 +183,11 @@ class DirichletTransfer:
             theta = (X_prop[:, :, None] * beta_i).sum(axis=1)
             pm.Multinomial("y", n=Y.sum(axis=1), p=theta, observed=Y)
             pm.Deterministic("B", (w[:, :, None] * beta_i).sum(axis=0))
+            pm.NUTS(max_treedepth=6)
             self.trace = pm.sample(
                 tune=2000,
                 draws=self.draws,
-                chains=4,
+                chains=8,
                 target_accept=0.95,
                 nuts_sampler="numpyro",
                 nuts={"chain_method": "vectorized"},
@@ -200,7 +201,9 @@ class DirichletTransfer:
         return self
 
     def flows(self):
-        """Posterior mean voters: origin in V_U (rows) -> destination (columns)."""
+        """Sampled (n<=1000) posterior means. Origin in rows and destination in
+        columns.
+        """
         return pd.DataFrame(self.XU_.sum(axis=0)[:, None] * self.mean_)
 
     def summary(self):
