@@ -280,8 +280,8 @@ def _(Path, X, Y, d, f, mo):
             idx_a=0,
             idx_b=1,
             u_cols=[2, 3, 4],
-            tune=100,
-            draws=100,
+            tune=1000,
+            draws=1000,
             max_depth=16,
             max_stations=10_000,
         )
@@ -319,7 +319,7 @@ def _(Path, d, g, pd):
         right_colors=["#008181", "#942020", "#212c38", "#98a7b4"],
         disclaimer=(
             "Estimado com modelo de inferência ecológica adaptado para "
-            'assumir que não existe\n"roubo de votos" entre os vencedores '
+            'assumir que não\nexiste "roubo de votos" entre os vencedores '
             "do primeiro turno.\n\n"
             "As quantidades variam com margem de erro média de "
             f"±{_avg_percent_error}% do valor informado."
