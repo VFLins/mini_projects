@@ -157,6 +157,141 @@ class RejectionPolls:
         self.df = pd.DataFrame(data=self._polls)
 
 
+import numpy as np
+import pandas as pd
+
+SECTION_KEY = ["CD_MUNICIPIO", "NR_ZONA", "NR_SECAO"]
+
+GRANULARITY_KEYS = {
+    "MUNICIPIO": ["CD_MUNICIPIO"],
+    "ZONA": ["CD_MUNICIPIO", "NR_ZONA"],  # NR_ZONA só é única dentro do município
+    "SECAO": SECTION_KEY,
+}
+
+BLANK_OR_NULL_CODES = {95, 96, 97}
+
+
+def build_matrices(
+    votes_df,
+    position_code,
+    candidate_a_number,
+    candidate_b_number,
+    electorate_total,
+    granularity="SECAO",
+):
+    """Build the X (Round 1) and Y (Round 2) matrices of the ecological model.
+
+    Abstention is computed per voting section, as the difference in total
+    votes between rounds in the same section: the round with fewer votes
+    receives the difference as abstention and the other receives zero. The
+    electorate of a section is therefore the larger of the two vote totals.
+    Sections are then aggregated to the requested granularity, so every row
+    of X and Y sums to the electorate of its unit.
+
+    :param votes_df: VOTACAO_SECAO already loaded as a DataFrame (both
+        rounds). It must contain ``CD_MUNICIPIO``, ``NR_ZONA``, ``NR_SECAO``,
+        ``CD_CARGO``, ``NR_TURNO``, ``NR_VOTAVEL`` and ``QT_VOTOS``.
+    :param position_code: ``CD_CARGO`` of the race (e.g. 1 = President,
+        3 = Governor).
+    :param candidate_a_number: ``NR_VOTAVEL`` of candidate A (Round 2
+        finalist).
+    :param candidate_b_number: ``NR_VOTAVEL`` of candidate B (Round 2
+        finalist).
+    :param electorate_total: Total eligible voters.
+    :param granularity: Unit of analysis of the rows: ``"MUNICIPIO"``,
+        ``"ZONA"`` or ``"SECAO"`` (default).
+    :returns: ``(X, Y, report)``. X columns are ``[A, B, OUT, BN, ABS]`` and
+        Y columns are ``[A, B, BN, ABS]``; with the VUTransfer class use
+        ``idx_a=0, idx_b=1, u_cols=[2, 3, 4]``.
+    """
+    granularity = granularity.upper()
+    if granularity not in GRANULARITY_KEYS:
+        raise ValueError(
+            f"granularity must be one of {list(GRANULARITY_KEYS)}, "
+            f"got {granularity!r}."
+        )
+    unit_keys = GRANULARITY_KEYS[granularity]
+
+    race_votes = votes_df.loc[
+        votes_df["CD_CARGO"] == position_code,
+        SECTION_KEY + ["NR_TURNO", "NR_VOTAVEL", "QT_VOTOS"],
+    ]
+    vote_group = np.select(
+        [
+            race_votes["NR_VOTAVEL"] == candidate_a_number,
+            race_votes["NR_VOTAVEL"] == candidate_b_number,
+            race_votes["NR_VOTAVEL"].isin(BLANK_OR_NULL_CODES),
+        ],
+        ["A", "B", "BN"],
+        default="OUT",
+    )
+    votes_by_section_and_round = (
+        race_votes.assign(vote_group=vote_group)
+        .groupby(SECTION_KEY + ["NR_TURNO", "vote_group"])["QT_VOTOS"]
+        .sum()
+        .unstack("vote_group", fill_value=0)
+        .reindex(columns=["A", "B", "OUT", "BN"], fill_value=0)
+    )
+
+    round1_sections = votes_by_section_and_round.xs(1, level="NR_TURNO")
+    round2_sections = votes_by_section_and_round.xs(2, level="NR_TURNO")
+    sections_in_both_rounds = round1_sections.join(
+        round2_sections, how="inner", lsuffix="_1", rsuffix="_2"
+    )
+
+    round1_section_votes = sections_in_both_rounds[
+        ["A_1", "B_1", "OUT_1", "BN_1"]
+    ].sum(axis=1)
+    round2_section_votes = sections_in_both_rounds[
+        ["A_2", "B_2", "OUT_2", "BN_2"]
+    ].sum(axis=1)
+    section_electorate = np.maximum(round1_section_votes, round2_section_votes)
+
+    # Abstention is always derived section by section, regardless of the
+    # chosen granularity, so the definition is not diluted by aggregation.
+    sections_in_both_rounds["ABS_1"] = section_electorate - round1_section_votes
+    sections_in_both_rounds["ABS_2"] = section_electorate - round2_section_votes
+    sections_in_both_rounds["ELECTORATE_BASE"] = section_electorate
+
+    has_votes = section_electorate > 0
+    sections_kept = sections_in_both_rounds[has_votes]
+
+    units = sections_kept.groupby(level=unit_keys).sum()
+
+    kept_votes_total = units["ELECTORATE_BASE"].sum()
+    extra_abstention_total = electorate_total - kept_votes_total
+    if extra_abstention_total < 0:
+        raise ValueError(
+            f"Votes in kept sections ({kept_votes_total:,}) exceed "
+            f"electorate_total ({electorate_total:,}); check the territory."
+        )
+    common_abstention_per_unit = np.round(
+        extra_abstention_total * units["ELECTORATE_BASE"] / kept_votes_total
+    ).astype(int)
+    units["ABS_1"] += common_abstention_per_unit
+    units["ABS_2"] += common_abstention_per_unit
+
+    report = {
+        "granularity": granularity,
+        "sections_round1": len(round1_sections),
+        "sections_round2": len(round2_sections),
+        "sections_kept": len(sections_kept),
+        "units_kept": len(units),
+        "net_abstention_part": int(
+            sections_in_both_rounds.loc[has_votes, "ABS_1"].sum()
+        ),
+        "common_abstention_added": int(common_abstention_per_unit.sum()),
+        "abstention_rate_round1": float(units["ABS_1"].sum() / electorate_total),
+        "abstention_rate_round2": float(units["ABS_2"].sum() / electorate_total),
+    }
+
+    round1_matrix = units[["A_1", "B_1", "OUT_1", "BN_1", "ABS_1"]].copy()
+    round1_matrix.columns = ["A", "B", "OUT", "BN", "ABS"]
+    round2_matrix = units[["A_2", "B_2", "BN_2", "ABS_2"]].copy()
+    round2_matrix.columns = ["A", "B", "BN", "ABS"]
+    return round1_matrix, round2_matrix, report
+
+
 # Usando:
 # Candidato A: Flávio Bolsonaro
 # Candidato B: Lula

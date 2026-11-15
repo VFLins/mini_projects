@@ -139,9 +139,21 @@ class DirichletTransfer:
     :param seed: Random subsampling seed.
     """
 
-    def __init__(self, idx_a, idx_b, u_cols, draws=1000, max_stations=30_000, seed=42):
+    def __init__(
+        self,
+        idx_a,
+        idx_b,
+        u_cols,
+        tune=1000,
+        draws=1000,
+        chains=4,
+        max_depth=10,
+        max_stations=30_000,
+        seed=42
+    ):
         self.idx_a, self.idx_b, self.u_cols = idx_a, idx_b, list(u_cols)
-        self.draws, self.max_stations, self.seed = draws, max_stations, seed
+        self.tune, self.draws, self.chains = tune, draws, chains
+        self.max_depth, self.max_stations, self.seed = max_depth, max_stations, seed
 
     def fit(self, X, Y):
         """
@@ -183,11 +195,11 @@ class DirichletTransfer:
             theta = (X_prop[:, :, None] * beta_i).sum(axis=1)
             pm.Multinomial("y", n=Y.sum(axis=1), p=theta, observed=Y)
             pm.Deterministic("B", (w[:, :, None] * beta_i).sum(axis=0))
-            pm.NUTS(max_treedepth=6)
+            pm.NUTS(max_treedepth=self.max_depth)
             self.trace = pm.sample(
-                tune=2000,
+                tune=self.tune,
                 draws=self.draws,
-                chains=8,
+                chains=self.chains,
                 target_accept=0.95,
                 nuts_sampler="numpyro",
                 nuts={"chain_method": "vectorized"},
@@ -209,83 +221,3 @@ class DirichletTransfer:
     def summary(self):
         """R-hat, ESS and HDI of the aggregate transition matrix."""
         return az.summary(self.trace, var_names=["B"])
-
-
-
-def build_matrices(df, cargo, a_num, b_num, electorate_total):
-    """Build the X (Round 1) and Y (Round 2) matrices of the ecological model.
-
-    Abstention is the difference in total votes between rounds in the same
-    station: the round with fewer votes receives the difference as abstention
-    and the other receives zero. The electorate of a station is therefore the
-    larger of the two vote totals, and every row of X and Y sums to it.
-
-    :param df: VOTACAO_SECAO already loaded as a DataFrame (both rounds). It
-        must contain ``CD_MUNICIPIO``, ``NR_ZONA``, ``NR_SECAO``,
-        ``CD_CARGO``, ``NR_TURNO``, ``NR_VOTAVEL`` and ``QT_VOTOS``.
-    :param cargo: ``CD_CARGO`` of the race (e.g. 1 = President, 3 = Governor).
-    :param a_num: ``NR_VOTAVEL`` of candidate A (Round 2 finalist).
-    :param b_num: ``NR_VOTAVEL`` of candidate B (Round 2 finalist).
-    :param electorate_total: Total eligible voters.
-    :returns: ``(X, Y, report)``. X columns are ``[A, B, OUT, BN, ABS]`` and
-        Y columns are ``[A, B, BN, ABS]``; with the VUTransfer class use
-        ``idx_a=0, idx_b=1, u_cols=[2, 3, 4]``.
-    """
-    KEY = ["CD_MUNICIPIO", "NR_ZONA", "NR_SECAO"]
-    BLANK_NULL = {95, 96, 97}
-
-    v = df.loc[
-        df["CD_CARGO"] == cargo, KEY + ["NR_TURNO", "NR_VOTAVEL", "QT_VOTOS"]
-    ]
-    grp = np.select(
-        [
-            v["NR_VOTAVEL"] == a_num, v["NR_VOTAVEL"] == b_num,
-            v["NR_VOTAVEL"].isin(BLANK_NULL)
-        ],
-        ["A", "B", "BN"],
-        default="OUT"
-    )
-    table = (
-        v.assign(grp=grp)
-        .groupby(KEY + ["NR_TURNO", "grp"])["QT_VOTOS"].sum()
-        .unstack("grp", fill_value=0)
-        .reindex(columns=["A", "B", "OUT", "BN"], fill_value=0)
-    )
-
-    r1 = table.xs(1, level="NR_TURNO")
-    r2 = table.xs(2, level="NR_TURNO")
-    both = r1.join(r2, how="inner", lsuffix="_1", rsuffix="_2")
-
-    t1 = both[["A_1", "B_1", "OUT_1", "BN_1"]].sum(axis=1)
-    t2 = both[["A_2", "B_2", "OUT_2", "BN_2"]].sum(axis=1)
-    base = np.maximum(t1, t2)
-
-    both["ABS_1"] = base - t1
-    both["ABS_2"] = base - t2
-    keep = base > 0
-    both, base = both[keep], base[keep]
-    extra = electorate_total - base.sum()
-    if extra < 0:
-        raise ValueError(
-            f"Votes in kept stations ({base.sum():,}) exceed "
-            f"electorate_total ({electorate_total:,}); check the territory."
-        )
-    common = np.round(extra * base / base.sum()).astype(int)
-    both["ABS_1"] += common
-    both["ABS_2"] += common
-
-    report = {
-        "stations_round1": len(r1),
-        "stations_round2": len(r2),
-        "stations_kept": len(both),
-        "net_abstention_part": int(base.sum() - t1[keep].sum()),
-        "common_abstention_added": int(common.sum()),
-        "abstention_rate_round1": float(both["ABS_1"].sum() / electorate_total),
-        "abstention_rate_round2": float(both["ABS_2"].sum() / electorate_total),
-    }
-
-    X = both[["A_1", "B_1", "OUT_1", "BN_1", "ABS_1"]]
-    X.columns = ["A", "B", "OUT", "BN", "ABS"]
-    Y = both[["A_2", "B_2", "BN_2", "ABS_2"]]
-    Y.columns = ["A", "B", "BN", "ABS"]
-    return X, Y, report

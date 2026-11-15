@@ -192,17 +192,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Metodologia
-
-    Nesta seção vamos entender os dados que serão usados e como a análise será feita dos dados será feita. Vamos começar buscando informações adicionais para suportar a análise, para entender a propensão dos eleitores a transferir vontos entre candidatos, vamos apoiar e guiar os testes nas intenções de votos das pesquisas independentes realizadas.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ### Dados de rejeição e intenção de votos
+    ## Dados de rejeição e intenção de votos
 
     A rejeição é medida em um questionário por uma pergunta do tipo "Em qual(is) candidatos você não votaria de jeito nenhum?". A diferença entre a rejeição e a intenção de voto de um candidato é composto por, eleitores que ainda não decidiram o voto e eleitores decididos a votar em outro candidato.
 
@@ -225,7 +215,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Transferência de votos inferida
+    ## Inferindo a transferência de votos
 
     Os dias de votação das eleições presidenciais de 2026 foram 4 de outubro para o primeiro turno e 25 do mesmo mês para o segundo. Os candidatos tiveram um período de apenas três semanas para convencer o eleitorado e atrair votos para si.
 
@@ -243,7 +233,17 @@ def _(mo):
 
     O viés potencialmente introduzido por esta restrição está relacionado com a diferença entre as datas de votações dos turnos. Como a possibilidade de convencer um eleitor aumenta como tempo disponível para a campanha, o prazo de 21 dias entre os turnos torna razoável esperar que quem votou em um dos finalistas no primeio turno manterá o seu voto no segundo.
 
-    Por limitações de _hardware_, além de aplicar as restrições na modelagem, o modelo também precisará ser executado com algumas restrições nos parâmetros
+    Algumas outras restrições precisaram ser feitas no modelo empregado por causa de algumas limitações de _hardware_:
+
+    - **Memória de vídeo:** Para treinar o modelo já com a restrição mencionada mas usando todas as seções eleitorais, eu precisaria de aproximadamente 60GB de VRAM, para contornar isso, os dados foram agregados em zonas eleitorais, o que reduz o requisito de VRAM para ~1GB.
+
+    - **Tempo de processamento:** A precisão e qualidade do resultado depende da quantidade e da qualidade das iterações realizadas, cada uma delas exige tempo de processamento:
+
+        1. **Qualidade:** cada iteração pode ser rápida ou não dependendo do tempo que cada uma precisa para atingir uma condição de parada, as condições podem ser um limite fixo ou o momento que o modelo entende que não fará mais progresso mesmo que continue tentando se ajustar. Quase todas as iterações pararam no limite fixo, o que indica que o modelo provavelmente se ajustaria melhor com um limite fix mais alto, e
+
+        2. **Quantidade**: Com a configuração `chains=8`, `tune=500` e `draws=1000`, o modelo faz 1500 iterações por grupo, das quais as últimas 1000 são guardadas na memória em 8 grupos trabalhando em paralelo. Esta combinação exigiu aproximadamente 40 minutos de processamento no meu _hardware_.
+
+    Os dados de fluxo de votos retornados pelo modelo vão divergir um pouco dos números reais da votação, eles devem ser interpretados como estimativas, e estão sujeitas a uma margem de erro, informada na parte inferior do gráfico.
 
 
 
@@ -254,6 +254,86 @@ def _(mo):
     [^3]: **BBC**. ['Ele achou que já estava eleito': os erros da campanha de Flávio Bolsonaro no segundo turno apontados por analistas](https://www.bbc.com/portuguese/articles/cmrryxg991d8o)
 
     [^4]: **Statistica Neerlandica**. [Bayesian and Frequentist Inference for Ecological Inference: The R×C Case](https://onlinelibrary.wiley.com/doi/abs/10.1111/1467-9574.00162) por Ori Rosen, Wenxin Jiang, Gary King e Martin A. Tanner
+    """)
+    return
+
+
+@app.cell
+def _(d, votos):
+    # total de eleitores tirado de https://www.tse.jus.br/comunicacao/noticias/2026/Setembro/faltam-30-dias-brasil-tem-mais-de-158-milhoes-de-eleitoras-e-eleitores-aptos-a-votar
+    X, Y, report = d.build_matrices(
+        votos.df,
+        position_code=1,
+        candidate_a_number=22,
+        candidate_b_number=13,
+        electorate_total=158_700_000,
+        granularity="ZONA",
+    )
+    return X, Y
+
+
+@app.cell(hide_code=True)
+def _(Path, X, Y, d, f, mo):
+    mo.stop(Path(d.DOWNLOADS_DIR, "model_flows.csv").is_file())
+    model = (
+        f.DirichletTransfer(
+            idx_a=0,
+            idx_b=1,
+            u_cols=[2, 3, 4],
+            tune=100,
+            draws=100,
+            max_depth=16,
+            max_stations=10_000,
+        )
+        .fit(X.values, Y.values)
+    )
+    model.summary().to_csv(Path(d.DOWNLOADS_DIR, "model_summary.csv"), index=True)
+    model.flows().to_csv(Path(d.DOWNLOADS_DIR, "model_flows.csv"), index=False)
+    return (model,)
+
+
+@app.cell
+def _(model):
+    ss = model.trace.sample_stats
+    print("divergências:", ss["diverging"].sum().item())
+    print("profundidade média:", ss["tree_depth"].mean().item())
+    print("% limitada pela profund.:", (ss["tree_depth"] >= 16).mean().item())
+    print("passos por iteração:", ss["n_steps"].mean().item())
+    return
+
+
+@app.cell
+def _(Path, d, g, pd):
+    flows = pd.read_csv(Path(d.PROJECT_ROOT, "data", "model_flows.csv"))
+    summary = pd.read_csv(Path(d.PROJECT_ROOT, "data", "model_summary.csv"))
+    _avg_percent_error = str(
+        round(
+            ((1.96 * summary["sd"] * 100) / (summary["mean"] * 100)).sum(), 2
+    )
+    ).replace(".", ",")
+
+    plot3 = g.SankeyPlot(
+        flows,
+        left_labels=["Outros candidatos", "Branco/Nulo", "Abstenções"],
+        right_labels=["Flávio", "Lula", "Branco/Nulo", "Abstenções"],
+        right_colors=["#008181", "#942020", "#212c38", "#98a7b4"],
+        disclaimer=(
+            "Estimado com modelo de inferência ecológica adaptado para "
+            'assumir que não existe\n"roubo de votos" entre os vencedores '
+            "do primeiro turno.\n\n"
+            "As quantidades variam com margem de erro média de "
+            f"±{_avg_percent_error}% do valor informado."
+        )
+    )
+    plot3.cfg["disclaimer"]["clearance"] = 0.2
+    plot3.show()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    O fluxo de votos estimado mostra, diferente do esperado pela equipe do Flávio e de muitos analistas, o Lula conseguindo atrair uma uma parcela relevante do eleitorado que tinha votado em candidatos que não passaram para o segundo turno, e junto com isso, também a maior parte dos que se abstiveram e dos que votaram branco e nulo.
     """)
     return
 
@@ -517,57 +597,6 @@ def _(f, poll_stats):
             rb=poll_stats["lula"]["r"],
         ),
     )
-    return
-
-
-@app.cell
-def _(f, votos):
-    # total de eleitores tirado de https://www.tse.jus.br/comunicacao/noticias/2026/Setembro/faltam-30-dias-brasil-tem-mais-de-158-milhoes-de-eleitoras-e-eleitores-aptos-a-votar
-    X, Y, report = f.build_matrices(
-        votos.df,
-        cargo=1,
-        a_num=22,
-        b_num=13,
-        electorate_total=158_700_000
-    )
-    return X, Y
-
-
-@app.cell(hide_code=True)
-def _(Path, X, Y, d, f, mo):
-    mo.stop(Path(d.DOWNLOADS_DIR, "model_flows.csv").is_file())
-    model = (
-        f.DirichletTransfer(
-            idx_a=0,
-            idx_b=1,
-            u_cols=[2, 3, 4],
-            draws=500,
-            max_stations=3000,
-        )
-        .fit(X.values, Y.values)
-    )
-    model.summary().to_csv(Path(d.DOWNLOADS_DIR, "model_summary.csv"), index=False)
-    model.flows().to_csv(Path(d.DOWNLOADS_DIR, "model_flows.csv"), index=False)
-    return
-
-
-@app.cell
-def _(Path, d, g, pd):
-    flows = pd.read_csv(Path(d.PROJECT_ROOT, "data", "model_flows.csv"))
-
-    plot3 = g.SankeyPlot(
-        flows * 160, # Ajuste para se adequar à quantidade real de votos ganhos
-        left_labels=["Outros candidatos", "Branco/Nulo", "Abstenções"],
-        right_labels=["Flávio", "Lula", "Branco/Nulo", "Abstenções"],
-        right_colors=["#008181", "#942020", "#212c38", "#98a7b4"],
-        disclaimer=(
-            "Estimado com modelo de inferência ecológica adaptado para "
-            'assumir que não existe\n"roubo de votos" entre os vencedores '
-            "do primeiro turno."
-        )
-    )
-    plot3.cfg["disclaimer"]["clearance"] = 0.15
-    plot3.show()
     return
 
 
