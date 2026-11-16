@@ -261,12 +261,6 @@ def _(mo):
 
 
 @app.cell
-def _(votos):
-    votos.df.groupby("SG_UF")["NR_ZONA"].value_counts()
-    return
-
-
-@app.cell
 def _(d, votos):
     # total de eleitores tirado de https://www.tse.jus.br/comunicacao/noticias/2026/Setembro/faltam-30-dias-brasil-tem-mais-de-158-milhoes-de-eleitoras-e-eleitores-aptos-a-votar
     X, Y, report = d.build_matrices(

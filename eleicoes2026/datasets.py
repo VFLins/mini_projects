@@ -222,23 +222,29 @@ def build_matrices(
     if granularity not in GRANULARITY:
         raise ValueError(f"granularity must be one of {list(GRANULARITY)}")
 
-    v = df.loc[df["CD_CARGO"] == cargo,
-               KEY + ["NR_TURNO", "NR_VOTAVEL", "QT_VOTOS"]]
-
+    v = votes_df.loc[
+        votes_df["CD_CARGO"] == position_code,
+        KEY + ["NR_TURNO", "NR_VOTAVEL", "QT_VOTOS"]
+    ]
     grp = np.select(
-        [v["NR_VOTAVEL"] == a_num, v["NR_VOTAVEL"] == b_num,
-         v["NR_VOTAVEL"].isin(BLANK_NULL)],
-        ["A", "B", "BN"], default="OUT")
-
-    table = (v.assign(grp=grp)
-             .groupby(KEY + ["NR_TURNO", "grp"])["QT_VOTOS"].sum()
-             .unstack("grp", fill_value=0)
-             .reindex(columns=["A", "B", "OUT", "BN"], fill_value=0))
+        [
+            v["NR_VOTAVEL"] == candidate_a_number,
+            v["NR_VOTAVEL"] == candidate_b_number,
+            v["NR_VOTAVEL"].isin(BLANK_NULL),
+        ],
+        ["A", "B", "BN"],
+        default="OUT"
+    )
+    table = (
+        v.assign(grp=grp)
+        .groupby(KEY + ["NR_TURNO", "grp"])["QT_VOTOS"].sum()
+        .unstack("grp", fill_value=0)
+        .reindex(columns=["A", "B", "OUT", "BN"], fill_value=0)
+    )
 
     r1 = table.xs(1, level="NR_TURNO")
     r2 = table.xs(2, level="NR_TURNO")
     both = r1.join(r2, how="inner", lsuffix="_1", rsuffix="_2")
-
     t1 = both[["A_1", "B_1", "OUT_1", "BN_1"]].sum(axis=1)
     t2 = both[["A_2", "B_2", "OUT_2", "BN_2"]].sum(axis=1)
     base = np.maximum(t1, t2)
@@ -246,7 +252,6 @@ def build_matrices(
     # Part 1: net difference between rounds (always at station level)
     both["ABS_1"] = base - t1
     both["ABS_2"] = base - t2
-
     keep = base > 0
     both, base = both[keep], base[keep]
 
@@ -260,7 +265,6 @@ def build_matrices(
     common = np.round(extra * base / base.sum()).astype(int)
     both["ABS_1"] += common
     both["ABS_2"] += common
-
     X = both[["A_1", "B_1", "OUT_1", "BN_1", "ABS_1"]]
     X.columns = ["A", "B", "OUT", "BN", "ABS"]
     Y = both[["A_2", "B_2", "BN_2", "ABS_2"]]
