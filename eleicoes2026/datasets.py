@@ -9,6 +9,15 @@ import zipfile
 PROJECT_ROOT = Path(__file__).parent.resolve()
 DOWNLOADS_DIR = PROJECT_ROOT / "data"
 
+KEY = ["SG_UF", "CD_MUNICIPIO", "NR_ZONA", "NR_SECAO"]
+BLANK_NULL = {95, 96, 97}
+GRANULARITY = {
+    "SECAO": KEY,
+    "ZONA": ["SG_UF", "NR_ZONA"],            # zone numbers are unique within a UF
+    "MUNICIPIO": ["SG_UF", "CD_MUNICIPIO"],
+}
+
+
 # Presidente - Votação por seção eleitoral - 2026
 # https://dadosabertos.tse.jus.br/dataset/resultados-2026/resource/01ea4ccd-f443-469c-9f29-c69ff97f7d4c
 VOTOS_URL = (
@@ -60,6 +69,7 @@ class VoteData:
             usecols=[
                 "CD_CARGO",
                 "CD_MUNICIPIO",
+                "SG_UF",
                 "NR_ZONA",
                 "NR_SECAO",
                 "NR_VOTAVEL",
@@ -73,6 +83,7 @@ class VoteData:
                 "CD_CARGO": "int16",
                 "NR_VOTAVEL": "int16",
                 "NM_VOTAVEL": "category",
+                "SG_UF": "category",
                 "NR_TURNO": "int16",
                 "QT_VOTOS": "int64",
                 "NR_SECAO": "int64",
@@ -181,115 +192,98 @@ def build_matrices(
 ):
     """Build the X (Round 1) and Y (Round 2) matrices of the ecological model.
 
-    Abstention is computed per voting section, as the difference in total
-    votes between rounds in the same section: the round with fewer votes
-    receives the difference as abstention and the other receives zero. The
-    electorate of a section is therefore the larger of the two vote totals.
-    Sections are then aggregated to the requested granularity, so every row
-    of X and Y sums to the electorate of its unit.
+    Abstention has two parts, both computed at station level and only then
+    aggregated to ``granularity``. The first is the net difference in total
+    votes between rounds in the same station: the round with fewer votes
+    receives the difference, the other receives zero. The second is the
+    remaining national abstention, ``electorate_total`` minus the electorate
+    implied by the first part, spread over the stations proportionally to
+    their size and added to both rounds.
 
-    :param votes_df: VOTACAO_SECAO already loaded as a DataFrame (both
-        rounds). It must contain ``CD_MUNICIPIO``, ``NR_ZONA``, ``NR_SECAO``,
-        ``CD_CARGO``, ``NR_TURNO``, ``NR_VOTAVEL`` and ``QT_VOTOS``.
-    :param position_code: ``CD_CARGO`` of the race (e.g. 1 = President,
-        3 = Governor).
-    :param candidate_a_number: ``NR_VOTAVEL`` of candidate A (Round 2
-        finalist).
-    :param candidate_b_number: ``NR_VOTAVEL`` of candidate B (Round 2
-        finalist).
-    :param electorate_total: Total eligible voters.
-    :param granularity: Unit of analysis of the rows: ``"MUNICIPIO"``,
-        ``"ZONA"`` or ``"SECAO"`` (default).
+    :param df: VOTACAO_SECAO already loaded as a DataFrame (both rounds). It
+        must contain ``SG_UF``, ``CD_MUNICIPIO``, ``NR_ZONA``, ``NR_SECAO``,
+        ``CD_CARGO``, ``NR_TURNO``, ``NR_VOTAVEL`` and ``QT_VOTOS``, and must
+        cover the same territory as ``electorate_total``.
+    :param cargo: ``CD_CARGO`` of the race (e.g. 1 = President, 3 = Governor).
+    :param a_num: ``NR_VOTAVEL`` of candidate A (Round 2 finalist).
+    :param b_num: ``NR_VOTAVEL`` of candidate B (Round 2 finalist).
+    :param electorate_total: Total eligible voters in the territory covered by
+        ``df`` (e.g. ``158_700_000`` for Brazil).
+    :param granularity: Unit of the rows of X and Y: ``"SECAO"`` (polling
+        station), ``"ZONA"`` (electoral zone, identified by ``SG_UF`` and
+        ``NR_ZONA``) or ``"MUNICIPIO"``.
     :returns: ``(X, Y, report)``. X columns are ``[A, B, OUT, BN, ABS]`` and
         Y columns are ``[A, B, BN, ABS]``; with the VUTransfer class use
         ``idx_a=0, idx_b=1, u_cols=[2, 3, 4]``.
+    :raises ValueError: If ``granularity`` is unknown or the votes already
+        exceed ``electorate_total``.
     """
     granularity = granularity.upper()
-    if granularity not in GRANULARITY_KEYS:
+    if granularity not in GRANULARITY:
+        raise ValueError(f"granularity must be one of {list(GRANULARITY)}")
+
+    v = df.loc[df["CD_CARGO"] == cargo,
+               KEY + ["NR_TURNO", "NR_VOTAVEL", "QT_VOTOS"]]
+
+    grp = np.select(
+        [v["NR_VOTAVEL"] == a_num, v["NR_VOTAVEL"] == b_num,
+         v["NR_VOTAVEL"].isin(BLANK_NULL)],
+        ["A", "B", "BN"], default="OUT")
+
+    table = (v.assign(grp=grp)
+             .groupby(KEY + ["NR_TURNO", "grp"])["QT_VOTOS"].sum()
+             .unstack("grp", fill_value=0)
+             .reindex(columns=["A", "B", "OUT", "BN"], fill_value=0))
+
+    r1 = table.xs(1, level="NR_TURNO")
+    r2 = table.xs(2, level="NR_TURNO")
+    both = r1.join(r2, how="inner", lsuffix="_1", rsuffix="_2")
+
+    t1 = both[["A_1", "B_1", "OUT_1", "BN_1"]].sum(axis=1)
+    t2 = both[["A_2", "B_2", "OUT_2", "BN_2"]].sum(axis=1)
+    base = np.maximum(t1, t2)
+
+    # Part 1: net difference between rounds (always at station level)
+    both["ABS_1"] = base - t1
+    both["ABS_2"] = base - t2
+
+    keep = base > 0
+    both, base = both[keep], base[keep]
+
+    # Part 2: national abstention not explained by the difference between rounds
+    extra = electorate_total - base.sum()
+    if extra < 0:
         raise ValueError(
-            f"granularity must be one of {list(GRANULARITY_KEYS)}, "
-            f"got {granularity!r}."
-        )
-    unit_keys = GRANULARITY_KEYS[granularity]
-
-    race_votes = votes_df.loc[
-        votes_df["CD_CARGO"] == position_code,
-        SECTION_KEY + ["NR_TURNO", "NR_VOTAVEL", "QT_VOTOS"],
-    ]
-    vote_group = np.select(
-        [
-            race_votes["NR_VOTAVEL"] == candidate_a_number,
-            race_votes["NR_VOTAVEL"] == candidate_b_number,
-            race_votes["NR_VOTAVEL"].isin(BLANK_OR_NULL_CODES),
-        ],
-        ["A", "B", "BN"],
-        default="OUT",
-    )
-    votes_by_section_and_round = (
-        race_votes.assign(vote_group=vote_group)
-        .groupby(SECTION_KEY + ["NR_TURNO", "vote_group"])["QT_VOTOS"]
-        .sum()
-        .unstack("vote_group", fill_value=0)
-        .reindex(columns=["A", "B", "OUT", "BN"], fill_value=0)
-    )
-
-    round1_sections = votes_by_section_and_round.xs(1, level="NR_TURNO")
-    round2_sections = votes_by_section_and_round.xs(2, level="NR_TURNO")
-    sections_in_both_rounds = round1_sections.join(
-        round2_sections, how="inner", lsuffix="_1", rsuffix="_2"
-    )
-
-    round1_section_votes = sections_in_both_rounds[
-        ["A_1", "B_1", "OUT_1", "BN_1"]
-    ].sum(axis=1)
-    round2_section_votes = sections_in_both_rounds[
-        ["A_2", "B_2", "OUT_2", "BN_2"]
-    ].sum(axis=1)
-    section_electorate = np.maximum(round1_section_votes, round2_section_votes)
-
-    # Abstention is always derived section by section, regardless of the
-    # chosen granularity, so the definition is not diluted by aggregation.
-    sections_in_both_rounds["ABS_1"] = section_electorate - round1_section_votes
-    sections_in_both_rounds["ABS_2"] = section_electorate - round2_section_votes
-    sections_in_both_rounds["ELECTORATE_BASE"] = section_electorate
-
-    has_votes = section_electorate > 0
-    sections_kept = sections_in_both_rounds[has_votes]
-
-    units = sections_kept.groupby(level=unit_keys).sum()
-
-    kept_votes_total = units["ELECTORATE_BASE"].sum()
-    extra_abstention_total = electorate_total - kept_votes_total
-    if extra_abstention_total < 0:
-        raise ValueError(
-            f"Votes in kept sections ({kept_votes_total:,}) exceed "
+            f"Votes in kept stations ({base.sum():,}) exceed "
             f"electorate_total ({electorate_total:,}); check the territory."
         )
-    common_abstention_per_unit = np.round(
-        extra_abstention_total * units["ELECTORATE_BASE"] / kept_votes_total
-    ).astype(int)
-    units["ABS_1"] += common_abstention_per_unit
-    units["ABS_2"] += common_abstention_per_unit
+    common = np.round(extra * base / base.sum()).astype(int)
+    both["ABS_1"] += common
+    both["ABS_2"] += common
+
+    X = both[["A_1", "B_1", "OUT_1", "BN_1", "ABS_1"]]
+    X.columns = ["A", "B", "OUT", "BN", "ABS"]
+    Y = both[["A_2", "B_2", "BN_2", "ABS_2"]]
+    Y.columns = ["A", "B", "BN", "ABS"]
+
+    # Aggregate only after abstention has been computed per station
+    if granularity != "SECAO":
+        levels = GRANULARITY[granularity]
+        X = X.groupby(level=levels).sum()
+        Y = Y.groupby(level=levels).sum()
 
     report = {
         "granularity": granularity,
-        "sections_round1": len(round1_sections),
-        "sections_round2": len(round2_sections),
-        "sections_kept": len(sections_kept),
-        "units_kept": len(units),
-        "net_abstention_part": int(
-            sections_in_both_rounds.loc[has_votes, "ABS_1"].sum()
-        ),
-        "common_abstention_added": int(common_abstention_per_unit.sum()),
-        "abstention_rate_round1": float(units["ABS_1"].sum() / electorate_total),
-        "abstention_rate_round2": float(units["ABS_2"].sum() / electorate_total),
+        "stations_round1": len(r1),
+        "stations_round2": len(r2),
+        "stations_kept": len(both),
+        "units": len(X),
+        "net_abstention_part": int(base.sum() - t1[keep].sum()),
+        "common_abstention_added": int(common.sum()),
+        "abstention_rate_round1": float(X["ABS"].sum() / electorate_total),
+        "abstention_rate_round2": float(Y["ABS"].sum() / electorate_total),
     }
-
-    round1_matrix = units[["A_1", "B_1", "OUT_1", "BN_1", "ABS_1"]].copy()
-    round1_matrix.columns = ["A", "B", "OUT", "BN", "ABS"]
-    round2_matrix = units[["A_2", "B_2", "BN_2", "ABS_2"]].copy()
-    round2_matrix.columns = ["A", "B", "BN", "ABS"]
-    return round1_matrix, round2_matrix, report
+    return X, Y, report
 
 
 # Usando:

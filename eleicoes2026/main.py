@@ -245,6 +245,8 @@ def _(mo):
 
     Os dados de fluxo de votos retornados pelo modelo vão divergir um pouco dos números reais da votação, eles devem ser interpretados como estimativas, e estão sujeitas a uma margem de erro, informada na parte inferior do gráfico.
 
+    Como a amostra foi reduzida para menos de 7 mil
+
 
 
     [^1]: **Terra**. [A revolução da linguagem no segundo turno das eleições de 2026](https://www.terra.com.br/noticias/a-revolucao-da-linguagem-no-segundo-turno-das-eleicoes-de-2026,23066fe203723310bd23f18087066c3f15bi85pz.html?utm_source=clipboard) por Djiovanni Marioto
@@ -255,6 +257,12 @@ def _(mo):
 
     [^4]: **Statistica Neerlandica**. [Bayesian and Frequentist Inference for Ecological Inference: The R×C Case](https://onlinelibrary.wiley.com/doi/abs/10.1111/1467-9574.00162) por Ori Rosen, Wenxin Jiang, Gary King e Martin A. Tanner
     """)
+    return
+
+
+@app.cell
+def _(votos):
+    votos.df.groupby("SG_UF")["NR_ZONA"].value_counts()
     return
 
 
@@ -289,16 +297,6 @@ def _(Path, X, Y, d, f, mo):
     )
     model.summary().to_csv(Path(d.DOWNLOADS_DIR, "model_summary.csv"), index=True)
     model.flows().to_csv(Path(d.DOWNLOADS_DIR, "model_flows.csv"), index=False)
-    return (model,)
-
-
-@app.cell
-def _(model):
-    ss = model.trace.sample_stats
-    print("divergências:", ss["diverging"].sum().item())
-    print("profundidade média:", ss["tree_depth"].mean().item())
-    print("% limitada pela profund.:", (ss["tree_depth"] >= 16).mean().item())
-    print("passos por iteração:", ss["n_steps"].mean().item())
     return
 
 
@@ -318,9 +316,9 @@ def _(Path, d, g, pd):
         right_labels=["Flávio", "Lula", "Branco/Nulo", "Abstenções"],
         right_colors=["#008181", "#942020", "#212c38", "#98a7b4"],
         disclaimer=(
-            "Estimado com modelo de inferência ecológica adaptado para "
-            'assumir que não\nexiste "roubo de votos" entre os vencedores '
-            "do primeiro turno.\n\n"
+            "Estimado com modelo de inferência com restrição: Assume-se que "
+            "os eleitores de\nLula e Flávio Bolsonaro não mudaram seu voto "
+            "entre o primeiro e o segundo turno.\n\n"
             "As quantidades variam com margem de erro média de "
             f"±{_avg_percent_error}% do valor informado."
         )
