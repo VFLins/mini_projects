@@ -235,17 +235,17 @@ def _(mo):
 
     Algumas outras restrições precisaram ser feitas no modelo empregado por causa de algumas limitações de _hardware_:
 
-    - **Memória de vídeo:** Para treinar o modelo já com a restrição mencionada mas usando todas as seções eleitorais, eu precisaria de aproximadamente 60GB de VRAM, para contornar isso, os dados foram agregados em zonas eleitorais, o que reduz o requisito de VRAM para ~1GB.
+    - **Memória de vídeo:** Para treinar o modelo já com a restrição mencionada mas usando todas as seções eleitorais, eu precisaria de aproximadamente 60GB de VRAM, para contornar isso, os dados foram agregados em zonas eleitorais, o que reduz o requisito de VRAM para menos de 1GB.
 
     - **Tempo de processamento:** A precisão e qualidade do resultado depende da quantidade e da qualidade das iterações realizadas, cada uma delas exige tempo de processamento:
 
         1. **Qualidade:** cada iteração pode ser rápida ou não dependendo do tempo que cada uma precisa para atingir uma condição de parada, as condições podem ser um limite fixo ou o momento que o modelo entende que não fará mais progresso mesmo que continue tentando se ajustar. Quase todas as iterações pararam no limite fixo, o que indica que o modelo provavelmente se ajustaria melhor com um limite fix mais alto, e
 
-        2. **Quantidade**: Com a configuração `chains=8`, `tune=500` e `draws=1000`, o modelo faz 1500 iterações por grupo, das quais as últimas 1000 são guardadas na memória em 8 grupos trabalhando em paralelo. Esta combinação exigiu aproximadamente 40 minutos de processamento no meu _hardware_.
+        2. **Quantidade**: Com a configuração `chains=8`, `tune=1000` e `draws=1000`, o modelo faz 2000 iterações por grupo, das quais as últimas 1000 são guardadas na memória em 8 grupos trabalhando em paralelo. Esta combinação exigiu aproximadamente 30 minutos de processamento no meu _hardware_.
 
     Os dados de fluxo de votos retornados pelo modelo vão divergir um pouco dos números reais da votação, eles devem ser interpretados como estimativas, e estão sujeitas a uma margem de erro, informada na parte inferior do gráfico.
 
-    Como a amostra foi reduzida para menos de 7 mil
+    Como a amostra foi reduzida para menos de 3 mil depois de agrupar por zona eleitoral, ele não atinge um tamanho de amostra efetiva (ESS) suficiente para retornar métricas de erro confiáveis, mas os fluxos obtidos mostram uma variância pequena.
 
 
 
@@ -262,7 +262,6 @@ def _(mo):
 
 @app.cell
 def _(d, votos):
-    # total de eleitores tirado de https://www.tse.jus.br/comunicacao/noticias/2026/Setembro/faltam-30-dias-brasil-tem-mais-de-158-milhoes-de-eleitoras-e-eleitores-aptos-a-votar
     X, Y, report = d.build_matrices(
         votos.df,
         position_code=1,
@@ -310,14 +309,16 @@ def _(Path, d, g, pd):
         right_labels=["Flávio", "Lula", "Branco/Nulo", "Abstenções"],
         right_colors=["#008181", "#942020", "#212c38", "#98a7b4"],
         disclaimer=(
-            "Estimado com modelo de inferência com restrição: Assume-se que "
-            "os eleitores de\nLula e Flávio Bolsonaro não mudaram seu voto "
-            "entre o primeiro e o segundo turno.\n\n"
-            "As quantidades variam com margem de erro média de "
+            "1. Estimado por um modelo de inferência com restrição: Assume-se "
+            "que os eleitores de Lula e Flávio Bolsonaro não mudaram seu voto "
+            "entre o primeiro e o segundo turno.\n"
+            "2. Número de abstenções obtido pela discrepância entre quantidade "
+            "de votos registrados e quantidade de eleitores aptos divulgados."
+            "\n\nAs quantidades variam com margem de erro média de "
             f"±{_avg_percent_error}% do valor informado."
         )
     )
-    plot3.cfg["disclaimer"]["clearance"] = 0.2
+    plot3.cfg["disclaimer"]["clearance"] = 0.28
     plot3.show()
     return
 
@@ -325,7 +326,29 @@ def _(Path, d, g, pd):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    O fluxo de votos estimado mostra, diferente do esperado pela equipe do Flávio e de muitos analistas, o Lula conseguindo atrair uma uma parcela relevante do eleitorado que tinha votado em candidatos que não passaram para o segundo turno, e junto com isso, também a maior parte dos que se abstiveram e dos que votaram branco e nulo.
+    O fluxo de votos estimado mostra, diferente do esperado pela equipe do Flávio e de alguns analistas, o Lula conseguindo atrair uma uma parcela relevante do eleitorado que tinha votado em candidatos que não passaram para o segundo turno, e junto com isso, também a maior parte dos que se abstiveram e dos que votaram branco e nulo.
+
+    Este resultado é plausível porque se aproxima muito do resultado obtido nas urnas, incluindo as quantidades de transferência de votos, 3 milhões para Flávio e 10 milhões para Lula[^1], além dos votos Branco e Nulo totais no primeiro e no segundo turno: aproximadamente 6 e 4 milhões, respectivamente[^1].
+
+    A quantidade total de abstenções é medida da discrepância entre a quantidade de votos registrada e a quantidade de eleitores aptos segundo o TSE[^2], para a estimativa, o modelo distribui a quantidade total de abstenções entre todas as seções eleitorais. Além de assumir que não há transferência de votos entre os finalistas, o fato de assumir que a abstenção está distribuida igualmente entre todas as seções eleitorais pode explicar a leve discrepância entre os números oficiais e a estimativa.
+
+    Para justificar os 10 milhões de votos recebidos pelo candidato Lula, o modelo mediu uma transferência de aproximadamente 4 milhões de votos vindo de pessoas que não foram votar no primeiro turno, este número pode ser verificado em [`model_flows.csv`](https://github.com/VFLins/mini_projects/blob/main/eleicoes2026/data/model_flows.csv), terceira linha, segunda coluna.
+
+    Esta grande transferência faz sentido quando comparamos a abordagem das campanhas eleitorais durante o segundo turno já discutidas. O cenário que se pode interpretar do resultado do modelo é:
+
+    1. Flávio recebeu os três milhões de votos "garantidos", dos eleitores que o tinham como segunda opção no primeiro turno, mas como a atvidade da campanha diminuiu depois do resultado do primeiro turno, não conseguiu mais eleitores além desses, enquanto que
+
+    2. A campanha mais ativa de Lula conseguiu convencer os eleitores que ficaram indecisos depois de ver seu candidato perder no primeiro turno, além de converter alguns votos inválidos e muitos eleitores que se abstiveram no primeiro turno.
+
+    Se não tivesse convencido pessoas as pessoas que não foram votar no primeiro turno, Lula poderia não ter ganhado votos o suficiente para ganhar, enquanto que a suspeição das urnas eletrônicas inflada pelos bolsonaristas[^3] pode acabar fazendo o efeito contrário, desincentivando o comparecimento de seus eleitores à votação.
+
+
+
+    [^1]: **TSE**. [Eleição Geral Ordinária 2026](https://resultados.tse.jus.br/oficial/app/index.html#/eleicao/6257/uf/br/cargo/1/vis/nominal/resultados)
+
+    [^2]: **TSE**. [Faltam 30 dias: Brasil tem mais de 158 milhões de eleitoras e eleitores aptos a votar](https://www.tse.jus.br/comunicacao/noticias/2026/Setembro/faltam-30-dias-brasil-tem-mais-de-158-milhoes-de-eleitoras-e-eleitores-aptos-a-votar)
+
+    [^3]: **G1**. [Flávio Bolsonaro repete discurso do pai sobre urnas e amplia desafios para crescer fora da base bolsonarista](https://g1.globo.com/politica/blog/julia-duailibi/post/2026/07/22/flavio-bolsonaro-urnas.ghtml)
     """)
     return
 
@@ -435,10 +458,10 @@ def _(d, g, ticker):
         with_regression=True,
         disclaimer=(
             f"Produzido com dados de {len(d.rpolls.polls)} pesquisas de 8 institutos "
-            'diferentes realizadas\napós os resultados do primeiro turno. "Vota Flávio '
-            'Bolsonaro" representa o\npercentual de entrevistados que responderam '
-            '"vou votar no candidato com\ncerteza" na pesquisa estimulada, enquanto que '
-            '"Rejeita Lula" representa os\nentrevistados que responderam "não '
+            'diferentes realizadas após os resultados do primeiro turno. "Vota Flávio '
+            'Bolsonaro" representa o percentual de entrevistados que responderam '
+            '"vou votar no candidato com certeza" na pesquisa estimulada, enquanto que '
+            '"Rejeita Lula" representa os entrevistados que responderam "não '
             'votaria no candidato de jeito nenhum".'
         ),
     )
@@ -469,10 +492,10 @@ def _(d, g, ticker):
         with_regression=True,
         disclaimer=(
             f"Produzido com dados de {len(d.rpolls.polls)} pesquisas de 8 institutos "
-            'diferentes realizadas\napós os resultados do primeiro turno. "Vota Lula" '
-            'representa o percentual de\nentrevistados que responderam "vou votar no '
-            'candidato com certeza" na\npesquisa estimulada, enquanto que "Rejeita '
-            'Flávio Bolsonaro" representa os\nentrevistados que responderam "não '
+            'diferentes realizadas após os resultados do primeiro turno. "Vota Lula" '
+            'representa o percentual de entrevistados que responderam "vou votar no '
+            'candidato com certeza" na pesquisa estimulada, enquanto que "Rejeita '
+            'Flávio Bolsonaro" representa os entrevistados que responderam "não '
             'votaria no candidato de jeito nenhum".'
         ),
     )
