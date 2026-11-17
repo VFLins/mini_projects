@@ -184,30 +184,13 @@ def _(mo):
 
     O candidato Flávio Bolsonaro terminou o primeiro turno com uma votação maior que a do seu principal adversário Lula, isto levou os bolsonaristas a acreditar que a vitória no segundo turno seria certa, já que historicamente, o primeiro colocado no primeiro turno sempre acabava ganhando a disputa no segundo turno.
 
-    Depois da derrota, já nos Estados Unidos, Flávio Bolsonaro alegou uma "impossibilidade matemática", que permitiu que o seu adversário Lula ganhasse mais de 10 Milhões de votos do primeiro para o segundo turno. O objetivo desta análise é combinar os dados de votação com os resultados de pesquisas de opinião anteriores às votações do segundo turno para entender se esta transferência é realmente impossível como alegado.
-    """)
-    return
+    Depois da derrota, já nos Estados Unidos, Flávio Bolsonaro alegou uma "impossibilidade matemática", que permitiu que o seu adversário Lula ganhasse mais de 10 Milhões de votos do primeiro para o segundo turno. Além disso, se aponta que a maioria das pesquisas de intenções de voto indicava a vitória iminente do candidato.
 
+    O objetivo desta análise é combinar os dados de votação com os resultados de pesquisas de opinião anteriores às votações do segundo turno para entender se esta transferência é realmente impossível como alegado. Para isso, vamos separar esta análise em partes:
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ## Dados de rejeição e intenção de votos
+    1. Estimar a transferência possível de votos com dados oficiais das votações, e comparar com fatos das estratégias de campanha para entender se este ganho de votos foi realmente possível; depois vamos
 
-    A rejeição é medida em um questionário por uma pergunta do tipo "Em qual(is) candidatos você não votaria de jeito nenhum?". A diferença entre a rejeição e a intenção de voto de um candidato é composto por, eleitores que ainda não decidiram o voto e eleitores decididos a votar em outro candidato.
-
-    Para entender quantos votos podem ser adquiridos por um candidato no segundo turno, precisamos saber sua rejeição e os votos decididos para o seu adversário. As pessoas que não se encaixam em nenhum dos dois grupos são os votos mais possíveis de conquistar.
-
-    A primeira etapa desta pesquisa consiste em montar um conjunto de dados com as intenções de voto e rejeição, todas as pesquisas selecionadas foram feitas após os resultados do primeiro turno:
-
-    1. [Futura](https://www.futurainteligencia.com.br/pesquisas): BR-00650/2026, BR-00650/2026, BR-06715/2026
-    2. [Data Folha](https://datafolha.folha.uol.com.br/): BR-09709/2026 e BR-09540/2026
-    3. [Gerp](https://www.gerp.com.br/relatorios.html): BR-07877/2026, BR-05187/2026, BR-03835/2026, e BR-09327/2026
-    4. [Nexus](https://www.nexus.fsb.com.br/estudos-divulgados/): BR-07997/2026, BR-044499/2026 e BR-08234/2026
-    5. [Palver](https://www.palver.com.br/survey): BR-00198/2026, BR-08028/2026, BR-04612/2026, e BR-01794/2026
-    6. [Poder Data](https://www.poder360.com.br/poderdata/): BR-08134/2026, BR-07926/2026, BR-04258/2026, BR-02586/2026 e BR-01209/2026
-    7. [Quaest](https://quaest.com.br/relatorios-quaest/): BR-08535/2026 e BR-09158/2026
-    8. [Vox Brasil](https://voxbrasilpesquisas.com.br/imprensa/): BR-09623/2026, BR-04332/2026 e BR-03259/2026
+    2. Tentar entender a discrepância entre as pesquisas eleitorais realizadas após o resultado do primeiro turno e o resultado nas urnas.
     """)
     return
 
@@ -356,29 +339,85 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Segundo auditoria independente de Barberia et al. (2026)[^4], os institutos de pesquisa apresentaram um viés consistente entre os turnos, em que a maioria superestimou o desempenho do candidato Lula no primeiro turno e depois o subestimou no segundo.
+    ## Rejeição e intenções de voto
+
+    Outro fato importante que levantou a indignação do Flávio Bolsonaro e seus apoiadores foi a grande diferença entre a quantidade de votos nas urnas e as intenções de votos medidas pelas pesquisas realizadas entre o primeiro e o segundo turno.
+
+    Segundo auditoria independente de Barberia et al. (2026)[^1], os institutos de pesquisa apresentaram um viés consistente entre os turnos. O estudo mostrou que a maioria das pesquisas superestimou o desempenho do candidato Lula no primeiro turno e depois passou a fazer o mesmo para o Flávio Bolsonaro no segundo.
+
+    Muitas pesquisas apontavam vantagem para Flávio Bolsonaro nas intenções de votos, e resultados similarmente favoráveis a ele na rejeição. Se um candidato é rejeitado por mais de 50% dos eleitores, é possível que ele tenha um desempenho competitivo no primeiro turno, mas tenha um segundo turno muito difícil tentando conquistar a parcela que ainda não votou nele no primeiro turno, mas também não o rejeita.
+
+    Entre os bolsonaristas, este parecia ser o caso do Lula, as pesquisas apontavam um nível de rejeição mais alta e intenções de votos mais baixas para ele. O que indica uma grande dificuldade de conquistar votos suficientes para virar a disputa ao seu favor no segundo turno.
+
+    Como já temos os resultados das eleições presidenciais, podemos medir o nível de viés das pesquisas, e ajustar a métrica de rejeição para um nível mais próximo do real. Mas vale ressaltar que o viés não representa necessariamente uma preferência do instituto de pesquisa por um candidato, e pode surgir naturalmente durante a seleção da amostra[^2].
 
 
 
-    [^4]: **Jota**. [A eleição de 2026 terminou. Agora, abram seus dados](https://www.jota.info/opiniao-e-analise/colunas/lorena-barberia/a-eleicao-de-2026-terminou-agora-abram-seus-dados) por Lorena G. Barberia, Natália de Paula Moreira e Gustavo Fernandes de Paula
+    [^1]: **Jota**. [A eleição de 2026 terminou. Agora, abram seus dados](https://www.jota.info/opiniao-e-analise/colunas/lorena-barberia/a-eleicao-de-2026-terminou-agora-abram-seus-dados) por Lorena G. Barberia, Natália de Paula Moreira e Gustavo Fernandes de Paula
+
+    [^2]: **Jota**. ['House effects' explicam por que pesquisas eleitorais são tão diferentes](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) por Daniel Marcelino.
     """)
+    return
+
+
+@app.cell
+def _(d, g, pd, ticker):
+    _df = d.rpolls.df[
+        ["vote_a", "vote_b", "reject_a", "reject_b", "unsure_a", "unsure_b"]
+    ].copy()
+    _df = _df.rename(
+        {
+            "vote_a": "Vota Flávio",
+            "vote_b": "Vota Lula",
+            "reject_a": "Rejeita Flávio",
+            "reject_b": "Rejeita Lula",
+            "unsure_a": "Incerteza Flávio",
+            "unsure_b": "Incerteza Lula",
+        },
+        axis=1,
+    )
+    _df = pd.melt(_df)
+    _df["candidate"] = [ i.split(" ")[-1] for i in _df["variable"] ]
+
+    _plot = g.GroupedBarPlot(
+        categories=_df["candidate"],
+        values=_df["value"],
+        groups=_df["variable"],
+        stacked=True,
+    )
+    _plot.cfg["bar"]["colors"] = [
+        "#008181", "#008181",
+        "#942020", "#942020",
+        "#212c38", "#212c38",
+    ]
+    (
+        _plot.ax.yaxis.set_major_formatter(
+            ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
+        )
+    )
+    _plot.show()
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Rejeição do candidato
+    ### Dados de rejeição e intenção de votos
 
-    A principal métrica para avaliar a capacidade de um candidato de receber votos transferidos de outros eleitores que não tinham votado nele no primeiro turno é o nível de rejeição. Se a rejeição a um candidato for maior que 50%, se torna, como dito pelo candidato derrotado, uma "impossibilidade matemática".
+    A rejeição é medida em um questionário por uma pergunta do tipo "Em qual(is) candidatos você não votaria de jeito nenhum?". A diferença entre a rejeição e a intenção de voto de um candidato é composto por, eleitores que ainda não decidiram o voto e eleitores decididos a votar em outro candidato.
 
-    Como veremos mais adiante, muitas pesquisas apontavam vantagem para Flávio Bolsonaro nas intenções de votos, e resultados similarmente favoráveis a ele na rejeição. A diferença entre intenções de votos e o resultado final das votações mostra que existia algum nível de viés nas pesquisas.
+    Para entender quantos votos podem ser adquiridos por um candidato no segundo turno, precisamos saber sua rejeição e os votos decididos para o seu adversário. As pessoas que não se encaixam em nenhum dos dois grupos são os votos mais possíveis de conquistar.
 
-    Como já temos os resultados das eleições presidenciais, podemos medir o nível de viés das pesquisas, e ajustar a métrica de rejeição para um nível mais próximo do real. Mas vale ressaltar que o viés não representa necessariamente uma preferência do instituto de pesquisa por um candidato, e pode surgir naturalmente durante a seleção da amostra[^1].
+    A primeira etapa desta pesquisa consiste em montar um conjunto de dados com as intenções de voto e rejeição, todas as pesquisas selecionadas foram feitas após os resultados do primeiro turno:
 
-
-
-    [^1]: **Jota**. ['House effects' explicam por que pesquisas eleitorais são tão diferentes](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) por Daniel Marcelino.
+    1. [Futura](https://www.futurainteligencia.com.br/pesquisas): BR-00650/2026, BR-00650/2026, BR-06715/2026
+    2. [Data Folha](https://datafolha.folha.uol.com.br/): BR-09709/2026 e BR-09540/2026
+    3. [Gerp](https://www.gerp.com.br/relatorios.html): BR-07877/2026, BR-05187/2026, BR-03835/2026, e BR-09327/2026
+    4. [Nexus](https://www.nexus.fsb.com.br/estudos-divulgados/): BR-07997/2026, BR-044499/2026 e BR-08234/2026
+    5. [Palver](https://www.palver.com.br/survey): BR-00198/2026, BR-08028/2026, BR-04612/2026, e BR-01794/2026
+    6. [Poder Data](https://www.poder360.com.br/poderdata/): BR-08134/2026, BR-07926/2026, BR-04258/2026, BR-02586/2026 e BR-01209/2026
+    7. [Quaest](https://quaest.com.br/relatorios-quaest/): BR-08535/2026 e BR-09158/2026
+    8. [Vox Brasil](https://voxbrasilpesquisas.com.br/imprensa/): BR-09623/2026, BR-04332/2026 e BR-03259/2026
     """)
     return
 
