@@ -147,9 +147,9 @@ class SankeyPlot(BasePlot):
     def __init__(
         self,
         flows,
-        left_labels: list[str],
-        right_labels: list[str],
-        right_colors: list[str],
+        left_labels: Sequence[str],
+        right_labels: Sequence[str],
+        right_colors: Sequence[str],
         gap: float = 0.03,
         title: str | None = None,
         disclaimer: str | None = None,
@@ -436,9 +436,9 @@ class GroupedBarPlot(BasePlot):
 
     def __init__(
         self,
-        categories: Sequence[Hashable],
+        categories: Sequence[str],
         values: Sequence[float],
-        groups: Sequence[Hashable],
+        groups: Sequence[str],
         stacked: bool = False,
         horizontal: bool = False,
         show_values: bool = False,

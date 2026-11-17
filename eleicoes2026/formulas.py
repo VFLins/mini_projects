@@ -1,11 +1,41 @@
 from __future__ import annotations
  
 import warnings
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
 import pymc as pm
 import arviz as az
+
+
+@dataclass(frozen=True)
+class Potential:
+    """Winnable share of one candidate, as proportions of the electorate.
+
+    Each field is a float, or an array with one entry per poll when the inputs
+    of :func:`vote_potential` are arrays.
+
+    :param hi: Upper (Fréchet) bound, valid for any ``beta``.
+    :param est: Estimate for the ``beta`` used.
+    :param lo: Lower (Fréchet) bound.
+    """
+    hi: float | np.ndarray
+    est: float | np.ndarray
+    lo: float | np.ndarray
+
+
+@dataclass(frozen=True)
+class VotePotential:
+    """Result of :func:`vote_potential`.
+
+    :param a: Potential of candidate A.
+    :param b: Potential of candidate B.
+    :param beta: Heterogeneity parameter used in the estimates.
+    """
+    a: Potential
+    b: Potential
+    beta: float
 
 
 def a_metric(
@@ -40,66 +70,6 @@ def a_std_error(n: float, a_estimate) -> np.float64:
     )
 
 
-def frechet_limits(va, vb, ra, rb, max_self_rejection=0.0):
-    """Compute Fréchet bounds for the winnable voters of candidates A and B.
-
-    Winnable voters of a candidate are the undecided voters who do not reject
-    that candidate. The undecided share is derived as
-    ``1 - va - vb``.
-
-    For candidate A, with :math:`x = V_A \\cap R_A` bounded by
-    ``max_self_rejection``:
-
-    * upper bound: ``undecided - max(0, (ra - x) - vb)``
-    * lower bound: ``undecided - min(undecided, ra)``
-
-    The bounds for B are symmetric.
-
-    :param va: Share of voters who intend to vote for A (0 to 1).
-    :type va: float
-    :param vb: Share of voters who intend to vote for B (0 to 1).
-    :type vb: float
-    :param ra: Share of voters who reject A (0 to 1).
-    :type ra: float
-    :param rb: Share of voters who reject B (0 to 1).
-    :type rb: float
-    :param max_self_rejection: Upper bound for the share of voters who vote for
-        a candidate and also reject that candidate. With ``0.0``, voters of X
-        are assumed not to reject X.
-    :type max_self_rejection: float
-    :returns: ``((hi_a, lo_a), (hi_b, lo_b))``, the upper and lower bounds of
-        the winnable share for A and for B, as proportions of the electorate.
-    :rtype: tuple[tuple[float, float], tuple[float, float]]
-    :raises ValueError: If any share is outside [0, 1], if
-        ``va + vb`` exceeds 1, or if a rejection share is larger than
-        the part of the electorate that does not vote for that candidate.
-
-    Example::
-
-        >>> frechet_limits(0.40, 0.40, 0.30, 0.25)
-        ((0.2, 0.0), (0.2, 0.0))
-    """
-    if min(va, vb, ra, rb) < 0 \
-            or max(va, vb, ra, rb) > 1:
-        raise ValueError("Shares must be in [0, 1]")
-
-    undecided = 1 - va - vb
-    if undecided < 0:
-        raise ValueError(f"va + vb must not exceed 1, got {va + vb}")
-
-    def _bounds(own_vote, other_vote, reject):
-        x_max = min(max_self_rejection, own_vote, reject)
-        if reject - x_max > 1 - own_vote:
-            raise ValueError("Rejection is inconsistent with the vote composition")
-        hi = undecided - max(0.0, (reject - x_max) - other_vote)
-        lo = undecided - min(undecided, reject)
-        return max(0.0, hi), max(0.0, lo)
-
-    return (
-        _bounds(va, vb, ra),  # winnable by A
-        _bounds(vb, va, rb),  # winnable by B
-    )
-
 
 def b_metric(*a_metrics: np.float64):
     """https://dx.doi.org/10.1093/pan/mpt012
@@ -112,6 +82,80 @@ def b_metric(*a_metrics: np.float64):
     """
     k = len(a_metrics)
     return np.sum(np.absolute(a_metrics)) / k
+
+
+def vote_potential(va, vb, ra, rb, beta=1.0):
+    """Estimate the winnable voters of candidates A and B from poll marginals.
+
+    Winnable voters of a candidate are the undecided voters who do not reject
+    that candidate, so the potential is a ceiling and not a forecast. The
+    cross-tabulation between vote intention and rejection is not observed, so
+    the rejection of A is split between B voters and undecided voters through
+    a heterogeneity parameter.
+
+    With ``vu = 1 - va - vb`` and ``beta = r_u / r_b``, where ``r_b`` and
+    ``r_u`` are the rejection rates of A among B voters and among undecided
+    voters, and assuming nobody votes for a candidate they reject::
+
+        P_A = vu * (1 - beta * ra / (vb + beta * vu))
+
+    The result is clipped to the Fréchet bounds, which hold without any
+    assumption on ``beta``::
+
+        hi = vu - max(0, ra - vb)
+        lo = max(0, vu - ra)
+
+    The estimate for B is symmetric (swap ``va``/``vb`` and ``ra``/``rb``).
+
+    :param va: Share of voters who intend to vote for A (0 to 1).
+    :param vb: Share of voters who intend to vote for B (0 to 1).
+    :param ra: Share of voters who reject A (0 to 1).
+    :param rb: Share of voters who reject B (0 to 1).
+    :param beta: Ratio between the rejection rate of a candidate among
+        undecided voters and among the rival's voters. ``1`` means homogeneous
+        rejection; ``beta > 1`` puts more of the rejection among the
+        undecided (lower potential); ``beta < 1`` puts more among the rival's
+        voters (higher potential).
+    :returns: A :class:`VotePotential` with ``a`` and ``b`` (each a
+        :class:`Potential` with ``hi``, ``est`` and ``lo``) and the ``beta``
+        used. Arguments may be scalars or arrays with one entry per poll.
+    :raises ValueError: If shares are outside [0, 1], if ``va + vb`` exceeds 1,
+        if ``beta`` is not positive, or if a rejection share is larger than the
+        part of the electorate that does not vote for that candidate.
+
+    Example::
+
+        >>> p = vote_potential(0.40, 0.40, 0.30, 0.25)
+        >>> round(float(p.a.hi), 3), round(float(p.a.est), 3), round(float(p.a.lo), 3)
+        (0.2, 0.1, 0.0)
+        >>> round(float(p.b.est), 3)
+        0.117
+    """
+    va, vb, ra, rb = (np.asarray(x, float) for x in (va, vb, ra, rb))
+    if any((x < 0).any() or (x > 1).any() for x in (va, vb, ra, rb)):
+        raise ValueError("Shares must be in [0, 1]")
+    if beta <= 0:
+        raise ValueError("beta must be positive")
+    vu = 1 - va - vb
+    if (vu < 0).any():
+        raise ValueError("va + vb must not exceed 1")
+
+    def _potential(v_other, r):
+        if (r > v_other + vu).any():
+            raise ValueError(
+              "Rejection exceeds the electorate that does not "
+              "vote for the candidate"
+            )
+        hi = vu - np.maximum(0.0, r - v_other)
+        lo = np.maximum(0.0, vu - r)
+        denom = v_other + beta * vu
+        est = vu * (1 - beta * r / np.where(denom > 0, denom, np.nan))
+        est = np.clip(np.nan_to_num(est, nan=0.0), lo, hi)
+        # unwrap 0-d arrays so scalar inputs give plain floats
+        hi, est, lo = (x.item() if x.ndim == 0 else x for x in (hi, est, lo))
+        return Potential(hi=hi, est=est, lo=lo)
+
+    return VotePotential(a=_potential(vb, ra), b=_potential(va, rb), beta=beta)
 
 
 class DirichletTransfer:

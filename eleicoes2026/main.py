@@ -349,13 +349,9 @@ def _(mo):
 
     Entre os bolsonaristas, este parecia ser o caso do Lula, as pesquisas apontavam um nível de rejeição mais alta e intenções de votos mais baixas para ele. O que indica uma grande dificuldade de conquistar votos suficientes para virar a disputa ao seu favor no segundo turno.
 
-    Como já temos os resultados das eleições presidenciais, podemos medir o nível de viés das pesquisas, e ajustar a métrica de rejeição para um nível mais próximo do real. Mas vale ressaltar que o viés não representa necessariamente uma preferência do instituto de pesquisa por um candidato, e pode surgir naturalmente durante a seleção da amostra[^2].
-
 
 
     [^1]: **Jota**. [A eleição de 2026 terminou. Agora, abram seus dados](https://www.jota.info/opiniao-e-analise/colunas/lorena-barberia/a-eleicao-de-2026-terminou-agora-abram-seus-dados) por Lorena G. Barberia, Natália de Paula Moreira e Gustavo Fernandes de Paula
-
-    [^2]: **Jota**. ['House effects' explicam por que pesquisas eleitorais são tão diferentes](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) por Daniel Marcelino.
     """)
     return
 
@@ -378,18 +374,19 @@ def _(d, g, pd, ticker):
     )
     _df = pd.melt(_df)
     _df["candidate"] = [ i.split(" ")[-1] for i in _df["variable"] ]
+    _df["variable"] = pd.Categorical(
+        [ i.split(" ")[0] for i in _df["variable"] ],
+        categories=["Rejeita", "Vota", "Incerteza"],
+    )
+    _df = _df.sort_values(by="variable", ascending=True)
 
     _plot = g.GroupedBarPlot(
-        categories=_df["candidate"],
+        categories=_df["variable"],
         values=_df["value"],
-        groups=_df["variable"],
-        stacked=True,
+        groups=_df["candidate"],
     )
-    _plot.cfg["bar"]["colors"] = [
-        "#008181", "#008181",
-        "#942020", "#942020",
-        "#212c38", "#212c38",
-    ]
+    _plot.cfg["bar"]["colors"] = ["#008181", "#942020", "#212c38", "#98a7b4"]
+    _plot.cfg["bar"]["error_colors"] = ["#98a7b4"]
     (
         _plot.ax.yaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
@@ -418,71 +415,6 @@ def _(mo):
     6. [Poder Data](https://www.poder360.com.br/poderdata/): BR-08134/2026, BR-07926/2026, BR-04258/2026, BR-02586/2026 e BR-01209/2026
     7. [Quaest](https://quaest.com.br/relatorios-quaest/): BR-08535/2026 e BR-09158/2026
     8. [Vox Brasil](https://voxbrasilpesquisas.com.br/imprensa/): BR-09623/2026, BR-04332/2026 e BR-03259/2026
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ### Metodologia
-
-    Existe uma métrica popular, usada especificamente para pesquisas eleitorais baseada na razão de chances logarítmica[^2]
-
-    $$
-    A' = \ln \left( \frac{ \hat p_A / (1 - \hat p_A) }{ p_A / (1 - p_A) } \right) \tag 1
-    $$
-
-    - $\hat p_A$: Percentual das intenções de voto ao candidato A estimadas pela pesquisa
-    - $p_A$: Percentual dos votos recebidos pelo candidato A na votação
-
-    O resultado $A'$ obtido é a medida do viés da pesquisa, favorável ao candidato A, se o valor for positivo, o viés é favorável à este candidato, caso contrário, o viés é favorável ao seu adversário, caso $A' = 0$, a  pesquisa não apresenta viés.
-
-    Mesmo que diferente de zero, valor da métrica ainda está sujeito à uma margem de erro para avaliar se o viés medido é estatisticamente significante, isto exige a medida do erro padrão aproximada pelo método-$\delta$[^3]:
-
-    $$
-    SE(A') = \sqrt{\frac{1}{n \times \hat p_A \times (1 - \hat p_A)}} \tag 2
-    $$
-
-    - $n$: Quantidade de pessoas entrevistadas na pesquisa
-
-    Com isso nós podemos fazer um intervalo de 95% de confiança para o valor real de $A'$, se zero estiver dentro do intervalo, não podemos considerá-lo significativamente diferente de zero.
-
-    $$
-    IC(A') = A' \pm 1,96 \times SE(A') \tag 3
-    $$
-
-    Para encontrar a "taxa de rejeição real" removendo o viés da pesquisa, vamos usar $A'$ para ajustar o peso das respostas entre os votantes de cada candidato, reduzindo para os super representados ou aumentando para os sub representados.
-
-    $$
-    P'_A = \hat p_A \times e^{-A'} \tag 4
-    $$
-
-    - $P'_A$: Taxa ajustada para o candidato A
-
-
-
-    [^2]: **Public Opinion Quarterly**. [A Review and Proposal for a New Measure of Poll Accuracy](https://doi.org/10.1093/poq/nfi044) por Elizabeth A. Martin, Michael W. Traugott e Courtney Kennedy
-
-    [^3]: **Constantin Ahlmann-Eltze**. [What is the delta method?](https://const-ae.name/post/2023-02-10_delta_method/delta-method-explainer/)
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ### Premissas
-
-    Esta abordagem de análise se apoia em alguns pressupostos, os resultados expostos aqui se tornam inválidos caso ao menos um deles seja falso:
-
-    1. O nível de rejeição é correlacionado com a intenção de voto;
-    2. A rejeição aos candidatos não mudou significativamente entre a data da pesquisa e a data da votação;
-    3. A votação registrada nas urnas eletrônicas é condizente com a realidade.
-
-    Com os dados disponíveis, apenas o primeiro pressuposto pode ser testado, depois que este tenha sido verificado, o leitor baseará seu nível de confiança nos resultados deste estudo na sua crença sobre os outros pressupostos. Para testar a primeira hipótese, vamos verificar se existe uma correlação significativa entre o voto em um candidato, e a rejeição pelo seu adversário.
-
-    Para fazer esta análise rapidamente, vamos usar os dados de diversas pesquisas eleitorais, comparando as pesquisas de intenção de voto estimuladas com o percentual de rejeição, onde o entrevistado responde "Não votaria em ___ de jeito nenhum".
     """)
     return
 
@@ -571,6 +503,77 @@ def _(mo):
     ## Ajustando as pesquisas eleitorais
 
     As pesquisas eleitorais apontavam um cenário favorável para o candidato Flávio Bolsonaro no segundo turno, agora vamos comparar o resultado previsto pelas pesquisas, o das pesquisas ajustado pela métrica $A'$ de Martin et al. (2005), e comparar com o resultado real das votações:
+
+    Como já temos os resultados das eleições presidenciais, podemos medir o nível de viés das pesquisas, e ajustar a métrica de rejeição para um nível mais próximo do real. Mas vale ressaltar que o viés não representa necessariamente uma preferência do instituto de pesquisa por um candidato, e pode surgir naturalmente durante a seleção da amostra[^2].
+
+
+
+    [^2]: **Jota**. ['House effects' explicam por que pesquisas eleitorais são tão diferentes](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) por Daniel Marcelino.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Metodologia
+
+    Existe uma métrica popular, usada especificamente para pesquisas eleitorais baseada na razão de chances logarítmica[^2]
+
+    $$
+    A' = \ln \left( \frac{ \hat p_A / (1 - \hat p_A) }{ p_A / (1 - p_A) } \right) \tag 1
+    $$
+
+    - $\hat p_A$: Percentual das intenções de voto ao candidato A estimadas pela pesquisa
+    - $p_A$: Percentual dos votos recebidos pelo candidato A na votação
+
+    O resultado $A'$ obtido é a medida do viés da pesquisa, favorável ao candidato A, se o valor for positivo, o viés é favorável à este candidato, caso contrário, o viés é favorável ao seu adversário, caso $A' = 0$, a  pesquisa não apresenta viés.
+
+    Mesmo que diferente de zero, valor da métrica ainda está sujeito à uma margem de erro para avaliar se o viés medido é estatisticamente significante, isto exige a medida do erro padrão aproximada pelo método-$\delta$[^3]:
+
+    $$
+    SE(A') = \sqrt{\frac{1}{n \times \hat p_A \times (1 - \hat p_A)}} \tag 2
+    $$
+
+    - $n$: Quantidade de pessoas entrevistadas na pesquisa
+
+    Com isso nós podemos fazer um intervalo de 95% de confiança para o valor real de $A'$, se zero estiver dentro do intervalo, não podemos considerá-lo significativamente diferente de zero.
+
+    $$
+    IC(A') = A' \pm 1,96 \times SE(A') \tag 3
+    $$
+
+    Para encontrar a "taxa de rejeição real" removendo o viés da pesquisa, vamos usar $A'$ para ajustar o peso das respostas entre os votantes de cada candidato, reduzindo para os super representados ou aumentando para os sub representados.
+
+    $$
+    P'_A = \hat p_A \times e^{-A'} \tag 4
+    $$
+
+    - $P'_A$: Taxa ajustada para o candidato A
+
+
+
+    [^2]: **Public Opinion Quarterly**. [A Review and Proposal for a New Measure of Poll Accuracy](https://doi.org/10.1093/poq/nfi044) por Elizabeth A. Martin, Michael W. Traugott e Courtney Kennedy
+
+    [^3]: **Constantin Ahlmann-Eltze**. [What is the delta method?](https://const-ae.name/post/2023-02-10_delta_method/delta-method-explainer/)
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Premissas
+
+    Esta abordagem de análise se apoia em alguns pressupostos, os resultados expostos aqui se tornam inválidos caso ao menos um deles seja falso:
+
+    1. O nível de rejeição é correlacionado com a intenção de voto;
+    2. A rejeição aos candidatos não mudou significativamente entre a data da pesquisa e a data da votação;
+    3. A votação registrada nas urnas eletrônicas é condizente com a realidade.
+
+    Com os dados disponíveis, apenas o primeiro pressuposto pode ser testado, depois que este tenha sido verificado, o leitor baseará seu nível de confiança nos resultados deste estudo na sua crença sobre os outros pressupostos. Para testar a primeira hipótese, vamos verificar se existe uma correlação significativa entre o voto em um candidato, e a rejeição pelo seu adversário.
+
+    Para fazer esta análise rapidamente, vamos usar os dados de diversas pesquisas eleitorais, comparando as pesquisas de intenção de voto estimuladas com o percentual de rejeição, onde o entrevistado responde "Não votaria em ___ de jeito nenhum".
     """)
     return
 
@@ -641,17 +644,12 @@ def _(adj_poll_a, mo, poll_a, poll_b, vote_a, vote_b):
     return
 
 
-@app.cell
-def _(f, poll_stats):
-    limits = dict(
-        frechet=f.frechet_limits(
-            va=poll_stats["flavio"]["wp"],
-            vb=poll_stats["lula"]["wp"],
-            ra=poll_stats["flavio"]["r"],
-            rb=poll_stats["lula"]["r"],
-        ),
-    )
-    return
+app._unparsable_cell(
+    r"""
+    limits = d.rpolls.df.apply(lambda va, vb, ra, rb: )
+    """,
+    name="_"
+)
 
 
 @app.cell(hide_code=True)
