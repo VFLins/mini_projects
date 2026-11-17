@@ -175,11 +175,6 @@ class DirichletTransfer:
         destination (e.g. eliminated candidates, blank/null and abstention). Must be
         exactly the columns of X that are neither ``idx_a`` nor ``idx_b``.
     :param draws: Posterior samples per chain.
-    :param max_stations: Maximum number of stations used in the fit. If more stations
-        remain after removing those that violate the assumption, a random subsample of
-        this size is drawn (seeded by ``seed``). Memory and sampling time grow roughly
-        linearly with the number of stations, since the model has one set of transfer
-        rates per station.
     :param seed: Random subsampling seed.
     """
 
@@ -192,12 +187,11 @@ class DirichletTransfer:
         draws=1000,
         chains=4,
         max_depth=10,
-        max_stations=30_000,
         seed=42
     ):
         self.idx_a, self.idx_b, self.u_cols = idx_a, idx_b, list(u_cols)
         self.tune, self.draws, self.chains = tune, draws, chains
-        self.max_depth, self.max_stations, self.seed = max_depth, max_stations, seed
+        self.max_depth, self.seed = max_depth, seed
 
     def fit(self, X, Y):
         """
@@ -221,12 +215,6 @@ class DirichletTransfer:
         XU = X[:, self.u_cols]
         keep = (XU.sum(axis=1) > 0) & (Y.sum(axis=1) > 0)
         XU, Y = XU[keep], Y[keep]
-
-        # Random subsample of stations to bound memory and sampling time
-        if len(XU) > self.max_stations:
-            idx = np.random.default_rng(self.seed).choice(
-                len(XU), self.max_stations, replace=False)
-            XU, Y = XU[idx], Y[idx]
 
         N, K = XU.shape
         M = Y.shape[1]

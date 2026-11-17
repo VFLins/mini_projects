@@ -267,7 +267,6 @@ def _(Path, X, Y, d, f, mo):
             tune=1000,
             draws=1000,
             max_depth=16,
-            max_stations=10_000,
         )
         .fit(X.values, Y.values)
     )
@@ -644,12 +643,51 @@ def _(adj_poll_a, mo, poll_a, poll_b, vote_a, vote_b):
     return
 
 
-app._unparsable_cell(
-    r"""
-    limits = d.rpolls.df.apply(lambda va, vb, ra, rb: )
-    """,
-    name="_"
-)
+@app.cell
+def _(d, f, g, pd, ticker):
+    vas = d.rpolls.df["vote_a"]
+    vbs = d.rpolls.df["vote_b"]
+    ras = d.rpolls.df["reject_a"]
+    rbs = d.rpolls.df["reject_b"]
+    limits = [
+        f.vote_potential(va, vb, ra, rb, beta=0.5)
+        for va, vb, ra, rb in zip(vas, vbs, ras, rbs)
+    ]
+    high_limits = [
+        f.vote_potential(va, vb, ra, rb, beta=0.001)
+        for va, vb, ra, rb in zip(vas, vbs, ras, rbs)
+    ]
+
+    _df = pd.DataFrame(
+        [
+            pd.Series(vp.a.est for vp in limits),
+            pd.Series(vp.a.est for vp in high_limits),
+            pd.Series(vp.b.est for vp in limits),
+            pd.Series(vp.b.est for vp in high_limits),
+        ],
+        index=[
+            "A limit", "A limit (high)",
+            "B limit", "B limit (high)",
+        ]
+    ).T
+
+    _df = pd.melt(_df)
+    _df[["group", "variable"]] = _df["variable"].str.split(" ", n=1, expand=True)
+
+    _plot = g.GroupedBarPlot(
+        values=_df["value"],
+        categories=_df["variable"],
+        groups=_df["group"],
+        horizontal=True,
+    )
+    _plot.cfg["bar"]["error_colors"] = ["#98a7b4"]
+    (
+        _plot.ax.xaxis.set_major_formatter(
+            ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
+        )
+    )
+    _plot.show()
+    return
 
 
 @app.cell(hide_code=True)
