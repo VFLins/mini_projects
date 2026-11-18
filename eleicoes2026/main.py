@@ -348,7 +348,13 @@ def _(mo):
 
     Entre os bolsonaristas, este parecia ser o caso do Lula, as pesquisas apontavam um nível de rejeição mais alta e intenções de votos mais baixas para ele. O que indica uma grande dificuldade de conquistar votos suficientes para virar a disputa ao seu favor no segundo turno.
 
-    A quantidade de votos conquistáveis por um candidato pode ser definida pela quantidade de eleitores que ainda não decidiram o voto, mas que ainda não o rejeitam. Esta quantidade pode ser estimada entre os votos válidos porque a maioria dos entrevistados têm voto declarad
+    A quantidade de votos conquistáveis por um candidato pode ser definida pela quantidade de eleitores que ainda não decidiram o voto, mas que ainda não o rejeitam. Esta quantidade pode ser estimada pelos dados divulgados pelas pesquisas eleitorais, mas não pode ser confiavelmente mapeada da pesquisa para as votações, por alguns motivos:
+
+    1. Viés apresentado pelas pesquisas pode também mostrar valores desajustados com a rejeição real, além dos desajustes já percebidos nas intenções de votos[^1];
+
+    2. Distribuição do comparecimento às urnas e votos inválidos não são diretamente alinhados com as respostas "Não opinou" ou "Não soube responder" nas pesquisas.
+
+    Com limitações tão importantes, um estudo de potencial de votos teria resultados muito pouco confiáveis para se usar seriamente como parte de uma estratégia de campanha ou em um estudo da transferência de votos. Por isso todo o progresso nesta seção da análise deve ser levado como uma
 
     Como as pesquisas não costumam divulgar o cruzamento de dados entre intenções de votos e rejeição, teremos que estimar a distribuição da rejeição a cada candidato entre entre os que ainda não decidiram o voto e os que já decidiram votar no adversário.
 
@@ -364,9 +370,9 @@ def _(mo):
     mo.md(r"""
     ### Dados de rejeição e intenção de votos
 
-    A rejeição é medida em um questionário por uma pergunta do tipo "Em qual(is) candidatos você não votaria de jeito nenhum?". A diferença entre a rejeição e a intenção de voto de um candidato é composto por, eleitores que ainda não decidiram o voto e eleitores decididos a votar em outro candidato.
+    A rejeição é medida em um questionário por uma pergunta do tipo "Em qual(is) candidatos você não votaria de jeito nenhum?". A diferença entre a rejeição e a intenção de voto de um candidato é composto por dois grupos: 1. eleitores que ainda não decidiram o voto; e 2. eleitores decididos a votar no candidato adversário.
 
-    Para entender quantos votos podem ser adquiridos por um candidato no segundo turno, precisamos saber sua rejeição e os votos decididos para o seu adversário. As pessoas que não se encaixam em nenhum dos dois grupos são os votos mais possíveis de conquistar.
+    Este segundo grupo também pode estar presente entre os eleitores que rejeitam o candidato observado. Para entender quantos votos podem ser adquiridos por um candidato no segundo turno, precisamos destas informações e da distribuição de eleitores
 
     A primeira etapa desta pesquisa consiste em montar um conjunto de dados com as intenções de voto e rejeição, todas as pesquisas selecionadas foram feitas após os resultados do primeiro turno:
 
@@ -625,18 +631,19 @@ def _(d, f, g, pd, ticker):
     _df = pd.DataFrame(
         [
             pd.Series(vp.a.est for vp in limits),
-            pd.Series(vp.a.est for vp in high_limits),
-            pd.Series(vp.b.est for vp in limits),
             pd.Series(vp.b.est for vp in high_limits),
         ],
         index=[
-            "Flávio beta=0,5", "Flávio beta=0,1",
-            "Lula beta=0,5", "Lula beta=0,1",
+            "beta=0,5 Flávio",
+            "beta=0,1 Lula",
         ]
     ).T
 
     _df = pd.melt(_df)
     _df[["group", "variable"]] = _df["variable"].str.split(" ", n=1, expand=True)
+    _df.iloc[-1] = pd.Series(["Flávio", 0.029020991394356, "Votos adquiridos"])
+    _df.iloc[-2] = pd.Series(["Lula", 0.0809186812752861-0.0311924708487255, "Votos adquiridos"])
+
 
     _plot = g.GroupedBarPlot(
         values=_df["value"],
