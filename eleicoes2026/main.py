@@ -17,7 +17,7 @@ def _():
     from datetime import date
     from pathlib import Path
 
-    return Path, date, np, pd, ticker
+    return Path, date, pd, ticker
 
 
 @app.cell
@@ -59,32 +59,58 @@ def _(mo, votos):
 @app.cell
 def _(mo, votos):
     mo.stop(not hasattr(votos, "df"))
+    prim_turno = votos.df.loc[votos.df["NR_TURNO"] == 1]
     seg_turno = votos.df.loc[votos.df["NR_TURNO"] == 2]
 
-    _is_valid = seg_turno["NR_VOTAVEL"].isin([13, 22])
-    _voted_lula = seg_turno["NR_VOTAVEL"] == 13
-    _voted_flavio = seg_turno["NR_VOTAVEL"] == 22
+    _is_valid_r1 = prim_turno["NR_VOTAVEL"].isin([13, 22])
+    _voted_lula_r1 = prim_turno["NR_VOTAVEL"] == 13
+    _voted_flavio_r1 = prim_turno["NR_VOTAVEL"] == 22
+    _is_valid_r2 = seg_turno["NR_VOTAVEL"].isin([13, 22])
+    _voted_lula_r2 = seg_turno["NR_VOTAVEL"] == 13
+    _voted_flavio_r2 = seg_turno["NR_VOTAVEL"] == 22
 
-    n_votos = seg_turno["QT_VOTOS"].sum()
-    n_votos_validos = seg_turno.loc[_is_valid]["QT_VOTOS"].sum()
+    n_votos_r1 = prim_turno["QT_VOTOS"].sum()
+    n_votos_validos_r1 = prim_turno.loc[_is_valid_r1]["QT_VOTOS"].sum()
+    n_votos_r2 = seg_turno["QT_VOTOS"].sum()
+    n_votos_validos_r2 = seg_turno.loc[_is_valid_r2]["QT_VOTOS"].sum()
 
     vote_stats = dict(
-        lula={
-            "n": seg_turno.loc[_voted_lula]["QT_VOTOS"].sum(),
-            "p": seg_turno.loc[_voted_lula]["QT_VOTOS"].sum() / n_votos,
-            "p_validos": seg_turno.loc[_voted_lula]["QT_VOTOS"].sum()
-            / n_votos_validos,
-        },
-        flavio={
-            "n": seg_turno.loc[_voted_flavio]["QT_VOTOS"].sum(),
-            "p": seg_turno.loc[_voted_flavio]["QT_VOTOS"].sum() / n_votos,
-            "p_validos": seg_turno.loc[_voted_flavio]["QT_VOTOS"].sum()
-            / n_votos_validos,
-        },
-        votos={
-            "n": n_votos,
-            "n_validos": n_votos_validos,
-        },
+        r1=dict(
+            lula={
+                "n": prim_turno.loc[_voted_lula_r1]["QT_VOTOS"].sum(),
+                "p": prim_turno.loc[_voted_lula_r1]["QT_VOTOS"].sum() / n_votos_r1,
+                "p_validos": prim_turno.loc[_voted_lula_r1]["QT_VOTOS"].sum()
+                / n_votos_validos_r1,
+            },
+            flavio={
+                "n": prim_turno.loc[_voted_flavio_r1]["QT_VOTOS"].sum(),
+                "p": prim_turno.loc[_voted_flavio_r1]["QT_VOTOS"].sum() / n_votos_r1,
+                "p_validos": prim_turno.loc[_voted_flavio_r1]["QT_VOTOS"].sum()
+                / n_votos_validos_r1,
+            },
+            votos={
+                "n": n_votos_r1,
+                "n_validos": n_votos_validos_r1,
+            },
+        ),
+        r2=dict(
+            lula={
+                "n": seg_turno.loc[_voted_lula_r2]["QT_VOTOS"].sum(),
+                "p": seg_turno.loc[_voted_lula_r2]["QT_VOTOS"].sum() / n_votos_r2,
+                "p_validos": seg_turno.loc[_voted_lula_r2]["QT_VOTOS"].sum()
+                / n_votos_validos_r2,
+            },
+            flavio={
+                "n": seg_turno.loc[_voted_flavio_r2]["QT_VOTOS"].sum(),
+                "p": seg_turno.loc[_voted_flavio_r2]["QT_VOTOS"].sum() / n_votos_r2,
+                "p_validos": seg_turno.loc[_voted_flavio_r2]["QT_VOTOS"].sum()
+                / n_votos_validos_r2,
+            },
+            votos={
+                "n": n_votos_r2,
+                "n_validos": n_votos_validos_r2,
+            },
+        ),
     )
     return (vote_stats,)
 
@@ -120,7 +146,7 @@ def _(d):
             "n_validos": (d.rpolls.df["n_vote_a"] + d.rpolls.df["n_vote_b"]).sum(),
         },
     )
-    return (poll_stats,)
+    return
 
 
 @app.cell
@@ -389,6 +415,65 @@ def _(mo):
 
 
 @app.cell
+def _(d, f, g, pd, ticker, vote_stats):
+    _p_acquired_a = (
+        (vote_stats["r2"]["flavio"]["n"]
+        - vote_stats["r1"]["flavio"]["n"])
+        / vote_stats["r2"]["votos"]["n"]
+    )
+    _p_acquired_b = (
+        (vote_stats["r2"]["lula"]["n"]
+        - vote_stats["r1"]["lula"]["n"])
+        / vote_stats["r2"]["votos"]["n"]
+    )
+
+    vas = d.rpolls.df["vote_a"]
+    vbs = d.rpolls.df["vote_b"]
+    ras = d.rpolls.df["reject_a"]
+    rbs = d.rpolls.df["reject_b"]
+    limits = [
+        f.vote_potential(va, vb, ra, rb, beta=0.5)
+        for va, vb, ra, rb in zip(vas, vbs, ras, rbs)
+    ]
+    high_limits = [
+        f.vote_potential(va, vb, ra, rb, beta=0.01)
+        for va, vb, ra, rb in zip(vas, vbs, ras, rbs)
+    ]
+
+    _df = pd.DataFrame(
+        [
+            pd.Series(vp.a.est for vp in limits),
+            pd.Series(vp.b.est for vp in high_limits),
+        ],
+        index=[
+            "beta=0,5 Flávio",
+            "beta=0,1 Lula",
+        ]
+    ).T
+
+    _df = pd.melt(_df)
+    _df[["group", "variable"]] = _df["variable"].str.split(" ", n=1, expand=True)
+    _df.iloc[-1] = pd.Series(["Flávio", _p_acquired_a, "Votos adquiridos"])
+    _df.iloc[-2] = pd.Series(["Lula", _p_acquired_b, "Votos adquiridos"])
+
+
+    _plot = g.GroupedBarPlot(
+        values=_df["value"],
+        categories=_df["variable"],
+        groups=_df["group"],
+        horizontal=True,
+    )
+    _plot.cfg["bar"]["error_colors"] = ["#98a7b4"]
+    (
+        _plot.ax.xaxis.set_major_formatter(
+            ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
+        )
+    )
+    _plot.show()
+    return
+
+
+@app.cell
 def _(d, g, ticker):
     plot1 = g.ScatterPlot(
         x=d.rpolls.df["vote_a"],
@@ -463,201 +548,6 @@ def _(mo):
 
     Isso significa que podemos medir uma rejeição ao Lula ajustada pelo viés das pesquisas, mas não podemos fazer o mesmo para o seu adversário com segurança, já que a correlação com as intenções de voto ao Lula é muito fraca.
     """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ## Ajustando as pesquisas eleitorais
-
-    As pesquisas eleitorais apontavam um cenário favorável para o candidato Flávio Bolsonaro no segundo turno, agora vamos comparar o resultado previsto pelas pesquisas, o das pesquisas ajustado pela métrica $A'$ de Martin et al. (2005), e comparar com o resultado real das votações:
-
-    Como já temos os resultados das eleições presidenciais, podemos medir o nível de viés das pesquisas, e ajustar a métrica de rejeição para um nível mais próximo do real. Mas vale ressaltar que o viés não representa necessariamente uma preferência do instituto de pesquisa por um candidato, e pode surgir naturalmente durante a seleção da amostra[^2].
-
-
-
-    [^2]: **Jota**. ['House effects' explicam por que pesquisas eleitorais são tão diferentes](https://www.jota.info/opiniao-e-analise/colunas/coluna-daniel-marcelino/house-effects-explicam-por-que-pesquisas-eleitorais-sao-tao-diferentes) por Daniel Marcelino.
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ### Metodologia
-
-    Existe uma métrica popular, usada especificamente para pesquisas eleitorais baseada na razão de chances logarítmica[^2]
-
-    $$
-    A' = \ln \left( \frac{ \hat p_A / (1 - \hat p_A) }{ p_A / (1 - p_A) } \right) \tag 1
-    $$
-
-    - $\hat p_A$: Percentual das intenções de voto ao candidato A estimadas pela pesquisa
-    - $p_A$: Percentual dos votos recebidos pelo candidato A na votação
-
-    O resultado $A'$ obtido é a medida do viés da pesquisa, favorável ao candidato A, se o valor for positivo, o viés é favorável à este candidato, caso contrário, o viés é favorável ao seu adversário, caso $A' = 0$, a  pesquisa não apresenta viés.
-
-    Mesmo que diferente de zero, valor da métrica ainda está sujeito à uma margem de erro para avaliar se o viés medido é estatisticamente significante, isto exige a medida do erro padrão aproximada pelo método-$\delta$[^3]:
-
-    $$
-    SE(A') = \sqrt{\frac{1}{n \times \hat p_A \times (1 - \hat p_A)}} \tag 2
-    $$
-
-    - $n$: Quantidade de pessoas entrevistadas na pesquisa
-
-    Com isso nós podemos fazer um intervalo de 95% de confiança para o valor real de $A'$, se zero estiver dentro do intervalo, não podemos considerá-lo significativamente diferente de zero.
-
-    $$
-    IC(A') = A' \pm 1,96 \times SE(A') \tag 3
-    $$
-
-    Para encontrar a "taxa de rejeição real" removendo o viés da pesquisa, vamos usar $A'$ para ajustar o peso das respostas entre os votantes de cada candidato, reduzindo para os super representados ou aumentando para os sub representados.
-
-    $$
-    P'_A = \hat p_A \times e^{-A'} \tag 4
-    $$
-
-    - $P'_A$: Taxa ajustada para o candidato A
-
-
-
-    [^2]: **Public Opinion Quarterly**. [A Review and Proposal for a New Measure of Poll Accuracy](https://doi.org/10.1093/poq/nfi044) por Elizabeth A. Martin, Michael W. Traugott e Courtney Kennedy
-
-    [^3]: **Constantin Ahlmann-Eltze**. [What is the delta method?](https://const-ae.name/post/2023-02-10_delta_method/delta-method-explainer/)
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ### Premissas
-
-    Esta abordagem de análise se apoia em alguns pressupostos, os resultados expostos aqui se tornam inválidos caso ao menos um deles seja falso:
-
-    1. O nível de rejeição é correlacionado com a intenção de voto;
-    2. A rejeição aos candidatos não mudou significativamente entre a data da pesquisa e a data da votação;
-    3. A votação registrada nas urnas eletrônicas é condizente com a realidade.
-
-    Com os dados disponíveis, apenas o primeiro pressuposto pode ser testado, depois que este tenha sido verificado, o leitor baseará seu nível de confiança nos resultados deste estudo na sua crença sobre os outros pressupostos. Para testar a primeira hipótese, vamos verificar se existe uma correlação significativa entre o voto em um candidato, e a rejeição pelo seu adversário.
-
-    Para fazer esta análise rapidamente, vamos usar os dados de diversas pesquisas eleitorais, comparando as pesquisas de intenção de voto estimuladas com o percentual de rejeição, onde o entrevistado responde "Não votaria em ___ de jeito nenhum".
-    """)
-    return
-
-
-@app.cell
-def _(d, f, np, poll_stats, vote_stats):
-    # Flávio
-    Aa = f.a_metric(
-        a=vote_stats["flavio"]["p_validos"],
-        a_estimate=poll_stats["flavio"]["wp_valid"],
-    )
-    Aa_SE = f.a_std_error(
-        n=d.rpolls.df["n"].sum(),
-        a_estimate=poll_stats["flavio"]["wp_valid"],
-    )
-    ICa_HI, ICa_LO = (Aa + 1.96 * Aa_SE), (Aa - 1.96 * Aa_SE)
-    ZERO_NOT_IN_ICa = np.sign(ICa_HI) * np.sign(ICa_LO) == 1
-
-    # Lula
-    Ab = f.a_metric(
-        a=vote_stats["lula"]["p_validos"],
-        a_estimate=poll_stats["lula"]["wp_valid"],
-    )
-    Ab_SE = f.a_std_error(
-        n=d.rpolls.df["n"].sum(),
-        a_estimate=poll_stats["lula"]["wp_valid"],
-    )
-    ICb_HI, ICb_LO = (Ab + 1.96 * Ab_SE), (Ab - 1.96 * Ab_SE)
-    ZERO_NOT_IN_ICb = np.sign(ICb_HI) * np.sign(ICb_LO) == 1
-
-    print(ZERO_NOT_IN_ICa, ZERO_NOT_IN_ICb)
-    return Aa, Ab
-
-
-@app.cell
-def _(Aa, Ab, np, poll_stats):
-    poll_stats["flavio"]["adj_wp_valid"] = poll_stats["flavio"]["wp_valid"] * np.exp(-Aa)
-    poll_stats["lula"]["adj_wp_valid"] = poll_stats["lula"]["wp_valid"] * np.exp(-Ab)
-    return
-
-
-@app.cell
-def _(poll_stats, vote_stats):
-    poll_a = round(poll_stats["flavio"]["wp_valid"] * 100, 1)
-    poll_b = round(poll_stats["lula"]["wp_valid"] * 100, 1)
-    adj_poll_a = round(poll_stats["flavio"]["adj_wp_valid"] * 100, 1)
-    adj_poll_b = round(poll_stats["lula"]["adj_wp_valid"] * 100, 1)
-    vote_a = round(vote_stats["flavio"]["p_validos"] * 100, 1)
-    vote_b = round(vote_stats["lula"]["p_validos"] * 100, 1)
-    return adj_poll_a, poll_a, poll_b, vote_a, vote_b
-
-
-@app.cell(hide_code=True)
-def _(adj_poll_a, mo, poll_a, poll_b, vote_a, vote_b):
-    def _f(v):
-        return str(v).replace(".", ",")
-
-
-    mo.md(rf"""
-    |                         |       Flávio      |         Lula            |
-    | :---                    |       :---:       |         :---:           |
-    | **Pesquisas**           | {_f(poll_a)}%     | {_f(poll_b)}%           |
-    | **Pesquisas ajustadas** | {_f(adj_poll_a)}% | {_f(100 - adj_poll_a)}% |
-    | **Votação**             | {_f(vote_a)}%     | {_f(vote_b)}%           |
-
-
-    """)
-    return
-
-
-@app.cell
-def _(d, f, g, pd, ticker):
-    vas = d.rpolls.df["vote_a"]
-    vbs = d.rpolls.df["vote_b"]
-    ras = d.rpolls.df["reject_a"]
-    rbs = d.rpolls.df["reject_b"]
-    limits = [
-        f.vote_potential(va, vb, ra, rb, beta=0.5)
-        for va, vb, ra, rb in zip(vas, vbs, ras, rbs)
-    ]
-    high_limits = [
-        f.vote_potential(va, vb, ra, rb, beta=0.01)
-        for va, vb, ra, rb in zip(vas, vbs, ras, rbs)
-    ]
-
-    _df = pd.DataFrame(
-        [
-            pd.Series(vp.a.est for vp in limits),
-            pd.Series(vp.b.est for vp in high_limits),
-        ],
-        index=[
-            "beta=0,5 Flávio",
-            "beta=0,1 Lula",
-        ]
-    ).T
-
-    _df = pd.melt(_df)
-    _df[["group", "variable"]] = _df["variable"].str.split(" ", n=1, expand=True)
-    _df.iloc[-1] = pd.Series(["Flávio", 0.029020991394356, "Votos adquiridos"])
-    _df.iloc[-2] = pd.Series(["Lula", 0.0809186812752861-0.0311924708487255, "Votos adquiridos"])
-
-
-    _plot = g.GroupedBarPlot(
-        values=_df["value"],
-        categories=_df["variable"],
-        groups=_df["group"],
-        horizontal=True,
-    )
-    _plot.cfg["bar"]["error_colors"] = ["#98a7b4"]
-    (
-        _plot.ax.xaxis.set_major_formatter(
-            ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
-        )
-    )
-    _plot.show()
     return
 
 

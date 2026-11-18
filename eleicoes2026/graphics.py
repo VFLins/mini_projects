@@ -409,6 +409,10 @@ class GroupedBarPlot(BasePlot):
     mode, error bars extend from the mean to the minimum and maximum. Error
     bars are drawn only for pairs with more than one value.
 
+    Side by side, a group missing from a category leaves no gap: the groups
+    that are present are centered on the category, with the same bar width as
+    in categories where every group appears.
+
     With ``stacked=True`` the groups are stacked on top of each other instead
     of placed side by side, and error bars are omitted. A missing
     ``(category, group)`` pair counts as zero when stacking.
@@ -436,9 +440,9 @@ class GroupedBarPlot(BasePlot):
 
     def __init__(
         self,
-        categories: Sequence[str],
+        categories: Sequence[Hashable],
         values: Sequence[float],
-        groups: Sequence[str],
+        groups: Sequence[Hashable],
         stacked: bool = False,
         horizontal: bool = False,
         show_values: bool = False,
@@ -492,13 +496,19 @@ class GroupedBarPlot(BasePlot):
         bar_size = bcfg["width"] if self.stacked else bcfg["width"] / n_groups
         base = np.zeros(len(self.categories))
 
+        # Side by side: in each category, only the groups present there take
+        # up space, and they are centered on the category tick.
+        is_present = ~np.isnan(self.means)
+        rank = np.cumsum(is_present, axis=0) - 1
+        n_present = is_present.sum(axis=0)
+        offsets = (rank - (n_present - 1) / 2) * bar_size
+
         for j, group in enumerate(self.groups):
             color = bcfg["colors"][j % len(bcfg["colors"])]
             error_color = bcfg["error_colors"][j % len(bcfg["error_colors"])]
             vals = self.means[j]
             present = ~np.isnan(vals)
-            offset = 0.0 if self.stacked else (j - (n_groups - 1) / 2) * bar_size
-            pos = positions + offset
+            pos = positions if self.stacked else positions + offsets[j]
 
             kwargs = {size_key: bar_size, "color": color, "zorder": 3}
             if self.stacked:
