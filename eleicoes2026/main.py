@@ -342,56 +342,20 @@ def _(mo):
 
     Outro fato importante que levantou a indignação do Flávio Bolsonaro e seus apoiadores foi a grande diferença entre a quantidade de votos nas urnas e as intenções de votos medidas pelas pesquisas realizadas entre o primeiro e o segundo turno.
 
-    Segundo auditoria independente de Barberia et al. (2026)[^1], os institutos de pesquisa apresentaram um viés consistente entre os turnos. O estudo mostrou que a maioria das pesquisas superestimou o desempenho do candidato Lula no primeiro turno e depois passou a fazer o mesmo para o Flávio Bolsonaro no segundo.
+    Segundo auditoria independente de Barberia et al. (2026)[^1], os institutos de pesquisa apresentaram um viés consistente entre os turnos. O estudo mostrou que a maioria das pesquisas superestimou o desempenho do candidato Lula no primeiro turno e depois da votação, passou a fazer o mesmo para o Flávio Bolsonaro no segundo.
 
-    Muitas pesquisas apontavam vantagem para Flávio Bolsonaro nas intenções de votos, e resultados similarmente favoráveis a ele na rejeição. Se um candidato é rejeitado por mais de 50% dos eleitores, é possível que ele tenha um desempenho competitivo no primeiro turno, mas tenha um segundo turno muito difícil tentando conquistar a parcela que ainda não votou nele no primeiro turno, mas também não o rejeita.
+    Muitas pesquisas apontavam vantagem para Flávio Bolsonaro nas intenções de votos, e resultados similarmente favoráveis a ele na rejeição. Se um candidato é rejeitado por aproximadamente de 50% dos eleitores, é possível que ele tenha um desempenho competitivo no primeiro turno, mas tenha um segundo turno muito difícil tentando conquistar a parcela que ainda não votou nele no primeiro turno, mas também não o rejeita.
 
     Entre os bolsonaristas, este parecia ser o caso do Lula, as pesquisas apontavam um nível de rejeição mais alta e intenções de votos mais baixas para ele. O que indica uma grande dificuldade de conquistar votos suficientes para virar a disputa ao seu favor no segundo turno.
+
+    A quantidade de votos conquistáveis por um candidato pode ser definida pela quantidade de eleitores que ainda não decidiram o voto, mas que ainda não o rejeitam. Esta quantidade pode ser estimada entre os votos válidos porque a maioria dos entrevistados têm voto declarad
+
+    Como as pesquisas não costumam divulgar o cruzamento de dados entre intenções de votos e rejeição, teremos que estimar a distribuição da rejeição a cada candidato entre entre os que ainda não decidiram o voto e os que já decidiram votar no adversário.
 
 
 
     [^1]: **Jota**. [A eleição de 2026 terminou. Agora, abram seus dados](https://www.jota.info/opiniao-e-analise/colunas/lorena-barberia/a-eleicao-de-2026-terminou-agora-abram-seus-dados) por Lorena G. Barberia, Natália de Paula Moreira e Gustavo Fernandes de Paula
     """)
-    return
-
-
-@app.cell
-def _(d, g, pd, ticker):
-    _df = d.rpolls.df[
-        ["vote_a", "vote_b", "reject_a", "reject_b", "unsure_a", "unsure_b"]
-    ].copy()
-    _df = _df.rename(
-        {
-            "vote_a": "Vota Flávio",
-            "vote_b": "Vota Lula",
-            "reject_a": "Rejeita Flávio",
-            "reject_b": "Rejeita Lula",
-            "unsure_a": "Incerteza Flávio",
-            "unsure_b": "Incerteza Lula",
-        },
-        axis=1,
-    )
-    _df = pd.melt(_df)
-    _df["candidate"] = [ i.split(" ")[-1] for i in _df["variable"] ]
-    _df["variable"] = pd.Categorical(
-        [ i.split(" ")[0] for i in _df["variable"] ],
-        categories=["Rejeita", "Vota", "Incerteza"],
-    )
-    _df = _df.sort_values(by="variable", ascending=True)
-
-    _plot = g.GroupedBarPlot(
-        categories=_df["variable"],
-        values=_df["value"],
-        groups=_df["candidate"],
-    )
-    _plot.cfg["bar"]["colors"] = ["#008181", "#942020", "#212c38", "#98a7b4"]
-    _plot.cfg["bar"]["error_colors"] = ["#98a7b4"]
-    (
-        _plot.ax.yaxis.set_major_formatter(
-            ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
-        )
-    )
-    _plot.show()
     return
 
 
@@ -654,7 +618,7 @@ def _(d, f, g, pd, ticker):
         for va, vb, ra, rb in zip(vas, vbs, ras, rbs)
     ]
     high_limits = [
-        f.vote_potential(va, vb, ra, rb, beta=0.001)
+        f.vote_potential(va, vb, ra, rb, beta=0.01)
         for va, vb, ra, rb in zip(vas, vbs, ras, rbs)
     ]
 
@@ -666,8 +630,8 @@ def _(d, f, g, pd, ticker):
             pd.Series(vp.b.est for vp in high_limits),
         ],
         index=[
-            "A limit", "A limit (high)",
-            "B limit", "B limit (high)",
+            "Flávio beta=0,5", "Flávio beta=0,1",
+            "Lula beta=0,5", "Lula beta=0,1",
         ]
     ).T
 
