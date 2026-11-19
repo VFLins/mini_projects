@@ -208,7 +208,7 @@ def _(mo):
 
     ## Introdução
 
-    O candidato Flávio Bolsonaro terminou o primeiro turno com uma votação maior que a do seu principal adversário Lula, isto levou os bolsonaristas a acreditar que a vitória no segundo turno seria certa, já que historicamente, o primeiro colocado no primeiro turno sempre acabava ganhando a disputa no segundo turno.
+    O candidato Flávio Bolsonaro terminou o primeiro turno com uma votação maior que a do seu adversário Lula, isto levou os bolsonaristas a acreditar que a vitória no segundo turno seria certa, já que historicamente, o primeiro colocado no primeiro turno sempre acabava ganhando a disputa no segundo turno.
 
     Depois da derrota, já nos Estados Unidos, Flávio Bolsonaro alegou uma "impossibilidade matemática", que permitiu que o seu adversário Lula ganhasse mais de 10 Milhões de votos do primeiro para o segundo turno. Além disso, se aponta que a maioria das pesquisas de intenções de voto indicava a vitória iminente do candidato.
 
@@ -216,7 +216,7 @@ def _(mo):
 
     1. Estimar a transferência possível de votos com dados oficiais das votações, e comparar com fatos das estratégias de campanha para entender se este ganho de votos foi realmente possível; depois vamos
 
-    2. Tentar entender a discrepância entre as pesquisas eleitorais realizadas após o resultado do primeiro turno e o resultado nas urnas.
+    2. Tentar entender se mesmo com a discrepância entre as pesquisas eleitorais realizadas após o resultado do primeiro turno e o resultado nas urnas, a vitória de Lula era possível.
     """)
     return
 
@@ -228,9 +228,26 @@ def _(mo):
 
     Os dias de votação das eleições presidenciais de 2026 foram 4 de outubro para o primeiro turno e 25 do mesmo mês para o segundo. Os candidatos tiveram um período de apenas três semanas para convencer o eleitorado e atrair votos para si.
 
-    Neste cenário de curto período de tempo, é razoavelmente seguro considerar que os esforços de campnha tenham se concentrado nos eleitores indecisos, como foi a estratégia da campanha do então candidato a reeleição Lula no segundo turno[^1].
+    Neste cenário de curto período de tempo, é razoavelmente seguro considerar que os esforços de campanha tenham se concentrado nos eleitores indecisos, como foi a estratégia da campanha do então candidato a reeleição, Lula, no segundo turno[^1].
 
     Por outro lado, para alguns especialistas[^2] e até para a própria equipe de campanha do Flávio Bolsonaro, sua vitória parecia ser muito segura. No fim das contas não foi feita nenhuma grande estratégia para garantir a vitória no segundo turno[^3].
+
+
+
+
+    [^1]: **Terra**. [A revolução da linguagem no segundo turno das eleições de 2026](https://www.terra.com.br/noticias/a-revolucao-da-linguagem-no-segundo-turno-das-eleicoes-de-2026,23066fe203723310bd23f18087066c3f15bi85pz.html?utm_source=clipboard) por Djiovanni Marioto
+
+    [^2]: **Veja**. [A estratégia de Flávio e o dilema de Lula no segundo turno](https://veja.abril.com.br/politica/a-estrategia-de-flavio-e-o-dilema-de-lula-no-segundo-turno/)
+
+    [^3]: **BBC**. ['Ele achou que já estava eleito': os erros da campanha de Flávio Bolsonaro no segundo turno apontados por analistas](https://www.bbc.com/portuguese/articles/cmrryxg991d8o)
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Metodologia
 
     Para estimar a transferência de votos, será um modelo de inferência de Rosen et al. (2001)[^4], mas com uma restrição: Não há transferência de votos entre os candidatos do primeiro turno. Isto significa que todo o potencial de receber votos dos candidatos no segundo turno está entre os eleitores que:
 
@@ -240,9 +257,21 @@ def _(mo):
 
     Esta restrição assume que todos os que votaram no Lula no primeiro turno vão continuar votando nele, e o mesmo vale para o Flávio. Embora crie um pressuposto capaz de introduzir viés no modelo, também traz outros dois benefícios importantes na minha análise.
 
-    O viés potencialmente introduzido por esta restrição está relacionado com a diferença entre as datas de votações dos turnos. Como a possibilidade de convencer um eleitor aumenta como tempo disponível para a campanha, o prazo de 21 dias entre os turnos torna razoável esperar que quem votou em um dos finalistas no primeio turno manterá o seu voto no segundo.
+    O viés potencialmente introduzido por esta restrição é controlado pela a diferença entre as datas de votações dos turnos. Como a possibilidade de converter um eleitor do candidato adversário aumenta como tempo disponível para a campanha, o prazo de 21 dias provavelmente será insuficiente para este propósito.
 
-    Algumas outras restrições precisaram ser feitas no modelo empregado por causa de algumas limitações de _hardware_:
+
+
+    [^4]: **Statistica Neerlandica**. [Bayesian and Frequentist Inference for Ecological Inference: The R×C Case](https://onlinelibrary.wiley.com/doi/abs/10.1111/1467-9574.00162) por Ori Rosen, Wenxin Jiang, Gary King e Martin A. Tanner
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Dados de votação
+
+    Para treinar este modelo serão usados os dados oficiais de votação divulgados pelo STE, obtidos pelo repositório oficial[^5].Algumas outras restrições precisaram ser feitas no modelo empregado por causa de limitações de _hardware_:
 
     - **Memória de vídeo:** Para treinar o modelo já com a restrição mencionada mas usando todas as seções eleitorais, eu precisaria de aproximadamente 60GB de VRAM, para contornar isso, os dados foram agregados em zonas eleitorais, o que reduz o requisito de VRAM para menos de 1GB.
 
@@ -250,21 +279,15 @@ def _(mo):
 
         1. **Qualidade:** cada iteração pode ser rápida ou não dependendo do tempo que cada uma precisa para atingir uma condição de parada, as condições podem ser um limite fixo ou o momento que o modelo entende que não fará mais progresso mesmo que continue tentando se ajustar. Quase todas as iterações pararam no limite fixo, o que indica que o modelo provavelmente se ajustaria melhor com um limite fix mais alto, e
 
-        2. **Quantidade**: Com a configuração `chains=8`, `tune=1000` e `draws=1000`, o modelo faz 2000 iterações por grupo, das quais as últimas 1000 são guardadas na memória em 8 grupos trabalhando em paralelo. Esta combinação exigiu aproximadamente 30 minutos de processamento no meu _hardware_.
+        2. **Quantidade**: Com a configuração `chains=8`, `tune=1000` e `draws=1000`, o modelo faz 2000 iterações por grupo, das quais as últimas 1000 são guardadas na memória para cada um dos oito grupos trabalhando em paralelo. Esta combinação exigiu aproximadamente 50 minutos de processamento no meu _hardware_.
 
     Os dados de fluxo de votos retornados pelo modelo vão divergir um pouco dos números reais da votação, eles devem ser interpretados como estimativas, e estão sujeitas a uma margem de erro, informada na parte inferior do gráfico.
 
-    Como a amostra foi reduzida para menos de 3 mil depois de agrupar por zona eleitoral, ele não atinge um tamanho de amostra efetiva (ESS) suficiente para retornar métricas de erro confiáveis, mas os fluxos obtidos mostram uma variância pequena.
+    Como a amostra foi reduzida para menos de 3 mil depois de agrupar por zona eleitoral, ele não atinge um tamanho de amostra efetiva (ESS) suficiente para retornar métricas de erro confiáveis, mas os fluxos obtidos mostram uma variância pequena e proporções plausíveis.
 
 
 
-    [^1]: **Terra**. [A revolução da linguagem no segundo turno das eleições de 2026](https://www.terra.com.br/noticias/a-revolucao-da-linguagem-no-segundo-turno-das-eleicoes-de-2026,23066fe203723310bd23f18087066c3f15bi85pz.html?utm_source=clipboard) por Djiovanni Marioto
-
-    [^2]: **Veja**. [A estratégia de Flávio e o dilema de Lula no segundo turno](https://veja.abril.com.br/politica/a-estrategia-de-flavio-e-o-dilema-de-lula-no-segundo-turno/)
-
-    [^3]: **BBC**. ['Ele achou que já estava eleito': os erros da campanha de Flávio Bolsonaro no segundo turno apontados por analistas](https://www.bbc.com/portuguese/articles/cmrryxg991d8o)
-
-    [^4]: **Statistica Neerlandica**. [Bayesian and Frequentist Inference for Ecological Inference: The R×C Case](https://onlinelibrary.wiley.com/doi/abs/10.1111/1467-9574.00162) por Ori Rosen, Wenxin Jiang, Gary King e Martin A. Tanner
+    [^5]: **Portal de Dados Abertos do TSE**. [Presidente - Votação por seção eleitoral - 2026](https://dadosabertos.tse.jus.br/dataset/resultados-2026/resource/01ea4ccd-f443-469c-9f29-c69ff97f7d4c)
     """)
     return
 
@@ -303,8 +326,8 @@ def _(Path, X, Y, d, f, mo):
 
 @app.cell
 def _(Path, d, g, pd):
-    flows = pd.read_csv(Path(d.PROJECT_ROOT, "data", "model_flows.csv"))
-    summary = pd.read_csv(Path(d.PROJECT_ROOT, "data", "model_summary.csv"))
+    flows = pd.read_csv(Path(d.DOWNLOADS_DIR, "model_flows.csv"))
+    summary = pd.read_csv(Path(d.DOWNLOADS_DIR, "model_summary.csv"))
     _avg_percent_error = str(
         round(
             ((1.96 * summary["sd"] * 100) / (summary["mean"] * 100)).sum(), 2
@@ -338,7 +361,7 @@ def _(mo):
 
     Este resultado é plausível porque se aproxima muito do resultado obtido nas urnas, incluindo as quantidades de transferência de votos, 3 milhões para Flávio e 10 milhões para Lula[^1], além dos votos Branco e Nulo totais no primeiro e no segundo turno: aproximadamente 6 e 4 milhões, respectivamente[^1].
 
-    A quantidade total de abstenções é medida da discrepância entre a quantidade de votos registrada e a quantidade de eleitores aptos segundo o TSE[^2], para a estimativa, o modelo distribui a quantidade total de abstenções entre todas as seções eleitorais. Além de assumir que não há transferência de votos entre os finalistas, o fato de assumir que a abstenção está distribuida igualmente entre todas as seções eleitorais pode explicar a leve discrepância entre os números oficiais e a estimativa.
+    A quantidade total de abstenções é medida pela discrepância entre a quantidade de votos registrada e a quantidade de eleitores aptos segundo o TSE[^2], para a estimativa, o modelo distribui a quantidade total de abstenções entre todas as seções eleitorais. Além de assumir que não há transferência de votos entre os finalistas, o fato de assumir que a abstenção está distribuida igualmente entre todas as seções eleitorais pode explicar a leve discrepância entre os números oficiais e a estimativa.
 
     Para justificar os 10 milhões de votos recebidos pelo candidato Lula, o modelo mediu uma transferência de aproximadamente 4 milhões de votos vindo de pessoas que não foram votar no primeiro turno, este número pode ser verificado em [`model_flows.csv`](https://github.com/VFLins/mini_projects/blob/main/eleicoes2026/data/model_flows.csv), terceira linha, segunda coluna.
 
@@ -348,7 +371,7 @@ def _(mo):
 
     2. A campanha mais ativa de Lula conseguiu convencer os eleitores que ficaram indecisos depois de ver seu candidato perder no primeiro turno, além de converter alguns votos inválidos e muitos eleitores que se abstiveram no primeiro turno.
 
-    Se não tivesse convencido pessoas as pessoas que não foram votar no primeiro turno, Lula poderia não ter ganhado votos o suficiente para ganhar, enquanto que a suspeição das urnas eletrônicas inflada pelos bolsonaristas[^3] pode acabar fazendo o efeito contrário, desincentivando o comparecimento de seus eleitores à votação.
+    Se não tivesse convencido as pessoas que não foram votar no primeiro turno, Lula poderia não ter recebido votos o suficiente para ganhar, enquanto que a suspeição das urnas eletrônicas inflada pelos bolsonaristas[^3] pode acabar fazendo o efeito contrário, desincentivando o comparecimento de seus eleitores à votação.
 
 
 
@@ -370,17 +393,17 @@ def _(mo):
 
     Segundo auditoria independente de Barberia et al. (2026)[^1], os institutos de pesquisa apresentaram um viés consistente entre os turnos. O estudo mostrou que a maioria das pesquisas superestimou o desempenho do candidato Lula no primeiro turno e depois da votação, passou a fazer o mesmo para o Flávio Bolsonaro no segundo.
 
-    Muitas pesquisas apontavam vantagem para Flávio Bolsonaro nas intenções de votos, e resultados similarmente favoráveis a ele na rejeição. Se um candidato é rejeitado por aproximadamente de 50% dos eleitores, é possível que ele tenha um desempenho competitivo no primeiro turno, mas tenha um segundo turno muito difícil tentando conquistar a parcela que ainda não votou nele no primeiro turno, mas também não o rejeita.
+    Muitas pesquisas apontavam vantagem para Flávio Bolsonaro nas intenções de votos, e resultados similarmente favoráveis a ele na rejeição. Se um candidato é rejeitado por aproximadamente de 50% dos eleitores, não é impossível que ele tenha um desempenho competitivo no primeiro turno, mas tenha um segundo turno muito difícil tentando disputar a parcela de eleitores que ainda não votou nele no primeiro turno, mas também não o rejeita.
 
-    Entre os bolsonaristas, este parecia ser o caso do Lula, as pesquisas apontavam um nível de rejeição mais alta e intenções de votos mais baixas para ele. O que indica uma grande dificuldade de conquistar votos suficientes para virar a disputa ao seu favor no segundo turno.
+    Entre os bolsonaristas, este parecia ser a situaçaõ do Lula, as pesquisas apontavam um nível de rejeição mais alta e intenções de votos mais baixas para ele. O que indicaria uma grande dificuldade de conquistar votos suficientes para virar a disputa ao seu favor no segundo turno.
 
-    A quantidade de votos conquistáveis por um candidato pode ser definida pela quantidade de eleitores que ainda não decidiram o voto, mas que ainda não o rejeitam. Esta quantidade pode ser estimada pelos dados divulgados pelas pesquisas eleitorais, mas não pode ser confiavelmente mapeada da pesquisa para as votações, por alguns motivos:
+    A quantidade de votos conquistáveis por um candidato pode ser definida pela quantidade de eleitores que ainda não decidiram o voto, mas que ainda não o rejeitam. Esta quantidade pode ser estimada pelos dados divulgados pelas pesquisas eleitorais, mas não pode ser confiavelmente mapeada das pesquisas para as votações, por alguns motivos:
 
     1. Viés apresentado pelas pesquisas pode também mostrar valores desajustados com a rejeição real, além dos desajustes já percebidos nas intenções de votos[^1];
 
     2. Distribuição do comparecimento às urnas e votos inválidos não são diretamente alinhados com as respostas "Não opinou" ou "Não soube responder" nas pesquisas.
 
-    Com limitações tão importantes, um estudo de potencial de votos teria resultados muito pouco confiáveis para se usar seriamente como parte de uma estratégia de campanha ou em um estudo da transferência de votos. Por isso todo o progresso nesta seção da análise deve ser levado como uma
+    Com limitações tão importantes, um estudo de potencial de votos teria resultados muito pouco confiáveis para se usar seriamente como parte de uma estratégia de campanha ou em um estudo da transferência de votos. Por isso todo o progresso nesta seção da análise deve ser considerado experimental e exploratória.
 
     Como as pesquisas não costumam divulgar o cruzamento de dados entre intenções de votos e rejeição, teremos que estimar a distribuição da rejeição a cada candidato entre entre os que ainda não decidiram o voto e os que já decidiram votar no adversário.
 
@@ -394,7 +417,15 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Dados de rejeição e intenção de votos
+    ### Metodologia
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Dados de pesquisas eleitorais
 
     A rejeição é medida em um questionário por uma pergunta do tipo "Em qual(is) candidatos você não votaria de jeito nenhum?". A diferença entre a rejeição e a intenção de voto de um candidato é composto por dois grupos: 1. eleitores que ainda não decidiram o voto; e 2. eleitores decididos a votar no candidato adversário.
 
@@ -554,15 +585,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Estimando a transferência real de votos
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ## Argumentos comuns do Flávio e seus apoiadores
+    ## Conclusão
     """)
     return
 
