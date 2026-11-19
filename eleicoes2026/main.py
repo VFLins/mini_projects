@@ -417,14 +417,6 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ### Metodologia
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
     ### Dados de pesquisas eleitorais
 
     A rejeição é medida em um questionário por uma pergunta do tipo "Em qual(is) candidatos você não votaria de jeito nenhum?". A diferença entre a rejeição e a intenção de voto de um candidato é composto por dois grupos: 1. eleitores que ainda não decidiram o voto; e 2. eleitores decididos a votar no candidato adversário.
@@ -441,6 +433,45 @@ def _(mo):
     6. [Poder Data](https://www.poder360.com.br/poderdata/): BR-08134/2026, BR-07926/2026, BR-04258/2026, BR-02586/2026 e BR-01209/2026
     7. [Quaest](https://quaest.com.br/relatorios-quaest/): BR-08535/2026 e BR-09158/2026
     8. [Vox Brasil](https://voxbrasilpesquisas.com.br/imprensa/): BR-09623/2026, BR-04332/2026 e BR-03259/2026
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(d, mo):
+    mo.md(rf"""
+    ### Metodologia
+
+    Para dizer exatamente quantos votos um candidato pode receber, ainda considerando que um candidato $A$ não pode conquistar que já está decidido por votar em seu adversário $B$, isto significa que o percentual de eleitores conquistaveis por A, $p_A$ é composto pelos percentuais de eleitores que não decidiram o voto $v_U$ e ao mesmo tempo também não o rejeitam ($1 - r_A$):
+
+    $$
+    p_A = p(v_U \cap 1 - r_A) \tag 1
+    $$
+
+    Os eleitores que rejeitam o candidato $A$ estarão distribuídos entre os que não decidiram o voto $v_U$ e os que já decidiram votar no candidato adversário $v_B$. No cenário mais favorárel, todos os que o rejeitam já decidiram votar no adversário, isto deixa uma proporção conquistável maior, e no pior cenário, todos os indecisos já o rejeitam, o que significa que a decisão deles será apenas entre votar no adversário, se abster ou votar nulo/branco.
+
+    {mo.image(src=d.PROJECT_ROOT / "static" / "scenarios.png")}
+
+    Como as pesquisas não costumam entregar estatísticas cruzadas de rejeição e intenção de votos, não podemos saber exatamente o percentual de indecisos que rejeitam cada candidato. Esta rejeição estará distribuída de alguma forma entre a o pior e o melhor cenário, para medir estes cenários, vamos usar os limites de Fréchet (1951)[^5] [^6].
+
+    $$
+    \max(0,\; v_U + (1 - r_A) - 1) \le p_A \le \min(v_U, (1 - r_A)) \tag 2
+    $$
+
+    Como já sabemos o resultado da votação, podemos ir mais longe e incluir um multiplicador ao limite máximo que presume uma distribuição  da rejeição entre as intenções de voto.
+    """
+    r"""
+    $$
+    β = \frac{p(r_A | v_U)}{p(r_A | v_B)} \tag 3
+    $$
+    """
+    rf"""
+
+    [^5]: **Mathematics Magazine**. [Abstract Sets, Abstract Spaces and General Analysis
+    ](https://doi.org/10.1080/19300980.1951.12467234)
+
+    [^6]: **Wikipedia**. [Fréchet inequalities](https://en.wikipedia.org/wiki/Fr%C3%A9chet_inequalities)
+
     """)
     return
 
@@ -463,11 +494,11 @@ def _(d, f, g, pd, ticker, vote_stats):
     ras = d.rpolls.df["reject_a"]
     rbs = d.rpolls.df["reject_b"]
     limits = [
-        f.vote_potential(va, vb, ra, rb, beta=0.5)
+        f.vote_potential(va, vb, ra, rb, beta=0.6)
         for va, vb, ra, rb in zip(vas, vbs, ras, rbs)
     ]
     high_limits = [
-        f.vote_potential(va, vb, ra, rb, beta=0.01)
+        f.vote_potential(va, vb, ra, rb, beta=0.1)
         for va, vb, ra, rb in zip(vas, vbs, ras, rbs)
     ]
 
@@ -477,8 +508,8 @@ def _(d, f, g, pd, ticker, vote_stats):
             pd.Series(vp.b.est for vp in high_limits),
         ],
         index=[
-            "beta=0,5 Flávio",
-            "beta=0,1 Lula",
+            "β=0,6 Flávio",
+            "β=0,1 Lula",
         ]
     ).T
 

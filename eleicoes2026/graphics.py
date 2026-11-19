@@ -440,9 +440,9 @@ class GroupedBarPlot(BasePlot):
 
     def __init__(
         self,
-        categories: Sequence[Hashable],
+        categories: Sequence[str],
         values: Sequence[float],
-        groups: Sequence[Hashable],
+        groups: Sequence[str],
         stacked: bool = False,
         horizontal: bool = False,
         show_values: bool = False,
