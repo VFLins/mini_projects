@@ -438,8 +438,8 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(d, mo):
-    mo.md(rf"""
+def _(mo):
+    mo.md(r"""
     ### Metodologia
 
     Para dizer exatamente quantos votos um candidato pode receber, ainda considerando que um candidato $A$ não pode conquistar que já está decidido por votar em seu adversário $B$, isto significa que o percentual de eleitores conquistaveis por A, $p_A$ é composto pelos percentuais de eleitores que não decidiram o voto $v_U$ e ao mesmo tempo também não o rejeitam ($1 - r_A$):
@@ -449,29 +449,57 @@ def _(d, mo):
     $$
 
     Os eleitores que rejeitam o candidato $A$ estarão distribuídos entre os que não decidiram o voto $v_U$ e os que já decidiram votar no candidato adversário $v_B$. No cenário mais favorárel, todos os que o rejeitam já decidiram votar no adversário, isto deixa uma proporção conquistável maior, e no pior cenário, todos os indecisos já o rejeitam, o que significa que a decisão deles será apenas entre votar no adversário, se abster ou votar nulo/branco.
+    """)
+    return
 
-    {mo.image(src=d.PROJECT_ROOT / "static" / "scenarios.png")}
 
-    Como as pesquisas não costumam entregar estatísticas cruzadas de rejeição e intenção de votos, não podemos saber exatamente o percentual de indecisos que rejeitam cada candidato. Esta rejeição estará distribuída de alguma forma entre a o pior e o melhor cenário, para medir estes cenários, vamos usar os limites de Fréchet (1951)[^5] [^6].
+@app.cell
+def _(d, mo):
+    mo.image(src=d.PROJECT_ROOT / "static" / "scenarios.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Como as pesquisas não costumam entregar estatísticas cruzadas de rejeição e intenção de votos, não podemos saber exatamente o percentual de indecisos que rejeitam cada candidato. Esta rejeição pode estar distribuída em qualquer ponto entre o pior e o melhor cenário, para medir estes cenários-limite, vamos nos basear nos limites de Fréchet (1951)[^5] [^6].
 
     $$
-    \max(0,\; v_U + (1 - r_A) - 1) \le p_A \le \min(v_U, (1 - r_A)) \tag 2
+    \max(0, v_U + (1 - r_A) - 1) \le p_A \le \min(v_U, (1 - r_A)) \tag 2
     $$
 
-    Como já sabemos o resultado da votação, podemos ir mais longe e incluir um multiplicador ao limite máximo que presume uma distribuição  da rejeição entre as intenções de voto.
-    """
-    r"""
+    O limite superior original $\min(v_U, (1 - r_A))$ pode ficar muito amplo se a rejeição ao candidato $A$ for maior que as intenções de voto ao candidato $B$, neste caso, os votos conquistáveis serão os votos indecisos menos a diferença entre $r_A$ e  $v_B$. Com o ajuste no limite superior, teremos:
+
     $$
-    β = \frac{p(r_A | v_U)}{p(r_A | v_B)} \tag 3
+    \max(0, v_U + (1 - r_A) - 1) \le p_A \le v_U - \max(0, r_A - v_B) \tag 3
     $$
-    """
-    rf"""
+
+
 
     [^5]: **Mathematics Magazine**. [Abstract Sets, Abstract Spaces and General Analysis
     ](https://doi.org/10.1080/19300980.1951.12467234)
 
     [^6]: **Wikipedia**. [Fréchet inequalities](https://en.wikipedia.org/wiki/Fr%C3%A9chet_inequalities)
+    """)
+    return
 
+
+@app.cell
+def _(d, mo):
+    mo.image(src=d.PROJECT_ROOT / "static" / "scenarios2.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Os limites conqistáveis sem ajuste são efetivamente os limites de Fréchet aplicados à este problema, já os limites com ajuste são a estimativa adequada para os pressupostos estabelecidos aqui.
+
+
+
+    $$
+    p_A = v_U \times  \frac{1 - \beta \times r_A}{v_B + \beta \times v_U} \tag 4
+    $$
     """)
     return
 
