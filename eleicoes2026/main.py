@@ -493,12 +493,16 @@ def _(d, mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Os limites conqistáveis sem ajuste são efetivamente os limites de Fréchet aplicados à este problema, já os limites com ajuste são a estimativa adequada para os pressupostos estabelecidos aqui.
+    Os limites conqistáveis sem ajuste são efetivamente os limites de Fréchet aplicados à este problema, já o limite superior com ajuste é a estimativa adequada para o pressuposto de que quem rejeita o candidato A também não pode ter declarado a intenção de voto nele.
 
-
+    Em outras palavras, quem rejeita o candidato A, está em um de dois grupos: 1- Não decidiu o voto ainda, ou 2- Já decidiu votar em seu adversário. Assim podemos dizer que a distribuição da rejeição a $A$ depende de como estes dois grupos estão distribuidos (probabilidades condicionais na equação 4):
 
     $$
-    p_A = v_U \times  \frac{1 - \beta \times r_A}{v_B + \beta \times v_U} \tag 4
+    r_A = v_B \cdot P(\text{rejeita A} \mid \text{vota B}) + v_U \cdot P(\text{rejeita A} \mid \text{indeciso}) \tag 4
+    $$
+
+    $$
+    p_A = v_U \times  \frac{1 - \beta \times r_A}{v_B + \beta \times v_U}
     $$
     """)
     return
