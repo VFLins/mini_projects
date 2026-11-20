@@ -292,6 +292,16 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Fluxo de votos estimado
+
+    O fluxo de votos estimado mostra, diferente do esperado pela equipe do Flávio e de alguns analistas, o Lula conseguindo atrair uma uma parcela relevante do eleitorado que tinha votado em candidatos que não passaram para o segundo turno, e junto com isso, também a maior parte dos que se abstiveram e dos que votaram branco e nulo.
+    """)
+    return
+
+
 @app.cell
 def _(d, votos):
     X, Y, report = d.build_matrices(
@@ -344,12 +354,15 @@ def _(Path, d, g, pd):
             "que os eleitores de Lula e Flávio Bolsonaro não mudaram seu voto "
             "entre o primeiro e o segundo turno.\n"
             "2. Número de abstenções obtido pela discrepância entre quantidade "
-            "de votos registrados e quantidade de eleitores aptos divulgados."
+            "de votos registrados e quantidade de eleitores aptos divulgados. "
+            "As abstenções foram distribuídas igualmente entre as zonas "
+            "eleitorais nos dados de treinamento do modelo."
             "\n\nAs quantidades variam com margem de erro média de "
-            f"±{_avg_percent_error}% do valor informado."
+            f"±{_avg_percent_error}% do valor informado.\n\n"
+            "Fonte: vitorlins.com.br"
         )
     )
-    plot3.cfg["disclaimer"]["clearance"] = 0.28
+    plot3.cfg["disclaimer"]["clearance"] = 0.35
     plot3.show()
     return
 
@@ -357,8 +370,6 @@ def _(Path, d, g, pd):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    O fluxo de votos estimado mostra, diferente do esperado pela equipe do Flávio e de alguns analistas, o Lula conseguindo atrair uma uma parcela relevante do eleitorado que tinha votado em candidatos que não passaram para o segundo turno, e junto com isso, também a maior parte dos que se abstiveram e dos que votaram branco e nulo.
-
     Este resultado é plausível porque se aproxima muito do resultado obtido nas urnas, incluindo as quantidades de transferência de votos, 3 milhões para Flávio e 10 milhões para Lula[^1], além dos votos Branco e Nulo totais no primeiro e no segundo turno: aproximadamente 6 e 4 milhões, respectivamente[^1].
 
     A quantidade total de abstenções é medida pela discrepância entre a quantidade de votos registrada e a quantidade de eleitores aptos segundo o TSE[^2], para a estimativa, o modelo distribui a quantidade total de abstenções entre todas as seções eleitorais. Além de assumir que não há transferência de votos entre os finalistas, o fato de assumir que a abstenção está distribuida igualmente entre todas as seções eleitorais pode explicar a leve discrepância entre os números oficiais e a estimativa.
@@ -445,7 +456,7 @@ def _(mo):
     Para dizer exatamente quantos votos um candidato pode receber, ainda considerando que um candidato $A$ não pode conquistar que já está decidido por votar em seu adversário $B$, isto significa que o percentual de eleitores conquistaveis por A, $p_A$ é composto pelos percentuais de eleitores que não decidiram o voto $v_U$ e ao mesmo tempo também não o rejeitam ($1 - r_A$):
 
     $$
-    p_A = p(v_U \cap 1 - r_A) \tag 1
+    p_A = v_U \times (1 - P(\text{rejeita A} \mid \text{vota B})) \tag 1
     $$
 
     Os eleitores que rejeitam o candidato $A$ estarão distribuídos entre os que não decidiram o voto $v_U$ e os que já decidiram votar no candidato adversário $v_B$. No cenário mais favorárel, todos os que o rejeitam já decidiram votar no adversário, isto deixa uma proporção conquistável maior, e no pior cenário, todos os indecisos já o rejeitam, o que significa que a decisão deles será apenas entre votar no adversário, se abster ou votar nulo/branco.
@@ -495,15 +506,59 @@ def _(mo):
     mo.md(r"""
     Os limites conqistáveis sem ajuste são efetivamente os limites de Fréchet aplicados à este problema, já o limite superior com ajuste é a estimativa adequada para o pressuposto de que quem rejeita o candidato A também não pode ter declarado a intenção de voto nele.
 
-    Em outras palavras, quem rejeita o candidato A, está em um de dois grupos: 1- Não decidiu o voto ainda, ou 2- Já decidiu votar em seu adversário. Assim podemos dizer que a distribuição da rejeição a $A$ depende de como estes dois grupos estão distribuidos (probabilidades condicionais na equação 4):
+    Em outras palavras, quem rejeita o candidato A, está em um de dois grupos: 1- Não decidiu o voto ainda, ou 2- Já decidiu votar em seu adversário. Assim podemos dizer que a distribuição da rejeição a $A$ depende de como estes dois grupos estão distribuidos através de probabilidades condicionais:
 
     $$
     r_A = v_B \cdot P(\text{rejeita A} \mid \text{vota B}) + v_U \cdot P(\text{rejeita A} \mid \text{indeciso}) \tag 4
     $$
 
+    Como não sabemos antecipadamente qual a distribuição dentro desses grupos, vamos criar um parâmetro $\beta$ para testar diferentes distribuições possíveis:
+
     $$
-    p_A = v_U \times  \frac{1 - \beta \times r_A}{v_B + \beta \times v_U}
+    \beta = \frac{ P(\text{rejeita A} \mid \text{indeciso}) }{ P(\text{rejeita A} \mid \text{vota B}) } \tag 5
     $$
+
+    Nesta configuração, podemos dizer que quando $\beta=1$, a proporção de rejeições é igual entre os eleitores do adversário e indecisos. Aumentando o valor, a proporção passa a ser maior entre os indecisos, e valores entre 0 e 1 aumentam a proporção entre os eleitores do candidato adversário.
+    """)
+    return
+
+
+@app.cell
+def _(d, mo):
+    mo.image(src=d.PROJECT_ROOT / "static" / "scenarios3.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Agora podemos usar o $\beta$ da equação 5 que criamos para resolver a equação 4 da probabilidade condicional de rejeitar o candidato $A$:
+
+    $$
+    P(\text{rejeita A} \mid \text{vota B}) = \frac{r_A}{v_B + \beta \cdot v_U} \tag 6
+    $$
+
+    Com isto definido, podemos substituir a equação 6 na definição inicial da equação 1, isto define formalmente o potencial de receber votos de um candidato para qualquer valor de $\beta$:
+
+    $$
+    p_A = v_U \left(1 - \frac{\beta \cdot r_A}{v_B + \beta \cdot v_U}\right) \tag 7
+    $$
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Potencial de votos versus Votos obtidos
+
+    Agora que sabemos como medir a proporção de votos que podem ser conquistados, podemos encontrar o valor de $\beta$ que aproxima o teto ajustado do resultado real das eleições. Isto nos dará um parâmetro para fixar um $\beta$ para cada candidato.
+
+    As conclusões que podem ser tiradas desta abordagem assumem que ambos os candidatos conseguiram aproximadamente todos os votos que poderiam conseguir, e que portanto, nenhum eleitor que tenha anulado o voto ou deixado de votar o fez por falta de esforços de convencimento das partes.
+
+    Como vimos antes, isto só é verdade para o candidato Lula, e portanto, o valor de $\beta$ obtido para o candidato Flávio pode ser mais baixo do que o que medimos aqui.
+
+    A proporção de votos conquistadas no gráfico abaixo é medida pela diferença de votos entre o primeiro e o segundo turno, dividido pela quantidade de votos totais no segundo turno.
     """)
     return
 
@@ -526,7 +581,7 @@ def _(d, f, g, pd, ticker, vote_stats):
     ras = d.rpolls.df["reject_a"]
     rbs = d.rpolls.df["reject_b"]
     limits = [
-        f.vote_potential(va, vb, ra, rb, beta=0.6)
+        f.vote_potential(va, vb, ra, rb, beta=0.55)
         for va, vb, ra, rb in zip(vas, vbs, ras, rbs)
     ]
     high_limits = [
@@ -539,31 +594,78 @@ def _(d, f, g, pd, ticker, vote_stats):
             pd.Series(vp.a.est for vp in limits),
             pd.Series(vp.b.est for vp in high_limits),
         ],
-        index=[
-            "β=0,6 Flávio",
-            "β=0,1 Lula",
-        ]
+        index=["β=0,55 Flávio", "β=0,10 Lula"]
     ).T
 
     _df = pd.melt(_df)
     _df[["group", "variable"]] = _df["variable"].str.split(" ", n=1, expand=True)
-    _df.iloc[-1] = pd.Series(["Flávio", _p_acquired_a, "Votos adquiridos"])
-    _df.iloc[-2] = pd.Series(["Lula", _p_acquired_b, "Votos adquiridos"])
-
+    _df = pd.concat(
+        [
+            _df,
+            pd.DataFrame(
+                [("Flávio", _p_acquired_a, "Votos adquiridos")],
+                columns=["variable", "value", "group"],
+            ),
+            pd.DataFrame(
+                [("Lula", _p_acquired_b, "Votos adquiridos")],
+                columns=["variable", "value", "group"],
+            ),
+        ],
+    )
 
     _plot = g.GroupedBarPlot(
         values=_df["value"],
         categories=_df["variable"],
         groups=_df["group"],
         horizontal=True,
+        title="Conquista de votos ex post",
+        disclaimer=(
+            f"Estimativa produzida com dados de {len(d.rpolls.polls)} pesquisas "
+            "eleitorais de 8 institutos diferentes. As barras escuras mostram a "
+            "estimativa média da proporção de votos conquistáveis, dado um valor "
+            "do coeficiente β que a aproxima da proporção de votos efetimvamente "
+            "conquistados, as barras de erro mostram os valores máximo e mínimo.\n\n"
+            "Um β maior é um indicativo de que uma proporção maior dos eleitores que se "
+            "tornaram indecisos depois do primeiro turno já rejeitava este candidato, "
+            "e portanto, dificilmente passariam a votar nele no segundo turno.\n\n"
+            "Fonte: vitorlins.com.br"
+        ),
     )
     _plot.cfg["bar"]["error_colors"] = ["#98a7b4"]
+    _plot.cfg["disclaimer"]["clearance"] = 0.44
     (
         _plot.ax.xaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
         )
     )
     _plot.show()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Não foi possível encotrar um valor de $\beta$ que aproximasse a média das estimativas mais do que o que já está mostrado no gráfico, valores abaixo de 0,1 não têm impacto no resultado.
+
+    Uma possível explicação para os votos adquiridos pelo Lula estar acima da média das estimativas está na própria natureza das pesquisas: As respostas "não soube responder" não podem ser mapeadas de nenhuma maneira aceitável para as abstenções e votos inválidos nas urnas.
+
+    Uma segunda explicação plausível, se baseia no fato já identificado de que as pesquisas eleitorais de segundo turno apresentavam viés favorável ao Flávio Bolsonaro nas intenções de votos, este viés também pode ter se refletido nas rejeições.
+
+    Os vieses das instituições de pesquisa se anulariam se fossem distribuídos normalmente, mas a maioria das casas apresentou viés a favor do Flávio acima da margem de erro. Com níveis menores de rejeição, a média das estimativas poderia ser mais alta do que o observado aqui.
+
+    Os dados das pesquisas não permitem dizer quantas pessoas que se abstiveram no primeiro turno passariam a votar no segundo, se desconsiderar-mos os aproximadamente 4 milhões de votos adquiridos por Lula desta fonte, a média das estimativas passaria a ficar próxima dos votos adquiridos.
+
+
+    ### Motivos para votar
+
+    Outra coisa que vale análise é a grande diferença entre os coeficientes $\beta$ estimados para cada candidato, se esta diferença é verdadeira, significa pode existir uma diferença importante no motivo para o voto entre os eleitores de cada candidato.
+
+    Um valor de $\beta$ muito baixo para um candidato pode indicar que uma grande parte do seu eleitorado vota em você por rejeição ao candidato adversário, isso pode parecer bom à primeira vista, porque pode indicar um eleitorado conquistável maior.
+
+    Mesmo assim, isto pode ser uma fraqueza, uma vez que seus eleitores podem ter opiniões mais fortes contra o seu adversário que ao seu favor, isto te torna competitivo contra este candidato em específico, mas fraco contra outros.
+
+    Para testar se este era o caso do candidato Lula, vamos comparar alguns dados das pesquisas e comparar com a correlação entre as intenções de votos e níveis de rejeição cruzados.
+    """)
     return
 
 
@@ -575,6 +677,7 @@ def _(d, g, ticker):
         x_label="Vota Flávio Bolsonaro",
         y_label="Rejeita Lula",
         with_regression=True,
+        title="Intenção de votos ao\nFlávio x Rejeição ao Lula",
         disclaimer=(
             f"Produzido com dados de {len(d.rpolls.polls)} pesquisas de 8 institutos "
             'diferentes realizadas após os resultados do primeiro turno. "Vota Flávio '
@@ -609,6 +712,7 @@ def _(d, g, ticker):
         x_label="Vota Lula",
         y_label="Rejeita Flávio Bolsonaro",
         with_regression=True,
+        title="Intenção de votos ao\nLula x Rejeição ao Flávio",
         disclaimer=(
             f"Produzido com dados de {len(d.rpolls.polls)} pesquisas de 8 institutos "
             'diferentes realizadas após os resultados do primeiro turno. "Vota Lula" '
@@ -638,7 +742,7 @@ def _(mo):
     mo.md(r"""
     A análise de correlação indica uma correlação forte entre rejeição e intenção de  votos, mas apenas nas intenções de voto ao Flávio Bolsonaro, quando observamos a intenção de voto no Lula contra a rejeição ao Flávio, esta correlação passa a ser muito fraca para ser considerada relevante. Isto fica evidente no coeficiente de inclinação com confiança de 37,9%, que idealmente seria igual ou superior 95%, como nos demais.
 
-    Este resultado é coerente com o resultado do questionário da pesquisa da Palver (BR-01794/2026, página 29), onde os entrevistados que votariam no Lula justificavam seu voto principalmente com a "Defesa da democracia e direitos", enquanto que os eleitores do Flávio justificaram principalmente com a "Rejeição ao Lula e o PT".
+    Este resultado discorda do que obtivemos na análise de conquista de votos, mas é coerente com o resultado do questionário da pesquisa da Palver (BR-01794/2026, página 29), onde os entrevistados que votariam no Lula justificavam seu voto principalmente com a "Defesa da democracia e direitos", enquanto que os eleitores do Flávio justificaram principalmente com a "Rejeição ao Lula e o PT".
 
     Isso significa que podemos medir uma rejeição ao Lula ajustada pelo viés das pesquisas, mas não podemos fazer o mesmo para o seu adversário com segurança, já que a correlação com as intenções de voto ao Lula é muito fraca.
     """)
