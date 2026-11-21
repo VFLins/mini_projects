@@ -73,3 +73,11 @@ td {
   line-height: 1.5;
   background-color: var(--background);
 }
+
+
+.admonition.attention, .admonition.warning {
+    --admonition-heading-color: #e27c00;
+}
+.admonition.info, .admonition.note {
+    --admonition-heading-color: #008181;
+}

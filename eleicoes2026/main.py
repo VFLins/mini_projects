@@ -348,7 +348,7 @@ def _(Path, d, g, pd):
         flows,
         left_labels=["Outros candidatos", "Branco/Nulo", "Abstenções"],
         right_labels=["Flávio", "Lula", "Branco/Nulo", "Abstenções"],
-        right_colors=["#008181", "#942020", "#212c38", "#98a7b4"],
+        right_colors=["#008181", "#942020", "#212c38", "#ced6de"],
         disclaimer=(
             "1. Estimado por um modelo de inferência com restrição: Assume-se "
             "que os eleitores de Lula e Flávio Bolsonaro não mudaram seu voto "
@@ -414,7 +414,9 @@ def _(mo):
 
     2. Distribuição do comparecimento às urnas e votos inválidos não são diretamente alinhados com as respostas "Não opinou" ou "Não soube responder" nas pesquisas.
 
+    /// warning | Aviso
     Com limitações tão importantes, um estudo de potencial de votos teria resultados muito pouco confiáveis para se usar seriamente como parte de uma estratégia de campanha ou em um estudo da transferência de votos. Por isso todo o progresso nesta seção da análise deve ser considerado experimental e exploratória.
+    ///
 
     Como as pesquisas não costumam divulgar o cruzamento de dados entre intenções de votos e rejeição, teremos que estimar a distribuição da rejeição a cada candidato entre entre os que ainda não decidiram o voto e os que já decidiram votar no adversário.
 
@@ -430,11 +432,17 @@ def _(mo):
     mo.md(r"""
     ### Dados de pesquisas eleitorais
 
-    A rejeição é medida em um questionário por uma pergunta do tipo "Em qual(is) candidatos você não votaria de jeito nenhum?". A diferença entre a rejeição e a intenção de voto de um candidato é composto por dois grupos: 1. eleitores que ainda não decidiram o voto; e 2. eleitores decididos a votar no candidato adversário.
+    A rejeição é medida em um questionário por uma pergunta do tipo "Em qual(is) candidatos você não votaria de jeito nenhum?", enquanto que a intenção de voto A diferença entre a rejeição e a intenção de voto de um candidato é composto por dois grupos: 1. eleitores que ainda não decidiram o voto; e 2. eleitores decididos a votar no candidato adversário.
 
-    Este segundo grupo também pode estar presente entre os eleitores que rejeitam o candidato observado. Para entender quantos votos podem ser adquiridos por um candidato no segundo turno, precisamos destas informações e da distribuição de eleitores
+    Este segundo grupo também pode estar presente entre os eleitores que rejeitam o candidato observado. Para entender quantos votos podem ser adquiridos por um candidato no segundo turno, precisamos destas informações e da distribuição de eleitores.
 
-    A primeira etapa desta pesquisa consiste em montar um conjunto de dados com as intenções de voto e rejeição, todas as pesquisas selecionadas foram feitas após os resultados do primeiro turno:
+    Quando existe distinção entre pesquisa estimulada e espontânea, vamos preferir a primeira. Algumas pesquisas não distinguem entre o tipo de abordagem, nestes casos, vamos simplesmente usar os valores que estejam dados.
+
+    Aqui consideramos que os eleitores com intenção de votar em um candidato terão respondido "Pretendo votar neste candidato com certeza", já a rejeição ao candidato será medida pela proporção de respostas "Não votaria neste candidado de maneira alguma".
+
+    Isto quer dizer que dificilmente a mesma pessoa estará entre os eleitores que declararam intenção de voto e ao mesmo tempo rejeitam o mesmo candidato, o que facilita um pouco a modelagem a seguir.
+
+    A primeira etapa desta análise consiste em montar um conjunto de dados com as intenções de voto e rejeição, todas as pesquisas selecionadas foram feitas após os resultados do primeiro turno:
 
     1. [Futura](https://www.futurainteligencia.com.br/pesquisas): BR-00650/2026, BR-00650/2026, BR-06715/2026
     2. [Data Folha](https://datafolha.folha.uol.com.br/): BR-09709/2026 e BR-09540/2026
@@ -631,7 +639,8 @@ def _(d, f, g, pd, ticker, vote_stats):
             "Fonte: vitorlins.com.br"
         ),
     )
-    _plot.cfg["bar"]["error_colors"] = ["#98a7b4"]
+    _plot.cfg["bar"]["colors"] = ["#212c38", "#008181", "#ced6de"]
+    _plot.cfg["bar"]["error_colors"] = ["#ced6de"]
     _plot.cfg["disclaimer"]["clearance"] = 0.44
     (
         _plot.ax.xaxis.set_major_formatter(
