@@ -453,10 +453,10 @@ def _(mo):
     mo.md(r"""
     ### Metodologia
 
-    Para dizer exatamente quantos votos um candidato pode receber, ainda considerando que um candidato $A$ não pode conquistar que já está decidido por votar em seu adversário $B$, isto significa que o percentual de eleitores conquistaveis por A, $p_A$ é composto pelos percentuais de eleitores que não decidiram o voto $v_U$ e ao mesmo tempo também não o rejeitam ($1 - r_A$):
+    Para dizer exatamente quantos votos um candidato pode receber, ainda considerando que um candidato $A$ não pode conquistar que já está decidido por votar em seu adversário $B$, isto significa que o percentual de eleitores conquistaveis por A, $p_A$ é composto pelos percentuais de eleitores que não decidiram o voto $v_U$ e ao mesmo tempo também não o rejeitam:
 
     $$
-    p_A = v_U \times (1 - P(\text{rejeita A} \mid \text{vota B})) \tag 1
+    p_A = v_U \times (1 - P(\text{rejeita A} \mid \text{indeciso})) \tag 1
     $$
 
     Os eleitores que rejeitam o candidato $A$ estarão distribuídos entre os que não decidiram o voto $v_U$ e os que já decidiram votar no candidato adversário $v_B$. No cenário mais favorárel, todos os que o rejeitam já decidiram votar no adversário, isto deixa uma proporção conquistável maior, e no pior cenário, todos os indecisos já o rejeitam, o que significa que a decisão deles será apenas entre votar no adversário, se abster ou votar nulo/branco.
@@ -532,16 +532,16 @@ def _(d, mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Agora podemos usar o $\beta$ da equação 5 que criamos para resolver a equação 4 da probabilidade condicional de rejeitar o candidato $A$:
+    Agora podemos usar o $\beta$ da equação 5 que criamos para resolver a equação 4 da probabilidade condicional de um eleitor que não decidiu o voto rejeitar o candidato $A$:
 
     $$
-    P(\text{rejeita A} \mid \text{vota B}) = \frac{r_A}{v_B + \beta \cdot v_U} \tag 6
+    P(\text{rejeita A} \mid \text{indeciso}) = \beta \cdot \frac{r_A}{v_B + \beta \cdot v_U} \tag 6
     $$
 
     Com isto definido, podemos substituir a equação 6 na definição inicial da equação 1, isto define formalmente o potencial de receber votos de um candidato para qualquer valor de $\beta$:
 
     $$
-    p_A = v_U \left(1 - \frac{\beta \cdot r_A}{v_B + \beta \cdot v_U}\right) \tag 7
+    p_A = v_U \times \left(1 - \frac{\beta \cdot r_A}{v_B + \beta \cdot v_U}\right) \tag 7
     $$
     """)
     return
@@ -744,7 +744,7 @@ def _(mo):
 
     Este resultado discorda do que obtivemos na análise de conquista de votos, mas é coerente com o resultado do questionário da pesquisa da Palver (BR-01794/2026, página 29), onde os entrevistados que votariam no Lula justificavam seu voto principalmente com a "Defesa da democracia e direitos", enquanto que os eleitores do Flávio justificaram principalmente com a "Rejeição ao Lula e o PT".
 
-    Isso significa que podemos medir uma rejeição ao Lula ajustada pelo viés das pesquisas, mas não podemos fazer o mesmo para o seu adversário com segurança, já que a correlação com as intenções de voto ao Lula é muito fraca.
+    Esta análise de correlação mede a distribuições de intenções de voto e rejeição agregados e não leva em consideração as margens de erro. Não é uma abordagem forte para determinar o comportamento individual de cada eleitor, mas ajuda a identificar um padrão entre as pesquisas.
     """)
     return
 
