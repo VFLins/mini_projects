@@ -196,6 +196,9 @@ def _(mo):
 
 @app.cell
 def _(date, mo):
+    import locale
+    locale.setlocale(locale.LC_ALL, "pt_BR")
+
     mo.md(rf"""
     <span style='font-family: space mono, monospace; font-size: 13px; text-transform: uppercase'><b>
         {date.today().strftime('%A, %d de %B de %Y')}</b> | 18 minutos de leitura</span>
