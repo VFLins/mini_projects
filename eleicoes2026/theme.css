@@ -6,7 +6,7 @@
 h1, :is(.markdown,.mo-markdown-renderer) h1 {
   font-family: space mono, courier new, Courier, monospace;
   font-weight: 700 !important;
-  font-size: 40px;
+  font-size: 60px;
   text-transform: uppercase;
   line-height: 1.1;
 }
@@ -15,7 +15,7 @@ h2,
 :is(.markdown,.mo-markdown-renderer) h2 {
   font-family: space mono, courier new, Courier, monospace;
   font-weight: 700 !important;
-  font-size: 32px;
+  font-size: 40px;
   line-height: 1.1;
 }
 
@@ -23,7 +23,7 @@ h3,
 :is(.markdown,.mo-markdown-renderer) h3 {
     font-family: space mono, courier new, Courier, monospace;
     font-weight: 400;
-    font-size: 25px;
+    font-size: 32px;
     line-height: 1.1;
 }
 

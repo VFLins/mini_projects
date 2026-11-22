@@ -2,7 +2,7 @@ import marimo
 
 __generated_with = "0.25.2"
 app = marimo.App(
-    app_title="Entendendo a transferência de votos entre o primeiro e segundo turno das eleições presidenciais de 2026",
+    app_title="Entendendo a transferência de votos nas eleições presidenciais de 2026",
     css_file="theme.css",
 )
 
@@ -13,8 +13,6 @@ def _():
     import matplotlib.ticker as ticker
     import numpy as np
     import pandas as pd
-    import locale
-    locale.setlocale(locale.LC_ALL, "pt_BR.utf-8")
 
     from datetime import date
     from pathlib import Path
@@ -155,6 +153,14 @@ def _(d):
     return
 
 
+@app.cell(hide_code=True)
+def _(d, mo):
+    mo.md(rf"""
+    [{mo.image(d.PROJECT_ROOT / "static" / "logo.svg", height=28, style={"margin-left": "8.5px", "margin-top": "2px"})}](https://vitorlins.com.br)
+    """)
+    return
+
+
 @app.cell
 def _(mo):
     mo.hstack(
@@ -181,27 +187,19 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(d, mo):
-    mo.md(rf"""
-    [{mo.image(d.PROJECT_ROOT / "static" / "logo.svg")}](https://vitorlins.com.br)
-    """)
-    return
-
-
-@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    # Entendendo a transferência de votos entre o primeiro e segundo turno das eleições presidenciais de 2026
+    # Entendendo a transferência de votos nas eleições presidenciais de 2026
     """)
     return
 
 
 @app.cell
 def _(date, mo):
-    mo.md(
-        "<span style='font-family: space mono, monospace'>"
-        f"{date.today().strftime('%d/%m/%Y')}</span>"
-    )
+    mo.md(rf"""
+    <span style='font-family: space mono, monospace; font-size: 13px; text-transform: uppercase'><b>
+        {date.today().strftime('%A, %d de %B de %Y')}</b> | 18 minutos de leitura</span>
+    """)
     return
 
 
@@ -213,7 +211,9 @@ def _(mo):
     </br>
 
     /// note | Resumo
-    Vou colocar o resumo aqui quando o trabalho estiver pronto.
+    As eleições presidenciais de 2026 sofreram com uma quantidade de acusações de fraude e por causa do resultado inesperado para muitos depois das votações. Esta análise tenta entender se o fluxo de votos entre turnos que vimos é possível e o que explicaria ele, para isso, usamos um modelo de inferência nos dados oficiais da votação, e complementamos a análise dos resultados deste modelo com uma análise exploratória em dados das pesquisas eleitorais e fatos divulgados pela imprensa.
+
+    Os resultados mostram que a diferença de estratégia entre as campanhas eleitorais no segundo turno definiram o resultado no segundo turno. Enquanto a campanha de Flávio Bolsonaro diminuiu esforços com a perspectiva de vitória certa, a capanha de Lula se intensificou, conseguindo votos suficientes para empatar a disputa ao atrair eleitores que votaram no primeiro turno, e somando-se a estes, suficientes para virar a votação ao atrair eleitores que se abstiveram no primeiro turno.
     ///
 
     <br/ >
@@ -789,7 +789,7 @@ def _(mo):
 
     Esta análise de correlação mede a distribuições de intenções de voto e rejeição agregados pelas pesquisas, e não leva em consideração as margens de erro, por isso, tem intenção de determinar o comportamento individual de cada eleitor, mas de ajudar a identificar um padrão entre as pesquisas.
 
-    A presença de uma correlação mais forte as intenções de voto ao Flávio e a rejeição à Lula pode ser
+    A presença de uma correlação mais forte as intenções de voto ao Flávio e a rejeição à Lula pode ser um indicativo de que o coeficiente $\beta$ verdadeiro do candidato era mais baixo do que o medido. A métrica pode ter sido superestimada por que ele teve um desempenho abaixo do esperado em atrair votos dos eleitores de candidatos derrotados no primeiro turno, o que é coerente com a expectativa de analistas políticos mencionados antes.
     """)
     return
 
