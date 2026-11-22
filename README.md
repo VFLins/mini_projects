@@ -4,3 +4,4 @@ Meus trabalhos de iniciativa própria e de código aberto, aqui eu deposito algu
 
 - [Data Glow Up - Anime](https://vflins.github.io/mini_projects/data_glow_up_anime/)
 - [Eleições 2026](https://vflins.github.io/mini_projects/eleicoes2026/)
+- [Monitor das condições do trabalhador](https://vflins.github.io/mini_projects/labor_monitor/)
