@@ -5,3 +5,4 @@ Meus trabalhos de iniciativa própria e de código aberto, aqui eu deposito algu
 - [Data Glow Up - Anime](https://vflins.github.io/mini_projects/data_glow_up_anime/)
 - [Entendendo a transferência de votos nas eleições presidenciais de 2026](https://vflins.github.io/mini_projects/eleicoes2026/)
 - [Monitor das condições do trabalhador](https://vflins.github.io/mini_projects/labor_monitor/)
+- [Usando o CDI para prever o IPCA](https://vflins.github.io/mini_projects/predict_ipca_with_cdi/predict_ipca_with_cdi_presentation.slides.html)
