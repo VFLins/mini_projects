@@ -1,4 +1,4 @@
-# Entendendo a transferência de votos entre o primeiro e segundo turno das eleições presidenciais de 2026
+# Entendendo a transferência de votos nas eleições presidenciais de 2026
 
 Este repositório contém o subprojeto **eleicoes2026**, integrante do repositório de miniprojetos [`mini_projects`](https://github.com/VFLins/mini_projects) de [@VFLins](https://github.com/VFLins).
 
