@@ -13,6 +13,8 @@ def _():
     import matplotlib.ticker as ticker
     import numpy as np
     import pandas as pd
+    import locale
+    locale.setlocale(locale.LC_ALL, "pt_BR.utf-8")
 
     from datetime import date
     from pathlib import Path
@@ -24,7 +26,11 @@ def _():
 def _():
     import marimo as mo
 
-    return (mo,)
+    def figcaption(text: str) -> mo.Html:
+        """HTML element styled as a figure caption."""
+        return mo.md(f"<span style='font-size: 13px'>{text}</span>").center()
+
+    return figcaption, mo
 
 
 @app.cell
@@ -175,6 +181,14 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
+def _(d, mo):
+    mo.md(rf"""
+    [{mo.image(d.PROJECT_ROOT / "static" / "logo.svg")}](https://vitorlins.com.br)
+    """)
+    return
+
+
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
     # Entendendo a transferência de votos entre o primeiro e segundo turno das eleições presidenciais de 2026
@@ -184,11 +198,9 @@ def _(mo):
 
 @app.cell
 def _(date, mo):
-    mo.hstack(
-        items=[
-            mo.md("Por: [Vitor Lins](https://vitorlins.com.br)"),
-            mo.md(date.today().strftime('%d/%m/%Y')),
-        ],
+    mo.md(
+        "<span style='font-family: space mono, monospace'>"
+        f"{date.today().strftime('%d/%m/%Y')}</span>"
     )
     return
 
@@ -335,7 +347,7 @@ def _(Path, X, Y, d, f, mo):
 
 
 @app.cell
-def _(Path, d, g, pd):
+def _(Path, d, figcaption, g, mo, pd):
     flows = pd.read_csv(Path(d.DOWNLOADS_DIR, "model_flows.csv"))
     summary = pd.read_csv(Path(d.DOWNLOADS_DIR, "model_summary.csv"))
     _avg_percent_error = str(
@@ -344,7 +356,7 @@ def _(Path, d, g, pd):
     )
     ).replace(".", ",")
 
-    plot3 = g.SankeyPlot(
+    _plot = g.SankeyPlot(
         flows,
         left_labels=["Outros candidatos", "Branco/Nulo", "Abstenções"],
         right_labels=["Flávio", "Lula", "Branco/Nulo", "Abstenções"],
@@ -362,8 +374,11 @@ def _(Path, d, g, pd):
             "Fonte: vitorlins.com.br"
         )
     )
-    plot3.cfg["disclaimer"]["clearance"] = 0.35
-    plot3.show()
+    _plot.cfg["disclaimer"]["clearance"] = 0.35
+    mo.vstack([
+        _plot.show(),
+        figcaption("Gráfico 1: Fluxos de votos estimados"),
+    ])
     return
 
 
@@ -473,8 +488,11 @@ def _(mo):
 
 
 @app.cell
-def _(d, mo):
-    mo.image(src=d.PROJECT_ROOT / "static" / "scenarios.png")
+def _(d, figcaption, mo):
+    mo.vstack([
+        mo.image(src=d.PROJECT_ROOT / "static" / "scenarios.png"),
+        figcaption("Figura 1: Cenários de melhor x pior distribuição de rejeição"),
+    ])
     return
 
 
@@ -504,8 +522,11 @@ def _(mo):
 
 
 @app.cell
-def _(d, mo):
-    mo.image(src=d.PROJECT_ROOT / "static" / "scenarios2.png")
+def _(d, figcaption, mo):
+    mo.vstack([
+        mo.image(src=d.PROJECT_ROOT / "static" / "scenarios2.png"),
+        figcaption("Figura 2: Cenários de votos conquistáveis sem x com ajuste conceitual"),
+    ])
     return
 
 
@@ -532,8 +553,11 @@ def _(mo):
 
 
 @app.cell
-def _(d, mo):
-    mo.image(src=d.PROJECT_ROOT / "static" / "scenarios3.png")
+def _(d, figcaption, mo):
+    mo.vstack([
+        mo.image(src=d.PROJECT_ROOT / "static" / "scenarios3.png"),
+        figcaption(r"Figura 3: Exemplos de distribuição de rejeição estimada para diferentes valores de $\beta$"),
+    ])
     return
 
 
@@ -572,7 +596,7 @@ def _(mo):
 
 
 @app.cell
-def _(d, f, g, pd, ticker, vote_stats):
+def _(d, f, figcaption, g, mo, pd, ticker, vote_stats):
     _p_acquired_a = (
         (vote_stats["r2"]["flavio"]["n"]
         - vote_stats["r1"]["flavio"]["n"])
@@ -626,7 +650,6 @@ def _(d, f, g, pd, ticker, vote_stats):
         categories=_df["variable"],
         groups=_df["group"],
         horizontal=True,
-        title="Conquista de votos ex post",
         disclaimer=(
             f"Estimativa produzida com dados de {len(d.rpolls.polls)} pesquisas "
             "eleitorais de 8 institutos diferentes. As barras escuras mostram a "
@@ -647,7 +670,10 @@ def _(d, f, g, pd, ticker, vote_stats):
             ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
         )
     )
-    _plot.show()
+    mo.vstack([
+        _plot.show(),
+        figcaption("Gráfico 2: Conquista de votos ex post"),
+    ])
     return
 
 
@@ -679,8 +705,8 @@ def _(mo):
 
 
 @app.cell
-def _(d, g, ticker):
-    plot1 = g.ScatterPlot(
+def _(d, figcaption, g, mo, ticker):
+    _plot = g.ScatterPlot(
         x=d.rpolls.df["vote_a"],
         y=d.rpolls.df["reject_b"],
         x_label="Vota Flávio Bolsonaro",
@@ -693,29 +719,33 @@ def _(d, g, ticker):
             'Bolsonaro" representa o percentual de entrevistados que responderam '
             '"vou votar no candidato com certeza" na pesquisa estimulada, enquanto que '
             '"Rejeita Lula" representa os entrevistados que responderam "não '
-            'votaria no candidato de jeito nenhum".'
+            'votaria no candidato de jeito nenhum".\n\n'
+            "Fonte: vitorlins.com.br"
         ),
     )
-    plot1.cfg["disclaimer"]["clearance"] = 0.35
+    _plot.cfg["disclaimer"]["clearance"] = 0.4
     (
-        plot1.ax.yaxis.set_major_formatter(
+        _plot.ax.yaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
         )
     )
     (
-        plot1.ax.xaxis.set_major_formatter(
+        _plot.ax.xaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
         )
     )
 
-    plot1.show()
+    mo.vstack([
+        _plot.show(),
+        figcaption("Gráfico 3: Intenção de votos ao Flávio x Rejeição ao Lula"),
+    ])
     return
 
 
 @app.cell
-def _(d, g, ticker):
+def _(d, figcaption, g, mo, ticker):
 
-    plot2 = g.ScatterPlot(
+    _plot = g.ScatterPlot(
         x=d.rpolls.df["vote_b"],
         y=d.rpolls.df["reject_a"],
         x_label="Vota Lula",
@@ -728,21 +758,25 @@ def _(d, g, ticker):
             'representa o percentual de entrevistados que responderam "vou votar no '
             'candidato com certeza" na pesquisa estimulada, enquanto que "Rejeita '
             'Flávio Bolsonaro" representa os entrevistados que responderam "não '
-            'votaria no candidato de jeito nenhum".'
+            'votaria no candidato de jeito nenhum".\n\n'
+            "Fonte: vitorlins.com.br"
         ),
     )
-    plot2.cfg["disclaimer"]["clearance"] = 0.35
+    _plot.cfg["disclaimer"]["clearance"] = 0.4
     (
-        plot2.ax.yaxis.set_major_formatter(
+        _plot.ax.yaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
         )
     )
     (
-        plot2.ax.xaxis.set_major_formatter(
+        _plot.ax.xaxis.set_major_formatter(
             ticker.FuncFormatter(lambda x, pos: f"{int(x * 100)}%")
         )
     )
-    plot2.show()
+    mo.vstack([
+        _plot.show(),
+        figcaption("Gráfico 4: Intenção de votos ao Lula x Rejeição ao Flávio"),
+    ])
     return
 
 
@@ -753,15 +787,27 @@ def _(mo):
 
     Este resultado discorda do que obtivemos na análise de conquista de votos, mas é coerente com o resultado do questionário da pesquisa da Palver (BR-01794/2026, página 29), onde os entrevistados que votariam no Lula justificavam seu voto principalmente com a "Defesa da democracia e direitos", enquanto que os eleitores do Flávio justificaram principalmente com a "Rejeição ao Lula e o PT".
 
-    Esta análise de correlação mede a distribuições de intenções de voto e rejeição agregados e não leva em consideração as margens de erro. Não é uma abordagem forte para determinar o comportamento individual de cada eleitor, mas ajuda a identificar um padrão entre as pesquisas.
+    Esta análise de correlação mede a distribuições de intenções de voto e rejeição agregados pelas pesquisas, e não leva em consideração as margens de erro, por isso, tem intenção de determinar o comportamento individual de cada eleitor, mas de ajudar a identificar um padrão entre as pesquisas.
+
+    A presença de uma correlação mais forte as intenções de voto ao Flávio e a rejeição à Lula pode ser
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
+def _(mo, vote_stats):
+    mo.md(rf"""
     ## Conclusão
+
+    A estimativa do fluxo de votos estimou aproximadamente 4 milhões de votos vindos das abstenções no primeiro turno, Lula ganhou com vantagem de {str(round((vote_stats["r2"]["lula"]["n"] - vote_stats["r2"]["flavio"]["n"]) / 1_000_000, 1)).replace(".", ",")} Milhões. Isto pode indicar que a camapanha de Lula poderia ter falhado se tivesse se concentrado apenas em conquistar votos de quem votou em outros candidatos no primeiro turno.
+
+    A mesma estimativa também mostrou que Flávio não recebeu votos dos antes absentos, e não recebeu todos os votos que esperava dos outros candidatos mais bem colocados, o que é coerente com o fato do abrandamento da sua campanha eleitoral no segundo turno, em contraste com a intensificação da campanha do seu adversário.
+
+    Após analisar a quantidade de votos conquistáveis, observamos que Lula conseguiu mais votos do que seria esperado pelas pesquisas eleitorais, o que pode ser explicado tanto pelo viés a favor do Flávio que quase todas as pesquisas eleitorais apresentaram após o primeiro turno, quanto pelo abrandamento de sua campanha.
+
+    Flávio mostra um alto nível de correlação entre intenções de votos com rejeição ao adversário, uma distribuição com $\beta$ mais baixo que o medido (como na figura 3). Não foi investigado mais a fundo aqui, mas isto pode confirmar que ele teria mais capacidade de atrair votos dos eleitores de outros candidatos.
+
+    Com muitos de seus votos sendo justificados pela rejeição ao seu adversário, Flávio se beneficiaria se sua campanha tivesse focado em melhorar sua imagem, mapeando e atacando os maiores receios em relação à ele entre os eleitores indecisos, além de tentar convencer seus apoiadores a votar, deixando de lado a suspeita às urnas.
     """)
     return
 

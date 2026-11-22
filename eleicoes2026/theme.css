@@ -3,7 +3,7 @@
   --marimo-text-font: "Inter", Arial, sans-serif;
 }
 
-h1 {
+h1, :is(.markdown,.mo-markdown-renderer) h1 {
   font-family: space mono, courier new, Courier, monospace;
   font-weight: 700 !important;
   font-size: 40px;
@@ -11,21 +11,23 @@ h1 {
   line-height: 1.1;
 }
 
-h2 {
+h2,
+:is(.markdown,.mo-markdown-renderer) h2 {
   font-family: space mono, courier new, Courier, monospace;
   font-weight: 700 !important;
   font-size: 32px;
   line-height: 1.1;
 }
 
-h3 {
+h3,
+:is(.markdown,.mo-markdown-renderer) h3 {
     font-family: space mono, courier new, Courier, monospace;
     font-weight: 400;
     font-size: 25px;
     line-height: 1.1;
 }
 
-h4 {
+h4, :is(.markdown,.mo-markdown-renderer) h4 {
   font-family: space mono, courier new, Courier, monospace;
   font-weight: 700 !important;
   font-size: 20px;
