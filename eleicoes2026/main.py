@@ -432,12 +432,18 @@ def _(mo):
 
     2. Distribuição do comparecimento às urnas e votos inválidos não são diretamente alinhados com as respostas "Não opinou" ou "Não soube responder" nas pesquisas.
 
-    /// warning | Aviso
-    Com limitações tão importantes, um estudo de potencial de votos teria resultados muito pouco confiáveis para se usar seriamente como parte de uma estratégia de campanha ou em um estudo da transferência de votos. Por isso todo o progresso nesta seção da análise deve ser considerado experimental e exploratória.
-    ///
-
     Como as pesquisas não costumam divulgar o cruzamento de dados entre intenções de votos e rejeição, teremos que estimar a distribuição da rejeição a cada candidato entre entre os que ainda não decidiram o voto e os que já decidiram votar no adversário.
 
+    /// warning | Cuidado ao interpretar os resultados abaixo
+    O conjunto de dados das análises abaixo é montado com pesquisas eleitorais, a interpretação dos resultados deve se restringir dentro dos limites do que uma pesquisa eleitoral pode oferecer.
+
+    Todos os valores de intenção de votos e rejeição estão sujeitos à:
+
+    1. Margem de erro, os valores reais podem não ser exatamente o divulgado;
+    2. Viés comprovado a favor do candidato Flávio[^1] mostra discrepância acima da margem de erro entre as intenções de voto divulgadas e o resultado da votação, o mesmo não pode ser medido sobre a rejeição porque não existe uma medida populacional da rejeição, mas o viés também pode estar presente nesta métrica;
+
+    A análise a seguir depende do conhecimento das limitações deste conjunto de dados para ser melhor interpretada.
+    ///
 
 
     [^1]: **Jota**. [A eleição de 2026 terminou. Agora, abram seus dados](https://www.jota.info/opiniao-e-analise/colunas/lorena-barberia/a-eleicao-de-2026-terminou-agora-abram-seus-dados) por Lorena G. Barberia, Natália de Paula Moreira e Gustavo Fernandes de Paula
@@ -715,7 +721,6 @@ def _(d, figcaption, g, mo, ticker):
         x_label="Vota Flávio Bolsonaro",
         y_label="Rejeita Lula",
         with_regression=True,
-        title="Intenção de votos ao\nFlávio x Rejeição ao Lula",
         disclaimer=(
             f"Produzido com dados de {len(d.rpolls.polls)} pesquisas de 8 institutos "
             'diferentes realizadas após os resultados do primeiro turno. "Vota Flávio '
@@ -754,7 +759,6 @@ def _(d, figcaption, g, mo, ticker):
         x_label="Vota Lula",
         y_label="Rejeita Flávio Bolsonaro",
         with_regression=True,
-        title="Intenção de votos ao\nLula x Rejeição ao Flávio",
         disclaimer=(
             f"Produzido com dados de {len(d.rpolls.polls)} pesquisas de 8 institutos "
             'diferentes realizadas após os resultados do primeiro turno. "Vota Lula" '
